@@ -9,11 +9,11 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      helpText(p("1/ Select region"),
-               p("2/ Add SNPs"),
-               p("3/ Set advanced options (optional)"),
-               p("4/ Search for experiments"),
-               p("5/ Draw !")),
+#       helpText(p("1/ Select region"),
+#                p("2/ Add SNPs"),
+#                p("3/ Set advanced options (optional)"),
+#                p("4/ Search for experiments"),
+#                p("5/ Draw !")),
       h3("Select region"),
       selectInput("chr", 
                   label = "Choose a chromosome",
@@ -31,7 +31,7 @@ shinyUI(fluidPage(
         ),
       bsCollapse(id = "param", open = NULL, multiple = FALSE,
                  bsCollapsePanel('Advanced parameters',uiOutput("highlight"), 
-                                 style = "info")
+                                 style = "default")
       ),
       br(),
       h3("Add SNPs"),
@@ -48,7 +48,10 @@ shinyUI(fluidPage(
       actionButton(inputId = "addsnp",label = "Add new SNP"),
       br(),
       br(),
-      span(textOutput("addsnp_msg"), style = "color:green")
+      span(textOutput("addsnp_msg"), style = "color:green"),
+      br(),
+      br(),
+      actionButton(inputId = "draw", label = h3("Draw"))
     ),
     
     mainPanel(
@@ -58,7 +61,10 @@ shinyUI(fluidPage(
       bsAlert("alert4"),
       bsAlert("alert5"),
       bsAlert("alert6"),
-      textOutput("text1"),
+      h4("27950000-28735000"),
+      plotOutput("plot"),
+      br(),
+      br(),
       bsButton(inputId = "endAnalysis",label = "End Analysis")
       
     )

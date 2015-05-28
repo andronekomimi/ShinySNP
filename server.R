@@ -1,5 +1,7 @@
 # SHINYSNP server.R
 
+source("data_functions.R")
+
 # EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
@@ -138,7 +140,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
-#   outputOptions(output, "addhg_msg", suspendWhenHidden=FALSE)
+  #   outputOptions(output, "addhg_msg", suspendWhenHidden=FALSE)
   
   output$addhg_msg <- renderText({
     if(!is.na(input$position_min)) {
@@ -206,7 +208,36 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
+  output$plot <- renderPlot({
+    
+      if (input$draw == 0)
+        return()
+      
+      isolate ({
+        print(input$chr)
+        my.data <- loadChrData(current_chr = input$chr)
+        current_range <- setStudyRange(current_chr = input$chr, 
+                                       current_start = input$position_min, 
+                                       current_stop = input$position_max)
+        my.ranges <- getDataOverview(my.data = my.data, current_range = current_range)
+        print(length(my.ranges$arch))
+        
+        archs_tracks <- drawArchs(ranges_list = my.ranges$arch, 
+                                  current_range = current_range,
+                                  highlight_range_list = NULL)
+        
+        annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+        #snp_track <- drawSNP(current_range, current_chr, as.numeric(selected_row["Position"]), selected_row["RsID"])
+        
+        t = c(archs_tracks, annot_track)
+        
+        print("DONE")
+        
+        tracks(t) + xlim(current_range)
+      })
+    
+  })
+
   observe({
     if(input$endAnalysis > 0) {
       updateButton(session, "endAnalysis", disabled = TRUE)
@@ -221,6 +252,6 @@ shinyServer(function(input, output, session) {
   })
   
   
-  
+  # subset(sgp_k562_lane13, (sgp_k562_lane13$V2 >= current_start & sgp_k562_lane13$V2 <= current_stop) | (sgp_k562_lane13$V3 >= current_start & sgp_k562_lane13$V3 <= current_stop))
 })
 
