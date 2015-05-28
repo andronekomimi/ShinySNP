@@ -1,23 +1,37 @@
 # SHINYSNP server.R
 
+# EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
 con = ""
+logfile = tempfile(pattern = "log", tmpdir = "logs", fileext = "")
+tempid = strsplit(x = logfile, split = "logs/log", fixed = TRUE)[[1]][2]
+snpsfile = paste0("logs/snp", tempid)
+hgsfile = paste0("logs/hg", tempid)
+USER = "Audrey Lemacon"
+
+if(!file.exists(logfile)) {
+  file.create(logfile)
+  logcon=file(logfile,open="w")
+  writeLines(c(USER,format(Sys.time(), "%a %b %d %X %Y")), logcon)
+}
+
+if(!file.exists(snpsfile)) {
+  file.create(snpsfile)
+  snpcon=file(snpsfile,open="a+b")
+  writeLines(paste("snp_id","start","end","metadata",sep = "\t"), snpcon)
+}
+
+if(!file.exists(hgsfile)) {
+  file.create(hgsfile)
+  hgcon=file(hgsfile,open="a+b")
+  writeLines(paste("start","end","method",sep = "\t"), hgcon)
+}
+
+print(snpsfile)
+options(scipen=999) # virer l'annotation scientifique
 
 shinyServer(function(input, output, session) {
-  
-  reactive ({
-    snpsfile <- paste0("logs/", session$clientData$singletons,".snps")
-    
-    print(snpsfile)
-    
-#     if(!file.exists(snpsfile)) {
-#       
-#       file.create(snpsfile)
-#       con=file(snpsfile,open="a+b")
-#       writeLines("snp_id  start end metadata", con)
-#     }
-  })
   
   #### CHANGE POSITION VALUE ACCORDING TO THE SELECTED CHROM
   observe({
@@ -33,13 +47,14 @@ shinyServer(function(input, output, session) {
   })
   
   
-  output$snplist <- renderText({
+  output$addsnp_msg <- renderText({
     if(!is.na(input$position_min)) {
       
       if (input$addsnp == 0)
         return()
       
       isolate ({
+        
         if(is.na(input$snp_position_min)) {
           snpstart <- 0
         } else {
@@ -90,18 +105,117 @@ shinyServer(function(input, output, session) {
         }
         
         if(!iserror) {
-#           writeLines(text = paste(input$snp_label,snpstart,snpend,"n",sep="\t"),
-#                      con = con)
-          return("LOOOOL")
+          writeLines(text = paste(input$snp_label,snpstart,snpend,"n",sep="\t"),
+                     con = snpcon)
+          return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
+                        "-",snpend, "]"))
         }
       })
     }
   })
   
+  output$highlight <- renderUI({
+    list(
+      div(style="shiny-date-range-input form-group shiny-input-container",
+          tags$label("Higlight zone", `for` = "highlight-zone"), 
+          div(style="input-daterange input-group",
+              tags$input(id = "hgstart", type = "number", value = "start",class="input-small"),
+              tags$span("to",style = "input-group-addon"),
+              tags$input(id = "hgend", type = "number", value = "end",class="input-small")
+          )
+      ),
+      br(),
+      div(style="shiny-date-range-input form-group shiny-input-container",
+          tags$label("Higlight method", `for` = "highlight-method"), 
+          checkboxGroupInput("hgmethod", label = NULL, 
+                             choices = list("alpha" = "alpha", "color" = "color"),
+                             inline = TRUE, selected = "alpha")
+      ),
+      actionButton(inputId = "addhg", label = "Add new Highlight Zone"),
+      br(),
+      br(),
+      span(textOutput("addhg_msg"), style = "color:green")
+    )
+  })
+  
+#   outputOptions(output, "addhg_msg", suspendWhenHidden=FALSE)
+  
+  output$addhg_msg <- renderText({
+    if(!is.na(input$position_min)) {
+      
+      if (input$addhg == 0)
+        return()
+      
+      isolate ({
+        if(is.na(input$hgstart)) {
+          hgstart <- 0
+        } else {
+          hgstart <- input$hgstart
+        }
+        
+        if(is.na(input$hgend)) {
+          hgend <- 0
+        } else {
+          hgend <- input$hgend
+        }
+        
+        selected_chr_min <- input$position_min
+        selected_chr_max <- input$position_max
+        
+        error_msg <- c()
+        iserror <- FALSE
+        
+        print(paste("start", hgstart))
+        print(paste("end", hgend))
+        
+        if(hgend < hgstart){
+          error_msg <- "HG Zone end must be greater than HG Zone start"
+          iserror <- TRUE
+          createAlert(session, "alert4", "exampleAlert4", title = "Warning",
+                      content = error_msg, append = TRUE, dismiss = TRUE)
+        } else {
+          closeAlert(session, "exampleAlert4")
+        }
+        
+        if(hgend == 0 || hgstart == 0){
+          error_msg <- "HG Zone positions are mandatory"
+          iserror <- TRUE
+          createAlert(session, "alert5", "exampleAlert5", title = "Warning",
+                      content = error_msg, append = TRUE, dismiss = TRUE)
+        } else {
+          closeAlert(session, "exampleAlert5")
+        }
+        
+        if(hgstart >= selected_chr_min && hgstart <= selected_chr_max &&
+             hgend >= selected_chr_min && hgend <= selected_chr_max) {
+          closeAlert(session, "exampleAlert6")          
+        } else {
+          error_msg <- "The HG Zone must be inclued in the selected region"
+          iserror <- TRUE
+          createAlert(session, "alert6", "exampleAlert6", title = "Warning",
+                      content = error_msg, append = TRUE, dismiss = TRUE)
+        }
+        
+        if(!iserror) {
+          writeLines(text = paste(hgstart,hgend,paste(input$hgmethod, collapse = ","),sep="\t"),
+                     con = hgcon)
+          return(paste0("Adding Highlight zone at position [", hgstart,
+                        "-",hgend, "] with method : ",paste(input$hgmethod, collapse = ",")))
+        }
+      })
+    }
+  })
+  
+  
   observe({
     if(input$endAnalysis > 0) {
-      #snpsfile <- paste0("logs/", session$clientData$singletons,".snps")
-      #if(isOpen(con)){close(con)}
+      updateButton(session, "endAnalysis", disabled = TRUE)
+      if(isOpen(snpcon)){close(snpcon)}
+      if(isOpen(hgcon)){close(hgcon)}
+      if(isOpen(logcon)){
+        writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+        close(logcon)
+      }
       #if(file.exists(snpsfile)) {file.remove(snpsfile)}
     }
   })
