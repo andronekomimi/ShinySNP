@@ -11,6 +11,7 @@ tempid = strsplit(x = logfile, split = "logs/log", fixed = TRUE)[[1]][2]
 snpsfile = paste0("logs/snp", tempid)
 hgsfile = paste0("logs/hg", tempid)
 USER = "Audrey Lemacon"
+print("27950000-28735000")
 
 if(!file.exists(logfile)) {
   file.create(logfile)
@@ -118,7 +119,7 @@ shinyServer(function(input, output, session) {
   
   output$highlight <- renderUI({
     list(
-      div(style="shiny-date-range-input form-group shiny-input-container",
+      div(style="form-inline",
           tags$label("Higlight zone", `for` = "highlight-zone"), 
           div(style="input-daterange input-group",
               tags$input(id = "hgstart", type = "number", value = "start",class="input-small"),
@@ -127,7 +128,7 @@ shinyServer(function(input, output, session) {
           )
       ),
       br(),
-      div(style="shiny-date-range-input form-group shiny-input-container",
+      div(style="form-group shiny-input-container",
           tags$label("Higlight method", `for` = "highlight-method"), 
           checkboxGroupInput("hgmethod", label = NULL, 
                              choices = list("alpha" = "alpha", "color" = "color"),
@@ -166,9 +167,6 @@ shinyServer(function(input, output, session) {
         
         error_msg <- c()
         iserror <- FALSE
-        
-        print(paste("start", hgstart))
-        print(paste("end", hgend))
         
         if(hgend < hgstart){
           error_msg <- "HG Zone end must be greater than HG Zone start"
@@ -227,9 +225,15 @@ shinyServer(function(input, output, session) {
                                   highlight_range_list = NULL)
         
         annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
-        #snp_track <- drawSNP(current_range, current_chr, as.numeric(selected_row["Position"]), selected_row["RsID"])
         
-        t = c(archs_tracks, annot_track)
+        ### READ SNP FILE THEN CONVERT IN DATAFRAME
+        lines = unlist(strsplit(readLines(con = snpcon), split = "\t", fixed = TRUE))
+        snpdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], byrow = TRUE))
+        colnames(snpdf) <- lines[1:4]
+        
+        snp_track <- drawSNP(current_range,snpdf)
+        
+        t = c(archs_tracks, snp_track, annot_track)
         
         print("DONE")
         
@@ -241,9 +245,9 @@ shinyServer(function(input, output, session) {
   observe({
     if(input$endAnalysis > 0) {
       updateButton(session, "endAnalysis", disabled = TRUE)
-      if(isOpen(snpcon)){close(snpcon)}
-      if(isOpen(hgcon)){close(hgcon)}
-      if(isOpen(logcon)){
+      if(!is.null(snpcon) && isOpen(snpcon)){close(snpcon)}
+      if(!is.null(hgcon) && isOpen(hgcon)){close(hgcon)}
+      if(!is.null(logcon) && isOpen(logcon)){
         writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
         close(logcon)
       }

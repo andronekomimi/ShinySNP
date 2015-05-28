@@ -77,7 +77,6 @@ subsetData <- function(my.df, start_idx, end_idx, zone_start, zone_stop){
 }
 
 convert2GRange <- function(my.df, current_chr, label) {
-  print(my.df)
   left = c()
   right = c()
   color = c()
@@ -345,19 +344,18 @@ drawAnnotations <- function(label = "Annotations", current_range) {
 #' snps_track <- drawSNPs(snps_list, "My SNPs")
 #' 
 #' @export
-drawSNP <- function(current_range, current_chr, position, rsid, label = "SNPs") {
-  #can_run_4()
+drawSNP <- function(current_range, snps_df) {
   
-  snp_id <- rsid
-  snp_range <- IRanges(position, position)
-  snp <- GRanges(seqnames = current_chr, ranges = snp_range)
-  snp$name <- snp_id
+  snp_ids <- snps_df$snp_id
+  snps_ranges <- IRanges(as.numeric(snps_df$start), as.numeric(snps_df$end))
+  snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
+  snps$name <- snp_ids
   
   snp_track <- autoplot(snp) +
     geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
     theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
     theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
-  
+    
   snp_track
 }
 
