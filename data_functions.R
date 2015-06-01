@@ -5,19 +5,8 @@ suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 suppressMessages(library(biovizBase))
 suppressMessages(library(org.Hs.eg.db))
 
-#' Download data for a current_chromosome
-#' After setting current_chr variable : current_chr <- "chr1"
-#' 
-#' @return list elements containing all data available for a particular 
-#' chromosome
-#'
-#' @import GenomicRanges
-#' @examples
-#' current_chr <- "chr12"
-#' my.data <- loadChrData(current_chr)
-#'  
-#' @export
-loadChrData <- function(current_chr) {
+
+load3DData <- function(current_chr) {
   
   ### chiapet 
   sgp_k562_lane13 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13.Rda"))
@@ -39,10 +28,6 @@ loadChrData <- function(current_chr) {
   k562_file_1 <- readRDS(paste0("data/",current_chr,"_k562_file_1.Rda"))
   k562_file_2 <- readRDS(paste0("data/",current_chr,"_k562_file_2.Rda"))
   
-  #   ### lncrna
-  #   lncrna <- readRDS(paste0("data/",current_chr,"_mitrans.Rda"))
-  #   lncrna_expr <- readRDS(paste0("data/lncrna_expr.Rda"))
-  
   my.data = list(sgp_k562_lane13 = sgp_k562_lane13,
                  sgp_k562_lane24 = sgp_k562_lane24,
                  sgp_mcf7_lane11 = sgp_mcf7_lane11,
@@ -59,9 +44,21 @@ loadChrData <- function(current_chr) {
                  hmec_file_2 = hmec_file_1,
                  k562_file_1 = k562_file_1,
                  k562_file_2 = k562_file_2
-                 #                  ,
-                 #                  lncrna = lncrna,
-                 #                  lncrna_expr = lncrna_expr
+  )
+  
+  invisible(my.data)
+  
+}
+
+load1Data <- function(current_chr) {
+  
+  ### lncrna
+  lncrna <- readRDS(paste0("data/",current_chr,"_mitrans.Rda"))
+  lncrna_expr <- readRDS(paste0("data/lncrna_expr.Rda"))
+  
+  my.data = list(
+    lncrna = lncrna,
+    lncrna_expr = lncrna_expr
   )
   
   invisible(my.data)
@@ -108,75 +105,32 @@ create_gr_from_df <- function(current_range, my.df,start_idx,stop_idx, label) {
   } else {
     invisible(GRanges())
   }
-
+  
   
 }
-#' Check data availability and extract relevant data under the form of list of
-#' GenomicRanges
-#' After setting the current chromosome and study range
-#' 
-#' 
-#' @return list of 3 lists containing GenomicRanges representing data in the 
-#' current study range : arch, circos, lncrna
-#'
-#' @examples
-#' current_chr <- "chr12"
-#' my.data <- loadChrData()
-#' current_range <- setStudyRange(27950000, 28735000)
-#' my.ranges <- getDataOverview(current_range)
-#' 
-#' @export
-getDataOverview <- function(my.data, current_range) {
-  print(current_range)
+
+get3DDataOverview <- function(my.data, current_range) {
+  
   my.ranges = list(
-    arch = list(sgp_k562_lane13 = create_gr_from_df(current_range,my.data$sgp_k562_lane13,2,6,"K562 ChIA-Pet lane 13"),
-                sgp_k562_lane24 = create_gr_from_df(current_range,my.data$sgp_k562_lane24, 2,6,"K562 ChIA-Pet lane 24"),
-                sgp_mcf7_lane11 = create_gr_from_df(current_range,my.data$sgp_mcf7_lane11,2,6,"MCF7 ChIA-Pet lane 11"),
-                sgp_mcf7_lane23 = create_gr_from_df(current_range,my.data$sgp_mcf7_lane23,2,6,"MCF7 ChIA-Pet lane 23"),
-                sfd_k562_rep1 = create_gr_from_df(current_range,my.data$sfd_k562_rep1,2,6,"K562 ChIA-Pet rep 1"),
-                sfd_k562_rep2 = create_gr_from_df(current_range,my.data$sfd_k562_rep2,2,6,"K562 ChIA-Pet rep 2"),
-                sfd_mcf7_rep3 = create_gr_from_df(current_range,my.data$sfd_mcf7_rep3,2,6,"MCF7 ChIA-Pet rep 3"),
-                sfd_mcf7_rep4 = create_gr_from_df(current_range,my.data$sfd_mcf7_rep4,2,6,"MCF7 ChIA-Pet rep 4"),
-                hmec_file_1 = create_gr_from_df(current_range,my.data$hmec_file_1,2,3,"HMEC HiC-arrowhead"),
-                hmec_file_2 = create_gr_from_df(current_range,my.data$hmec_file_2,2,6,"HMEC HiC-hiccups"),
-                k562_file_1 = create_gr_from_df(current_range,my.data$k562_file_1,2,3,"K562 HiC-arrowhead"),
-                k562_file_2 = create_gr_from_df(current_range,my.data$k562_file_2,2,6,"K562 HiC-hiccups")))
+    sgp_k562_lane13 = create_gr_from_df(current_range,my.data$sgp_k562_lane13,2,6,"K562 ChIA-Pet lane 13"),
+    sgp_k562_lane24 = create_gr_from_df(current_range,my.data$sgp_k562_lane24, 2,6,"K562 ChIA-Pet lane 24"),
+    sgp_mcf7_lane11 = create_gr_from_df(current_range,my.data$sgp_mcf7_lane11,2,6,"MCF7 ChIA-Pet lane 11"),
+    sgp_mcf7_lane23 = create_gr_from_df(current_range,my.data$sgp_mcf7_lane23,2,6,"MCF7 ChIA-Pet lane 23"),
+    sfd_k562_rep1 = create_gr_from_df(current_range,my.data$sfd_k562_rep1,2,6,"K562 ChIA-Pet rep 1"),
+    sfd_k562_rep2 = create_gr_from_df(current_range,my.data$sfd_k562_rep2,2,6,"K562 ChIA-Pet rep 2"),
+    sfd_mcf7_rep3 = create_gr_from_df(current_range,my.data$sfd_mcf7_rep3,2,6,"MCF7 ChIA-Pet rep 3"),
+    sfd_mcf7_rep4 = create_gr_from_df(current_range,my.data$sfd_mcf7_rep4,2,6,"MCF7 ChIA-Pet rep 4"),
+    hmec_file_1 = create_gr_from_df(current_range,my.data$hmec_file_1,2,3,"HMEC HiC-arrowhead"),
+    hmec_file_2 = create_gr_from_df(current_range,my.data$hmec_file_2,2,6,"HMEC HiC-hiccups"),
+    k562_file_1 = create_gr_from_df(current_range,my.data$k562_file_1,2,3,"K562 HiC-arrowhead"),
+    k562_file_2 = create_gr_from_df(current_range,my.data$k562_file_2,2,6,"K562 HiC-hiccups"))
   
   invisible(my.ranges)
 }
 
 
-#' Prepare tracks to plot them
-#' 
-#' @param ranges_list list of GenomicRange, default Genomic Ranges generated 
-#' with the functions \code{getDataOverview}
-#' @param highlight_range_list list of GenomicRange generated with the function 
-#' \code{setHighLight}
-#' 
-#' @return list of 3 lists containing GenomicRanges representing data in the 
-#' current study range : arch, circos, lncrna
-#'
-#' @examples
-#' current_chr <- "chr12"
-#' my.data <- loadChrData()
-#' current_range <- setStudyRange(27950000, 28735000)
-#' my.ranges <- getDataOverview()
-#' specific_range1 <- setHighLight(28111017,28127138,"alpha")
-#' specific_range2 <- setHighLight(28284682,28287682,"alpha")
-#' specific_range3 <- setHighLight(28284682,28287682,"color")
-#' 
-#' arch <- drawArchs(list(specific_range1,specific_range2,
-#' specific_range3))
-#' tracks(arch) + xlim(current_range)
-#' 
-#' @export
 drawArchs <- function(ranges_list = NULL, highlight_range_list = NULL, current_range) {
   #highlight_range_list : start, stop, highlight method
-  
-  if(is.null(ranges_list))
-  {
-    ranges_list = my.ranges$ranges$arch
-  }
   
   my.tracks = c()
   
@@ -221,18 +175,6 @@ drawSegment <- function(ranges_list = NULL, current_range) {
   invisible(my.tracks)
 }
 
-
-#' Enable to set the current study range
-#' 
-#' @param current_start integer start of the range
-#' @param current_stop integer end of the range
-#' 
-#' @return a GenomicRange
-#'
-#' @examples
-#' current_range <- setStudyRange(27950000, 28735000)
-#' 
-#' @export
 setStudyRange <- function(current_chr, current_start, current_stop) {
   current_range <- IRanges::IRanges(current_start, current_stop)
   current_range <- GenomicRanges::GRanges(seqnames = current_chr, ranges = current_range)
@@ -240,19 +182,6 @@ setStudyRange <- function(current_chr, current_start, current_stop) {
 }
 
 
-#' Enable to set the zone to higlight
-#' 
-#' @param current_start integer start of the range
-#' @param current_stop integer end of the range
-#' @param method character defining the way to highlight a specific zone (alpha 
-#' or color)
-#' 
-#' @return a GenomicRange
-#'
-#' @examples
-#' specific_range <- setHighLight(28111017,28127138,"alpha")
-#' 
-#' @export
 setHighLight <- function(current_start, current_stop, method) {
   can_run_3(current_start, current_stop, method)
   
@@ -264,19 +193,6 @@ setHighLight <- function(current_start, current_stop, method) {
 }
 
 
-#' Extract annotation informations from the annotation package org.Hs.eg.db
-#' 
-#' @param file_path character absolute path to the file containing snp 
-#' informations
-#' @param label character label of the track, default "Annotations" 
-#' @return a ggplot track
-#'
-#' @examples
-#' current_chr <- "chr12"
-#' current_range <- setStudyRange(27950000, 28735000)
-#' annot_track <- drawAnnotations("My Genes")
-#' 
-#' @export
 drawAnnotations <- function(label = "Annotations", current_range) {
   #can_run_4()
   
@@ -329,56 +245,23 @@ drawAnnotations <- function(label = "Annotations", current_range) {
   
 }
 
-#' Extract SNP informations from a flat file and build the resulting track
-#' 
-#' @param file_path character absolute path to the file containing snp 
-#' informations
-#' @param label character label of the track, default "SNPs"
-#' 
-#' @return a ggplot track
-#'
-#' @examples
-#' snps_list = "~/Workspace/COLLAB/PTHLH_snps"
-#' current_chr <- "chr12"
-#' current_range <- setStudyRange(27950000, 28735000)
-#' snps_track <- drawSNPs(snps_list, "My SNPs")
-#' 
-#' @export
-drawSNP <- function(current_range, snps_df) {
+drawSNP <- function(current_range, snps_df, label) {
   
   snp_ids <- snps_df$snp_id
-  snps_ranges <- IRanges(as.numeric(snps_df$start), as.numeric(snps_df$end))
+  
+  snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
   snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
   snps$name <- snp_ids
   
-  snp_track <- autoplot(snp) +
+  snps_track <- autoplot(snps, aes(color=imp)) +
     geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
     theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
     theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
-    
-  snp_track
+  
+  snps_track
 }
 
 
-
-
-#' Merge several ranges into a single one
-#' 
-#' @param ranges vector of GenomicRanges generated with the functions 
-#' \code{getDataOverview} you want to merge
-#' @param label character label of the merged range
-#' 
-#' @return a GenomicRange 
-#'
-#' @examples
-#' current_chr <- "chr12"
-#' my.data <- loadChrData()
-#' current_range <- setStudyRange(27950000, 28735000)
-#' my.ranges <- getDataOverview()
-#' k562_chiapet <- mergeRanges(c(my.ranges$arch$sgp_k562_lane13,
-#' my.ranges$arch$sgp_k562_lane24), label = "K562 ChiA-PET SGP")
-#' 
-#' @export
 mergeRanges <- function(ranges, label) {
   can_run_6(label)
   ranges$color = rep(x = label, times = length(ranges))
@@ -386,24 +269,6 @@ mergeRanges <- function(ranges, label) {
 }
 
 
-
-
-#' Global ranges re-organization (selection, ordering and fusion)
-#' 
-#' @param track_index character vector the index of the tracks generated using 
-#' drawArchs(my.ranges$arch)
-#' @param range_index character vector the index of the ranges in my.ranges$arch
-#' @param labels character vector with the labels of the range (NA to keep 
-#' the default track name)
-#' 
-#' @return a GenomicRange 
-#'
-#' @examples
-#' index = c("1;2;4","3;5","9","7")
-#' labels =  c("Chiapet 1", "Chiapet 2", "HiC 2", NA)
-#' custom_ranges <- organizeRanges(track_index = index, labels = labels)
-#' 
-#' @export
 organizeRanges <- function(track_index = NULL, range_index = NULL, labels = NULL) {
   
   can_run_5(track_index, range_index, labels)

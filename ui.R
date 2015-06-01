@@ -6,7 +6,7 @@ library(shinyFiles)
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
 
 shinyUI(fluidPage(
-  titlePanel("ShinySNP"),
+  titlePanel("Shiny SNP"),
   
   sidebarLayout(
     sidebarPanel(
@@ -19,7 +19,7 @@ shinyUI(fluidPage(
       selectInput("chr", 
                   label = "Choose a chromosome",
                   choices = as.character(chroms$chr),
-                  selected = NA),
+                  selected = "chr1"),
       fluidRow(
         column(width = 6,
                numericInput(inputId = 'position_min', 
@@ -30,6 +30,7 @@ shinyUI(fluidPage(
                             label = "end",
                             value = NA))
       ),
+      h6("27950000-28735000"),
       bsCollapse(id = "param", open = NULL, multiple = FALSE,
                  bsCollapsePanel('Advanced parameters',uiOutput("highlight"), 
                                  style = "default")
@@ -67,10 +68,71 @@ shinyUI(fluidPage(
       bsAlert("alert4"),
       bsAlert("alert5"),
       bsAlert("alert6"),
-      h4("27950000-28735000"),
-      plotOutput("plot"),
-      br(),
-      br(),
+      navbarPage(span("Analysis", style = "color:green"),
+                 tabPanel("Conformation",
+                          #       conditionalPanel(condition = "input.draw > 0 && !input.plot",
+                          #                        list(
+                          #                          img(src = "page_loader.gif",
+                          #                              filetype = "image/gif",
+                          #                              alt = "Please wait... I'm processing your query")
+                          #                        )
+                          #       ),
+                          plotOutput("plot1"),
+                          br(),
+                          br()
+                 ),
+                 tabPanel("Lncrna & Enhancers",
+                          plotOutput("plot2"),
+                          br(),
+                          br()
+                 ),
+                 tabPanel("RNA-Seq",
+                          h3("RNA-Seq"),
+                          helpText("We are working with the following dataset : ",
+                                   tags$ul(list(
+                                     tags$li("MCF7 : 7 experiments with 2 replicates each 
+                                   and 1 experiment with 3 replicates"),
+                                     tags$li("K562 : 3 experiments with 2 replicates for each"),
+                                     tags$li("HMEC : 1 experiment with 2 replicates")
+                                   ))),
+                          br(),
+                          fluidRow(
+                            column(width = 4,
+                                   radioButtons(inputId = 'merge_rnaseq_replicate', 
+                                                label = "Analysis configuration",
+                                                choices = list("One file per cell type" = FALSE, 
+                                                               "Merge in a single file" = TRUE),
+                                                selected = TRUE)),
+                            column(width = 4,
+                                   radioButtons(inputId = 'merge_rnaseq_experiment', 
+                                                label = "",
+                                                choices = list("One track per experiment" = FALSE, 
+                                                               "Merge experiments" = TRUE),
+                                                selected = TRUE)),
+                            column(width = 4,
+                                   radioButtons(inputId = 'merge_rnaseq_file', 
+                                                label = "",
+                                                choices = list("One track per replicate" = FALSE, 
+                                                               "Merge replicates" = TRUE),
+                                                selected = TRUE))
+                          ),
+                          br(),
+                          br()
+                 ),
+                 tabPanel("ChIP-Seq",
+                          h3("ChIP-Seq"),
+                          helpText("We are working with the following dataset : ",
+                                   tags$ul(list(
+                                     tags$li("MCF7 : 7 experiments with 2 replicates each 
+                                   and 1 experiment with 3 replicates"),
+                                     tags$li("K562 : 3 experiments with 2 replicates for each"),
+                                     tags$li("HMEC : 1 experiment with 2 replicates")
+                                   ))),
+                          br(),
+                          br()
+                 )
+                 
+      ),
       bsButton(inputId = "endAnalysis",label = "End Analysis", style = "btn btn-primary")
       
     )

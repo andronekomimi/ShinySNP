@@ -49,8 +49,7 @@ shinyServer(function(input, output, session) {
                        min = selected_chr_min + 1, max = selected_chr_max)    
   })
   
-  
-  output$addsnp_msg <- renderText({
+  observe ({
     if(!is.na(input$position_min)) {
       
       if (input$addsnp == 0)
@@ -83,7 +82,7 @@ shinyServer(function(input, output, session) {
           error_msg <- "SNP end must be greater than SNP start"
           iserror <- TRUE
           createAlert(session, "alert1", "exampleAlert1", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = FALSE)
+                      content = error_msg, append = TRUE, dismiss = TRUE)
         } else {
           closeAlert(session, "exampleAlert1")
         }
@@ -92,7 +91,7 @@ shinyServer(function(input, output, session) {
           error_msg <- "SNP positions are mandatory"
           iserror <- TRUE
           createAlert(session, "alert2", "exampleAlert2", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = FALSE)
+                      content = error_msg, append = TRUE, dismiss = TRUE)
         } else {
           closeAlert(session, "exampleAlert2")
         }
@@ -104,14 +103,15 @@ shinyServer(function(input, output, session) {
           error_msg <- "The variant must be inclued in the selected region"
           iserror <- TRUE
           createAlert(session, "alert3", "exampleAlert3", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = FALSE)
+                      content = error_msg, append = TRUE, dismiss = TRUE)
         }
         
         if(!iserror) {
           writeLines(text = paste(input$snp_label,snpstart,snpend,"n",sep="\t"),
                      con = snpcon)
-          return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
-                        "-",snpend, "]"))
+          output$addsnp_msg <- renderText({
+            return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
+                          "-",snpend, "]"))})
         }
       })
     }
@@ -206,42 +206,110 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$plot <- renderPlot({
+  output$plot1 <- renderPlot({
+    if (input$draw == 0)
+      return()
     
-      if (input$draw == 0)
-        return()
+    isolate ({
+      my.data <- load3DData(current_chr = input$chr)
+      current_range <- setStudyRange(current_chr = input$chr, 
+                                     current_start = input$position_min, 
+                                     current_stop = input$position_max)
+      my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
       
-      isolate ({
-        print(input$chr)
-        my.data <- loadChrData(current_chr = input$chr)
-        current_range <- setStudyRange(current_chr = input$chr, 
-                                       current_start = input$position_min, 
-                                       current_stop = input$position_max)
-        my.ranges <- getDataOverview(my.data = my.data, current_range = current_range)
-        print(length(my.ranges$arch))
-        
-        archs_tracks <- drawArchs(ranges_list = my.ranges$arch, 
-                                  current_range = current_range,
-                                  highlight_range_list = NULL)
-        
-        annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
-        
-        ### READ SNP FILE THEN CONVERT IN DATAFRAME
-        lines = unlist(strsplit(readLines(con = snpcon), split = "\t", fixed = TRUE))
-        snpdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], byrow = TRUE))
-        colnames(snpdf) <- lines[1:4]
-        
-        snp_track <- drawSNP(current_range,snpdf)
-        
-        t = c(archs_tracks, snp_track, annot_track)
-        
-        print("DONE")
-        
-        tracks(t) + xlim(current_range)
-      })
+      archs_tracks <- drawArchs(ranges_list = my.ranges,
+                                current_range = current_range,
+                                highlight_range_list = NULL)
+      
+      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      
+      ### READ SNP FILE THEN CONVERT IN DATAFRAME
+      lines = unlist(strsplit(readLines(con = snpcon), split = "\t", 
+                              fixed = TRUE))
+      snpsdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], 
+                                 byrow = TRUE))
+      colnames(snpsdf) <- lines[1:4]
+      
+      snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+      
+      t = c(archs_tracks, snp_track, annot_track)
+      
+      warning("DONE calculate the tracks",call. = FALSE)
+      
+      tracks(t) + xlim(current_range)
+    })
     
   })
-
+  
+  outputOptions(output, "plot1", suspendWhenHidden=FALSE)
+  
+  output$plot2 <- renderPlot({
+    if (input$draw == 0)
+      return()
+    
+    isolate ({
+      my.data <- load1DData(current_chr = input$chr)
+      current_range <- setStudyRange(current_chr = input$chr, 
+                                     current_start = input$position_min, 
+                                     current_stop = input$position_max)
+#       my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
+#       
+#       archs_tracks <- drawArchs(ranges_list = my.ranges$arch, 
+#                                 current_range = current_range,
+#                                 highlight_range_list = NULL)
+#       
+#       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+#       
+#       ### READ SNP FILE THEN CONVERT IN DATAFRAME
+#       lines = unlist(strsplit(readLines(con = snpcon), split = "\t", 
+#                               fixed = TRUE))
+#       snpsdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], 
+#                                  byrow = TRUE))
+#       colnames(snpsdf) <- lines[1:4]
+#       
+#       snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+#       
+#       t = c(archs_tracks, snp_track, annot_track)
+#       
+#       warning("DONE calculate the tracks",call. = FALSE)
+#       
+#       tracks(t) + xlim(current_range)
+    })
+    
+  })
+  
+  outputOptions(output, "plot2", suspendWhenHidden=FALSE)
+  
+  
+  
+  
+  observe({
+    roots = c(wd='.')
+    shinyFileChoose(input, 'loadsnp', session=session, roots=roots,
+                    filetypes=c('','csv','txt'))
+    pfile = parseFilePaths(roots, input$loadsnp)
+    updateTextInput(session, "path",  value = pfile$datapath)
+  })
+  
+  observe({
+    if(file.exists(input$path)) {
+      # get data from imported snp file
+      imported_snp = read.table(input$path, header=TRUE, 
+                                stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      for (i in (1:nrow(imported_snp))) {
+        new_snp = imported_snp[i,]
+        writeLines(text = paste(new_snp$snp_id,new_snp$start,new_snp$end,
+                                new_snp$metadata,sep="\t"), con = snpcon)
+      }
+      
+      output$addsnp_msg <- renderText({
+        paste0("Importing following snps : ", paste(imported_snp$snp_id, 
+                                                    collapse = ","))
+      })
+    }
+    
+  })
+  
   observe({
     if(input$endAnalysis > 0) {
       updateButton(session, "endAnalysis", disabled = TRUE)
@@ -251,6 +319,8 @@ shinyServer(function(input, output, session) {
         writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
         close(logcon)
       }
+      
+      stopApp()
       #if(file.exists(snpsfile)) {file.remove(snpsfile)}
     }
   })
