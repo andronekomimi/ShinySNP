@@ -1,15 +1,19 @@
 # SHINYSNP server.R
 
 source("data_functions.R")
+library(sendmailR)
 
 # EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
 con = ""
-logfile = tempfile(pattern = "log", tmpdir = "logs", fileext = "")
-tempid = strsplit(x = logfile, split = "logs/log", fixed = TRUE)[[1]][2]
-snpsfile = paste0("logs/snp", tempid)
-hgsfile = paste0("logs/hg", tempid)
+logfile = tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
+tempid = strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
+snpsfile = paste0("logs/snp_", tempid)
+hgsfile = paste0("logs/hg_", tempid)
+todornaseqfile = paste0("todo/rnaseq_", tempid)
+todochipseqfile = paste0("todo/chipseq_", tempid)
+
 USER = "Audrey Lemacon"
 print("27950000-28735000")
 
@@ -29,6 +33,20 @@ if(!file.exists(hgsfile)) {
   file.create(hgsfile)
   hgcon=file(hgsfile,open="a+b")
   writeLines(paste("start","end","method",sep = "\t"), hgcon)
+}
+
+if(!file.exists(todornaseqfile)) {
+  file.create(todornaseqfile)
+  todornaseqcon=file(todornaseqfile,open="w")
+  writeLines(USER, todornaseqcon)
+  writeLines(tempid, todornaseqcon)
+}
+
+if(!file.exists(todochipseqfile)) {
+  file.create(todochipseqfile)
+  todochipseqcon=file(todochipseqfile,open="w")
+  writeLines(USER, todochipseqcon)
+  writeLines(tempid, todochipseqcon)
 }
 
 print(snpsfile)
@@ -252,28 +270,28 @@ shinyServer(function(input, output, session) {
       current_range <- setStudyRange(current_chr = input$chr, 
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
-#       my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
-#       
-#       archs_tracks <- drawArchs(ranges_list = my.ranges$arch, 
-#                                 current_range = current_range,
-#                                 highlight_range_list = NULL)
-#       
-#       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
-#       
-#       ### READ SNP FILE THEN CONVERT IN DATAFRAME
-#       lines = unlist(strsplit(readLines(con = snpcon), split = "\t", 
-#                               fixed = TRUE))
-#       snpsdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], 
-#                                  byrow = TRUE))
-#       colnames(snpsdf) <- lines[1:4]
-#       
-#       snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
-#       
-#       t = c(archs_tracks, snp_track, annot_track)
-#       
-#       warning("DONE calculate the tracks",call. = FALSE)
-#       
-#       tracks(t) + xlim(current_range)
+      #       my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
+      #       
+      #       archs_tracks <- drawArchs(ranges_list = my.ranges$arch, 
+      #                                 current_range = current_range,
+      #                                 highlight_range_list = NULL)
+      #       
+      #       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      #       
+      #       ### READ SNP FILE THEN CONVERT IN DATAFRAME
+      #       lines = unlist(strsplit(readLines(con = snpcon), split = "\t", 
+      #                               fixed = TRUE))
+      #       snpsdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], 
+      #                                  byrow = TRUE))
+      #       colnames(snpsdf) <- lines[1:4]
+      #       
+      #       snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+      #       
+      #       t = c(archs_tracks, snp_track, annot_track)
+      #       
+      #       warning("DONE calculate the tracks",call. = FALSE)
+      #       
+      #       tracks(t) + xlim(current_range)
     })
     
   })
@@ -313,19 +331,134 @@ shinyServer(function(input, output, session) {
   observe({
     if(input$endAnalysis > 0) {
       updateButton(session, "endAnalysis", disabled = TRUE)
-      if(!is.null(snpcon) && isOpen(snpcon)){close(snpcon)}
-      if(!is.null(hgcon) && isOpen(hgcon)){close(hgcon)}
+      if(!is.null(snpcon) && isOpen(snpcon)){
+        close(snpcon)
+        # effacer le fichier
+      }
+      
+      if(!is.null(hgcon) && isOpen(hgcon)){
+        close(hgcon)
+        # effacer le fichier
+      }
+      
+      if(!is.null(todornaseqcon) && isOpen(todornaseqcon)){close(todornaseqcon)}
+      
+      if(!is.null(todochipseqcon) && isOpen(todochipseqcon)){close(todochipseqcon)}
+      
       if(!is.null(logcon) && isOpen(logcon)){
         writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
         close(logcon)
       }
       
       stopApp()
-      #if(file.exists(snpsfile)) {file.remove(snpsfile)}
     }
   })
   
+  observe ({
+    
+    if(input$addRNASeq == 0) {
+      return()
+    }
+    
+    isolate ({
+      # working files
+      all_cell_merge_file = "all_cells_rnaseq.csv"
+      all_cell_unmerge_file = "all_cells_unmerge_rnaseq.csv"
+      hmec_merge_file = "hmec_rnaseq.csv"
+      hmec_unmerge_file = "hmec_unmerge_rnaseq.csv"
+      k562_merge_file = "k562_rnaseq.csv"
+      k562_unmerge_file = "k562_unmerge_rnaseq.csv"
+      mcf7_merge_file = "mcf7_rnaseq.csv"
+      mcf7_unmerge_file = "mcf7_unmerge_rnaseq.csv"
+      
+      # construire la ligne de commande pour le calcul du rnaseq
+      # Rscript rnaseq.R chr4 84100000 84600000 PENNY ../merge_rnaseq_cells
+      command_line = "Rscript rnaseq.R "
+      
+      # position
+      command_line = paste0(command_line, input$chr, " ", input$position_min,
+                            " ", input$position_max)
+      
+      # unique ID
+      command_line = paste0(command_line, " ", tempid)
+      
+      # si merge file : 1 seul commande
+      if(input$merge_rnaseq_file) {
+        if (input$merge_rnaseq_experiment){
+          command_line = paste0(command_line, "_all ", all_cell_merge_file)
+        } else {
+          command_line = paste0(command_line, "_all ", all_cell_unmerge_file)
+        }
+      } else { # sinon 3 commandes, 1 par cell type
+        root_command_line <- command_line
+        if (input$merge_rnaseq_experiment){
+          command_line = paste0(command_line, "_hmec ", hmec_merge_file)
+          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file)
+          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file)
+        } else {
+          command_line = paste0(command_line, "_hmec ", hmec_unmerge_file)
+          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file)
+          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file)
+        }
+      }
+      
+      if(isOpen(todornaseqcon)) {
+        writeLines(command_line, todornaseqcon)
+        output$addrnaseq_msg <- renderText({
+          return("Adding RNA-Seq analysis")})
+      } else {
+        output$addrnaseq_msg <- renderText({
+          return("Fail adding RNA-Seq analysis")})
+      }
+      
+     
+    })
+  })
   
-  # subset(sgp_k562_lane13, (sgp_k562_lane13$V2 >= current_start & sgp_k562_lane13$V2 <= current_stop) | (sgp_k562_lane13$V3 >= current_start & sgp_k562_lane13$V3 <= current_stop))
+  
+  observe({
+    if(input$runRNASeq > 0) {
+      updateButton(session, "addRNASeq", disabled = TRUE)
+      updateButton(session, "runRNASeq", disabled = TRUE)
+      if(!is.null(todornaseqcon) && isOpen(todornaseqcon)){close(todornaseqcon)}
+      output$runrnaseq_msg <- renderText({
+        return("Sending RNA-Seq analysis request")})
+    }
+  })
+  
+  observe({
+    
+    if(input$runCHIPSeq == 0) {
+      return()
+    }
+    
+    isolate ({
+      updateButton(session, "runCHIPSeq", disabled = TRUE)
+      
+      # working files
+      hmec_file = "hmec_chipseq.csv"
+      k562_file = "k562_chipseq.csv"
+      mcf7_file = "mcf7_chipseq.csv"
+      
+      command_line = paste0("Rscript chipseq.R ", input$chr, " ", input$position_min,
+                            " ", input$position_max, " ", tempid)
+      
+      root_command_line <- command_line
+      command_line = paste0(command_line, "_hmec ", hmec_file)
+      command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file)
+      command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file)
+      
+      if(isOpen(todornaseqcon)) {
+        writeLines(command_line, todochipseqcon)
+        output$runchipseq_msg <- renderText({
+          return("Sending ChIP-Seq analysis request")})
+        close(todochipseqcon)
+      } else {
+        output$runchipseq_msg <- renderText({
+          return("Fail adding RNA-Seq analysis")})
+      }
+    })
+  })
+  
 })
 

@@ -58,9 +58,12 @@ shinyUI(fluidPage(
       span(textOutput("addsnp_msg"), style = "color:green"),
       br(),
       br(),
-      bsButton(inputId = "draw", label = "Draw", style = "btn btn-primary")
+      fluidRow(
+        column(width = 6,
+               bsButton(inputId = "draw", label = "Draw", style = "btn btn-primary")),
+        column(width = 6,
+               bsButton(inputId = "endAnalysis",label = "End Analysis", style = "btn btn-primary")))
     ),
-    
     mainPanel(
       bsAlert("alert1"),
       bsAlert("alert2"),
@@ -97,44 +100,45 @@ shinyUI(fluidPage(
                                    ))),
                           br(),
                           fluidRow(
-                            column(width = 4,
-                                   radioButtons(inputId = 'merge_rnaseq_replicate', 
-                                                label = "Analysis configuration",
-                                                choices = list("One file per cell type" = FALSE, 
-                                                               "Merge in a single file" = TRUE),
-                                                selected = TRUE)),
-                            column(width = 4,
+                            column(width = 6,
                                    radioButtons(inputId = 'merge_rnaseq_experiment', 
                                                 label = "",
                                                 choices = list("One track per experiment" = FALSE, 
                                                                "Merge experiments" = TRUE),
                                                 selected = TRUE)),
-                            column(width = 4,
+                            column(width = 6,
                                    radioButtons(inputId = 'merge_rnaseq_file', 
                                                 label = "",
-                                                choices = list("One track per replicate" = FALSE, 
-                                                               "Merge replicates" = TRUE),
+                                                choices = list("One file per cell type" = FALSE, 
+                                                               "One single file" = TRUE),
                                                 selected = TRUE))
                           ),
                           br(),
-                          br()
+                          fluidRow(
+                            column(width = 6,
+                                   bsButton(inputId = "addRNASeq", label = "Add RNA-Seq analysis"),
+                                   br(), br(), span(textOutput("addrnaseq_msg"), style = "color:green")),
+                            column(width = 6,
+                                   bsButton(inputId = "runRNASeq",label = "Send analysis request", style = "btn btn-primary"),
+                                   br(), br(), span(textOutput("runrnaseq_msg"), style = "color:green")))
                  ),
                  tabPanel("ChIP-Seq",
                           h3("ChIP-Seq"),
                           helpText("We are working with the following dataset : ",
                                    tags$ul(list(
-                                     tags$li("MCF7 : 7 experiments with 2 replicates each 
-                                   and 1 experiment with 3 replicates"),
-                                     tags$li("K562 : 3 experiments with 2 replicates for each"),
-                                     tags$li("HMEC : 1 experiment with 2 replicates")
+                                     tags$li("Targets for MCF7 : CTCF, H3K27ac, H3K36me3, H3K4me3, H3K27me3"),
+                                     tags$li("Targets for K562 : H3K36me3, H3K4me2, CTCF, EZH2"),
+                                     tags$li("Targets for HMEC : H3K4me3, H2AFZ, H3K9me3, H3K36me3, H3K4me3, 
+                                             H3K27ac, H3K4me1, H3K79me2, CTCF, H3K9ac, H3K4me2, 
+                                             H4K20me1, H3K27me3, EZH2")
                                    ))),
                           br(),
-                          br()
+                          br(),
+                          bsButton(inputId = "runCHIPSeq",label = "Send analysis request", style = "btn btn-primary"),
+                          br(), br(), span(textOutput("runchipseq_msg"), style = "color:green")
                  )
                  
-      ),
-      bsButton(inputId = "endAnalysis",label = "End Analysis", style = "btn btn-primary")
-      
+      )     
     )
   )
 ))

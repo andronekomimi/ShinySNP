@@ -50,7 +50,7 @@ load3DData <- function(current_chr) {
   
 }
 
-load1Data <- function(current_chr) {
+load1DData <- function(current_chr) {
   
   ### lncrna
   lncrna <- readRDS(paste0("data/",current_chr,"_mitrans.Rda"))
