@@ -48,29 +48,38 @@ common_methods = c("ENHANCER", "SUPER-ENHANCER", "LNCRNA")
 names(methods) = methods
 
 for (dataset in my.datasets) {
+  
   h5createGroup("myhdf5file.h5",dataset)
   
   for (cell in cells) {
+    
     h5createGroup("myhdf5file.h5",paste0(dataset,"/",cell))
     
     for (chr in chrs) {
+      
       h5createGroup("myhdf5file.h5",paste0(dataset,"/",cell,"/",chr))
-      h5createGroup("myhdf5file.h5",paste0("common/",chr))
       
       for (method in methods) {
         h5createGroup("myhdf5file.h5",paste0(dataset,"/",cell,"/",chr,"/",method))
-      }
-      
-      for (method in common_methods) {
-        h5createGroup("myhdf5file.h5",paste0("common/",chr,"/",method))
-      }
-      
+      }      
     }
-    
   }
 }
 
+h5createGroup("myhdf5file.h5","common")
 h5createGroup("myhdf5file.h5",paste0("common/misc"))
+
+for (chr in chrs) {
+  h5createGroup("myhdf5file.h5",paste0("common/",chr))
+  
+  for (method in common_methods) {
+    
+    h5createGroup("myhdf5file.h5",paste0("common/",chr,"/",method))
+  }
+  
+}
+
+
 
 h5ls("myhdf5file.h5")
 
@@ -316,12 +325,12 @@ print("start common data loading")
 files_path <- "/home/nekomimi/Workspace/COLLAB/mitranscriptome.gtf/mitranscriptome_"
 
 for (chr in chrs) {
-  my.file <- paste0(files_path, current_chr)
+  my.file <- paste0(files_path, chr)
   lncrna <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
   colnames(lncrna) = c("InteractorAChr","source","type", "InteractorAStart",
                    "InteractorAEnd","metric","strand", "transcript_id",
                    "annotation")
-  lncrna <- subset(d,lncrna$type == "transcript")
+  lncrna <- subset(lncrna,lncrna$type == "transcript")
   lncrna <- transform(lncrna, transcript_id = df_col2transcript_id(lncrna$annotation))
   lncrna <- transform(lncrna, annotation = df_col2transcript_id(lncrna$annotation))
   lncrna <- transform(lncrna, InteractorAStart = as.numeric(InteractorAStart), 
