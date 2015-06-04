@@ -19,7 +19,7 @@ shinyUI(fluidPage(
       selectInput("chr", 
                   label = "Choose a chromosome",
                   choices = as.character(chroms$chr),
-                  selected = "chr1"),
+                  selected = "chr12"),
       fluidRow(
         column(width = 6,
                numericInput(inputId = 'position_min', 
@@ -47,7 +47,7 @@ shinyUI(fluidPage(
                numericInput(inputId = 'snp_position_max', 
                             label = "end",
                             value = 0))),
-      actionButton(inputId = "addsnp",label = "Add new SNP"),
+      bsButton(inputId = "addsnp",label = "Add new SNP"),
       hr(),
       h4(" OR "),
       shinyFilesButton('loadsnp', 'Load SNP file', 
@@ -56,13 +56,23 @@ shinyUI(fluidPage(
       br(),
       br(),
       span(textOutput("addsnp_msg"), style = "color:green"),
+      span(textOutput("addsnp_err"), style = "color:red"),
       br(),
+      h3("Choose the dataset"),
+      radioButtons(inputId = 'my.dataset', 
+                   inline = TRUE,
+                   label = NULL,
+                   choices = list("local" = "interne", 
+                                  "4DGenome" = "externe"),
+                   selected = "interne"),
       br(),
       fluidRow(
-        column(width = 6,
-               bsButton(inputId = "draw", label = "Draw", style = "btn btn-primary")),
-        column(width = 6,
-               bsButton(inputId = "endAnalysis",label = "End Analysis", style = "btn btn-primary")))
+        column(width = 4,
+               bsButton(inputId = "run", label = "Run Analysis", style = "btn btn-primary")),
+        column(width = 4,
+               bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary")),
+        column(width = 4,
+               bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
     ),
     mainPanel(
       bsAlert("alert1"),
@@ -73,13 +83,13 @@ shinyUI(fluidPage(
       bsAlert("alert6"),
       navbarPage(span("Analysis", style = "color:green"),
                  tabPanel("Conformation",
-                          #       conditionalPanel(condition = "input.draw > 0 && !input.plot",
-                          #                        list(
-                          #                          img(src = "page_loader.gif",
-                          #                              filetype = "image/gif",
-                          #                              alt = "Please wait... I'm processing your query")
-                          #                        )
-                          #       ),
+#                                 conditionalPanel(condition = "input.draw > 0 && output.plot1",
+#                                                  list(
+#                                                    img(src = "page_loader.gif",
+#                                                        filetype = "image/gif",
+#                                                        alt = "Please wait... I'm processing your query")
+#                                                  )
+#                                 ),
                           plotOutput("plot1"),
                           br(),
                           br()
