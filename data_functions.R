@@ -4,46 +4,72 @@ suppressMessages(library(ggbio))
 suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 suppressMessages(library(biovizBase))
 suppressMessages(library(org.Hs.eg.db))
+suppressMessages(library(rhdf5))
 
-
-load3DData <- function(current_chr) {
+load3DData <- function(current_chr, my.dataset) {
   
   ### chiapet 
-  sgp_k562_lane13 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13.Rda"))
-  sgp_k562_lane24 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane24.Rda")) 
-  sgp_mcf7_lane11 <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane11.Rda")) 
-  sgp_mcf7_lane23 <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane23.Rda"))
-  sgp_k562_lane13_inter <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13_inter.Rda"))
-  sgp_k562_lane24_inter <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane24_inter.Rda")) 
-  sgp_mcf7_lane11_inter <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane11_inter.Rda"))
-  sgp_mcf7_lane23_inter <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane23_inter.Rda"))
-  sfd_k562_rep1 <- readRDS(paste0("data/",current_chr,"_sfd_k562_rep1.Rda"))  
-  sfd_k562_rep2 <- readRDS(paste0("data/",current_chr,"_sfd_k562_rep2.Rda"))
-  sfd_mcf7_rep3 <- readRDS(paste0("data/",current_chr,"_sfd_mcf7_rep3.Rda"))
-  sfd_mcf7_rep4 <- readRDS(paste0("data/",current_chr,"_sfd_mcf7_rep4.Rda"))
+  k562_chiapet = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/ChIA-PET/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_chiapet = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/ChIA-PET/df"))}, error = function(e) {return(data.frame())} )
+  hmec_chiapet = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/ChIA-PET/df"))}, error = function(e) {return(data.frame())} )
   
-  ### hic 
-  hmec_file_1 <- readRDS(paste0("data/",current_chr,"_hmec_file_1.Rda"))
-  hmec_file_2 <- readRDS(paste0("data/",current_chr,"_hmec_file_2.Rda"))
-  k562_file_1 <- readRDS(paste0("data/",current_chr,"_k562_file_1.Rda"))
-  k562_file_2 <- readRDS(paste0("data/",current_chr,"_k562_file_2.Rda"))
+  ### hic
+  k562_hic = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/Hi-C/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_hic = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/Hi-C/df"))}, error = function(e) {return(data.frame())} )
+  hmec_hic = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/Hi-C/df"))}, error = function(e) {return(data.frame())} )
   
-  my.data = list(sgp_k562_lane13 = sgp_k562_lane13,
-                 sgp_k562_lane24 = sgp_k562_lane24,
-                 sgp_mcf7_lane11 = sgp_mcf7_lane11,
-                 sgp_mcf7_lane23 = sgp_mcf7_lane23,
-                 sgp_k562_lane13_inter = sgp_k562_lane13_inter,
-                 sgp_k562_lane24_inter = sgp_k562_lane24_inter,
-                 sgp_mcf7_lane11_inter = sgp_mcf7_lane11_inter,
-                 sgp_mcf7_lane23_inter = sgp_mcf7_lane23_inter,
-                 sfd_k562_rep1 = sfd_k562_rep1,
-                 sfd_k562_rep2 = sfd_k562_rep2,
-                 sfd_mcf7_rep3 = sfd_mcf7_rep3,
-                 sfd_mcf7_rep4 = sfd_mcf7_rep4,
-                 hmec_file_1 = hmec_file_1,
-                 hmec_file_2 = hmec_file_1,
-                 k562_file_1 = k562_file_1,
-                 k562_file_2 = k562_file_2
+  ### 3C
+  k562_3c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/3C/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_3c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/3C/df"))}, error = function(e) {return(data.frame())} )
+  hmec_3c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/3C/df"))}, error = function(e) {return(data.frame())} )
+  
+  ### 4C
+  k562_4c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/4C/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_4c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/4C/df"))}, error = function(e) {return(data.frame())} )
+  hmec_4c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/4C/df"))}, error = function(e) {return(data.frame())} )
+  
+  ### 5C 
+  k562_5c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/5C/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_5c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/5C/df"))}, error = function(e) {return(data.frame())} )
+  hmec_5c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/5C/df"))}, error = function(e) {return(data.frame())} )
+  
+  #   sgp_k562_lane13 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13.Rda"))
+  #   sgp_k562_lane24 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane24.Rda")) 
+  #   sgp_mcf7_lane11 <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane11.Rda")) 
+  #   sgp_mcf7_lane23 <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane23.Rda"))
+  #   sgp_k562_lane13_inter <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13_inter.Rda"))
+  #   sgp_k562_lane24_inter <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane24_inter.Rda")) 
+  #   sgp_mcf7_lane11_inter <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane11_inter.Rda"))
+  #   sgp_mcf7_lane23_inter <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane23_inter.Rda"))
+  #   sfd_k562_rep1 <- readRDS(paste0("data/",current_chr,"_sfd_k562_rep1.Rda"))  
+  #   sfd_k562_rep2 <- readRDS(paste0("data/",current_chr,"_sfd_k562_rep2.Rda"))
+  #   sfd_mcf7_rep3 <- readRDS(paste0("data/",current_chr,"_sfd_mcf7_rep3.Rda"))
+  #   sfd_mcf7_rep4 <- readRDS(paste0("data/",current_chr,"_sfd_mcf7_rep4.Rda"))
+  
+  
+  
+  
+  #   hmec_file_1 <- readRDS(paste0("data/",current_chr,"_hmec_file_1.Rda"))
+  #   hmec_file_2 <- readRDS(paste0("data/",current_chr,"_hmec_file_2.Rda"))
+  #   k562_file_1 <- readRDS(paste0("data/",current_chr,"_k562_file_1.Rda"))
+  #   k562_file_2 <- readRDS(paste0("data/",current_chr,"_k562_file_2.Rda"))
+  
+  my.data = list(
+    mcf7_chiapet = mcf7_chiapet, 
+    hmec_chiapet = hmec_chiapet, 
+    k562_chiapet = k562_chiapet,
+    mcf7_hic = mcf7_hic, 
+    hmec_hic = hmec_hic, 
+    k562_hic = k562_hic,
+    mcf7_3c = mcf7_3c, 
+    hmec_3c = hmec_3c, 
+    k562_3c = k562_3c,
+    mcf7_4c = mcf7_4c, 
+    hmec_4c = hmec_4c, 
+    k562_4c = k562_4c,
+    mcf7_5c = mcf7_5c, 
+    hmec_5c = hmec_5c, 
+    k562_5c = k562_5c
   )
   
   invisible(my.data)
@@ -66,64 +92,61 @@ load1DData <- function(current_chr) {
 }
 
 
-subsetData <- function(my.df, start_idx, end_idx, zone_start, zone_stop){
-  subset(my.df, (my.df[start_idx] >= zone_start & my.df[start_idx] <= zone_stop) | 
-           (my.df[end_idx] >= zone_start & my.df[end_idx] <= zone_stop), 
-         select = c(start_idx, end_idx))
-  
+subsetData <- function(M, current_range){
+  subset(M, (M$InteractorAChr == M$InteractorBChr & M$InteractorAStart >= start(current_range) & M$InteractorAStart <= end(current_range)) | 
+           (M$InteractorBEnd >= start(current_range) & M$InteractorBEnd <= end(current_range)))
 }
 
-convert2GRange <- function(my.df, current_chr, label) {
-  left = c()
-  right = c()
-  color = c()
-  alpha = c()  
+convert2GRange <- function(S, current_chr, label) {
   
-  for (i in (1:nrow(my.df)))
-  {
-    start_value = as.numeric(my.df[i,1])
-    end_value = as.numeric(my.df[i,2])
-    
-    left = c(left, start_value)
-    right = c(right, end_value)
-    color = c(color,label)
-  }
+  bool = (S$InteractorAStart < S$InteractorBEnd)
+  
+  left = c(S$InteractorAStart[bool], S$InteractorBEnd[!bool])
+  right = c(S$InteractorBEnd[bool], S$InteractorAStart[!bool])
   
   ranges = IRanges(left,right)
   
-  g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, color = color, alpha = rep(0.5,length(left)))
-  cat(paste0("-> Find ",length(left)," interaction(s) for ", label, "\n"))
+  g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
+                      color = rep(label,nrow(S)),
+                      alpha = rep(0.5,nrow(S)))
+  cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
   invisible(g_ranges)
 }
 
 
-create_gr_from_df <- function(current_range, my.df,start_idx,stop_idx, label) {
-  tmp = subsetData(my.df,start_idx,stop_idx, start(current_range),end(current_range))
-  if(nrow(tmp) > 0) {
-    convert2GRange(tmp, current_chr = as.character(seqnames(current_range)), 
-                   label = label)
-  } else {
+create_gr_from_df <- function(current_range, my.df, label) {
+  if(nrow(my.df) > 0){
+    tmp = subsetData(my.df, current_range)
+    if(nrow(tmp) > 0) {
+      convert2GRange(tmp, current_chr = as.character(seqnames(current_range)), 
+                     label = label)
+    } else {
+      invisible(GRanges())
+    }
+  } else  {
     invisible(GRanges())
   }
-  
   
 }
 
 get3DDataOverview <- function(my.data, current_range) {
   
   my.ranges = list(
-    sgp_k562_lane13 = create_gr_from_df(current_range,my.data$sgp_k562_lane13,2,6,"K562 ChIA-Pet lane 13"),
-    sgp_k562_lane24 = create_gr_from_df(current_range,my.data$sgp_k562_lane24, 2,6,"K562 ChIA-Pet lane 24"),
-    sgp_mcf7_lane11 = create_gr_from_df(current_range,my.data$sgp_mcf7_lane11,2,6,"MCF7 ChIA-Pet lane 11"),
-    sgp_mcf7_lane23 = create_gr_from_df(current_range,my.data$sgp_mcf7_lane23,2,6,"MCF7 ChIA-Pet lane 23"),
-    sfd_k562_rep1 = create_gr_from_df(current_range,my.data$sfd_k562_rep1,2,6,"K562 ChIA-Pet rep 1"),
-    sfd_k562_rep2 = create_gr_from_df(current_range,my.data$sfd_k562_rep2,2,6,"K562 ChIA-Pet rep 2"),
-    sfd_mcf7_rep3 = create_gr_from_df(current_range,my.data$sfd_mcf7_rep3,2,6,"MCF7 ChIA-Pet rep 3"),
-    sfd_mcf7_rep4 = create_gr_from_df(current_range,my.data$sfd_mcf7_rep4,2,6,"MCF7 ChIA-Pet rep 4"),
-    hmec_file_1 = create_gr_from_df(current_range,my.data$hmec_file_1,2,3,"HMEC HiC-arrowhead"),
-    hmec_file_2 = create_gr_from_df(current_range,my.data$hmec_file_2,2,6,"HMEC HiC-hiccups"),
-    k562_file_1 = create_gr_from_df(current_range,my.data$k562_file_1,2,3,"K562 HiC-arrowhead"),
-    k562_file_2 = create_gr_from_df(current_range,my.data$k562_file_2,2,6,"K562 HiC-hiccups"))
+    mcf7_chiapet = create_gr_from_df(my.df = my.data$mcf7_chiapet,current_range = current_range, label = "MCF7 ChIA-PET"), 
+    hmec_chiapet = create_gr_from_df(my.df = my.data$hmec_chiapet,current_range = current_range, label = "HMEC ChIA-PET"), 
+    k562_chiapet = create_gr_from_df(my.df = my.data$k562_chiapet,current_range = current_range, label = "K562 ChIA-PET"),
+    mcf7_hic = create_gr_from_df(my.df = my.data$mcf7_hic,current_range = current_range, label = "MCF7 Hi-C"), 
+    hmec_hic = create_gr_from_df(my.df = my.data$hmec_hic,current_range = current_range, label = "HMEC Hi-C"), 
+    k562_hic = create_gr_from_df(my.df = my.data$k562_hic,current_range = current_range, label = "K562 Hi-C"),
+    mcf7_3c = create_gr_from_df(my.df = my.data$mcf7_3c,current_range = current_range, label = "MCF7 3C"), 
+    hmec_3c = create_gr_from_df(my.df = my.data$hmec_3c,current_range = current_range, label = "HMEC 3C"), 
+    k562_3c = create_gr_from_df(my.df = my.data$k562_3c,current_range = current_range, label = "K562 3C"),
+    mcf7_4c = create_gr_from_df(my.df = my.data$mcf7_4c,current_range = current_range, label = "MCF7 4C"), 
+    hmec_4c = create_gr_from_df(my.df = my.data$hmec_4c,current_range = current_range, label = "HMEC 4C"), 
+    k562_4c = create_gr_from_df(my.df = my.data$k562_4c,current_range = current_range, label = "K562 4C"),
+    mcf7_5c = create_gr_from_df(my.df = my.data$mcf7_5c,current_range = current_range, label = "MCF7 5C"), 
+    hmec_5c = create_gr_from_df(my.df = my.data$hmec_5c,current_range = current_range, label = "HMEC 5C"), 
+    k562_5c = create_gr_from_df(my.df = my.data$k562_5c,current_range = current_range, label = "K562 5C"))
   
   invisible(my.ranges)
 }
