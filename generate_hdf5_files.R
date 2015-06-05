@@ -33,7 +33,7 @@ h5createFile("data/data.h5")
 # public/cell/chr/experiments/OBJECT
 # common/cell/chr/experiement/OBJECT
 # common/chr/experiments/OBJECT
-# common/misc/OBJECT
+# common/misc/experiment/OBJECT
 
 my.datasets = c("interne","externe", "common")
 
@@ -47,6 +47,7 @@ names(chrs) = chrs
 
 methods = c("3C","4C","5C","ChIA-PET","Hi-C","IM-PET")
 common_methods = c("ENHANCER", "LNCRNA")
+chiapet_subcat = c("ER","CTCF")
 
 names(methods) = methods
 
@@ -64,6 +65,10 @@ for (dataset in my.datasets) {
       
       for (method in methods) {
         h5createGroup("data/data.h5",paste0(dataset,"/",cell,"/",chr,"/",method))
+      }
+      
+      for (sub in chiapet_subcat) {
+        h5createGroup("data/data.h5",paste0(dataset,"/",cell,"/",chr,"/ChIA-PET/",sub))
       }
       
       h5createGroup("data/data.h5",paste0(dataset,"/",cell,"/",chr,"/SUPER-ENHANCER"))
@@ -95,6 +100,12 @@ chiapet_k562_lane13_path <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parse
 chiapet_k562_lane24_path <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_K562_lane24_"
 chiapet_mcf7_lane11_path <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_lane11_"
 chiapet_mcf7_lane23_path <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_lane23_"
+chiapet_mcf7_er_file1 <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_ER_rep1_"
+chiapet_mcf7_er_file2 <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_ER_rep2_"
+#chiapet_mcf7_er_file3 <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_ER_rep3_"
+chiapet_mcf7_ctcf_file1 <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_CTCF_rep1_"
+chiapet_mcf7_ctcf_file2 <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_MCF7_CTCF_rep2_"
+chiapet_k562_ctcf_file1 <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_K562_CTCF_rep1_"
 ############################ STANDFORD DATA ############################  
 chiapet_k562_rep1_path <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_K562_rep1_"
 chiapet_k562_rep2_path <- "/home/nekomimi/Workspace/SNPVIZU/data/chiapet/parsed/CHIAPET_K562_rep2_"
@@ -110,6 +121,12 @@ hic_k562_file_2 <- "/home/nekomimi/Workspace/SNPVIZU/data/HIC_K562_HiCCUPS_loopl
 sgp_k562_files_path = c(chiapet_k562_lane13_path, chiapet_k562_lane24_path)
 
 sgp_mcf7_files_path = c(chiapet_mcf7_lane11_path, chiapet_mcf7_lane23_path)
+
+sgp_mcf7_er_files_path = c(chiapet_mcf7_er_file1, chiapet_mcf7_er_file2)
+
+sgp_mcf7_ctcf_files_path = c(chiapet_mcf7_ctcf_file1, chiapet_mcf7_ctcf_file2)
+
+sgp_k562_ctcf_files_path = c(chiapet_k562_ctcf_file1)
 
 sdf_k562_file_path = c(chiapet_k562_rep1_path, chiapet_k562_rep2_path)
 
@@ -132,7 +149,7 @@ empty_df1 <- data.frame(InteractorAChr= character(),
 
 empty_df2 <- data.frame(InteractorAChr= character(),
                         InteractorAStart=integer(),
-                        InteractorAEnd=integer(),
+                        InteractorBEnd=integer(),
                         peak= character(),
                         metric=character(), 
                         stringsAsFactors=FALSE)
@@ -399,6 +416,141 @@ for (chr in chrs) {
     h5write(df, "data/data.h5",path)
   }
   
+  # CHIAPET ER MCF7
+  my.file <- paste0(sgp_mcf7_er_files_path[1], chr)
+  #print(my.file)
+  if(file.info(my.file)$size > 0) {
+    df1 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
+    my.data <- strsplit(gsub("\\.\\.", "-", df1[,4]), '[:,-]')
+    df1 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    colnames(df1) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+                       "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
+  }
+  else
+  {
+    #print('3.EMPTY')
+    df1 <- empty_df1
+  }
+  
+  my.file <- paste0(sgp_mcf7_er_files_path[2], chr)
+  #print(my.file)
+  if(file.info(my.file)$size > 0) {
+    df2 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
+    my.data <- strsplit(gsub("\\.\\.", "-", df2[,4]), '[:,-]')
+    df2 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    colnames(df2) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+                       "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
+  }
+  else
+  {
+    #print('3.EMPTY')
+    df2 <- empty_df1
+  }
+  
+#   my.file <- paste0(sgp_mcf7_er_files_path[3], chr)
+#   #print(my.file)
+#   if(file.info(my.file)$size > 0) {
+#     df3 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
+#     my.data <- strsplit(gsub("\\.\\.", "-", df2[,4]), '[:,-]')
+#     df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+#     colnames(df3) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+#                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
+#   }
+#   else
+#   {
+#     #print('3.EMPTY')
+#     df3 <- empty_df1
+#   }  
+  
+  df <- rbind(df1, df2)
+  
+  #print(head(df))
+  
+  if(nrow(df) > 0) {
+    df <- transform(df, InteractorAStart = as.numeric(InteractorAStart), 
+                    InteractorAEnd = as.numeric(InteractorAStart),
+                    InteractorBStart = as.numeric(InteractorAEnd),
+                    InteractorBEnd = as.numeric(InteractorBEnd))
+    df <- df[ order(df$InteractorAStart),]
+    
+    path <- paste0("interne/MCF7/",chr,"/ChIA-PET/ER/df")
+    h5write(df, "data/data.h5",path)
+  }
+  
+  # CHIAPET CTCF MCF7
+  my.file <- paste0(sgp_mcf7_ctcf_files_path[1], chr)
+  #print(my.file)
+  if(file.info(my.file)$size > 0) {
+    df1 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
+    my.data <- strsplit(gsub("\\.\\.", "-", df1[,4]), '[:,-]')
+    df1 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    colnames(df1) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+                       "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
+  }
+  else
+  {
+    #print('3.EMPTY')
+    df1 <- empty_df1
+  }
+  
+  my.file <- paste0(sgp_mcf7_ctcf_files_path[2], chr)
+  #print(my.file)
+  if(file.info(my.file)$size > 0) {
+    df2 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
+    my.data <- strsplit(gsub("\\.\\.", "-", df2[,4]), '[:,-]')
+    df2 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    colnames(df2) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+                       "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
+  }
+  else
+  {
+    #print('3.EMPTY')
+    df2 <- empty_df1
+  }
+  
+  df <- rbind(df1, df2)
+  
+  #print(head(df))
+  
+  if(nrow(df) > 0) {
+    df <- transform(df, InteractorAStart = as.numeric(InteractorAStart), 
+                    InteractorAEnd = as.numeric(InteractorAStart),
+                    InteractorBStart = as.numeric(InteractorAEnd),
+                    InteractorBEnd = as.numeric(InteractorBEnd))
+    df <- df[ order(df$InteractorAStart),]
+    
+    path <- paste0("interne/MCF7/",chr,"/ChIA-PET/CTCF/df")
+    h5write(df, "data/data.h5",path)
+  }
+  
+  # CHIAPET CTCF K562
+  my.file <- paste0(sgp_k562_ctcf_files_path[1], chr)
+  #print(my.file)
+  if(file.info(my.file)$size > 0) {
+    df <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
+    my.data <- strsplit(gsub("\\.\\.", "-", df[,4]), '[:,-]')
+    df =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+                       "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
+  }
+  else
+  {
+    #print('3.EMPTY')
+    df <- empty_df1
+  }
+  
+  #print(head(df))
+  
+  if(nrow(df) > 0) {
+    df <- transform(df, InteractorAStart = as.numeric(InteractorAStart), 
+                    InteractorAEnd = as.numeric(InteractorAStart),
+                    InteractorBStart = as.numeric(InteractorAEnd),
+                    InteractorBEnd = as.numeric(InteractorBEnd))
+    df <- df[ order(df$InteractorAStart),]
+    
+    path <- paste0("interne/K562/",chr,"/ChIA-PET/CTCF/df")
+    h5write(df, "data/data.h5",path)
+  }
 }
 
 # Fourth : remplissage avec data subset externe specific
@@ -464,7 +616,7 @@ for (chr in chrs) {
   df <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
   if(nrow(df) > 0){
     colnames(df) = c("InteractorAChr","source","type", "InteractorAStart",
-                     "InteractorAEnd","metric","strand", "transcript_id",
+                     "InteractorBEnd","metric","strand", "transcript_id",
                      "annotation")
     df <- subset(df,df$type == "transcript")
     df <- transform(df, transcript_id = df_col2transcript_id(df$annotation))
@@ -479,7 +631,8 @@ for (chr in chrs) {
 
 lncrna_expr_file <- "/home/nekomimi/Workspace/COLLAB/mitranscriptome.expr.fpkm_select.tsv"
 df <- read.table(lncrna_expr_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
-h5write(df, "data/data.h5","common/misc/df")
+h5createGroup("data/data.h5",paste0("common/misc/LNCRNA-EXP"))
+h5write(df, "data/data.h5","common/misc/LNCRNA-EXP/df")
 
 ############################ ENHANCERS & SUPER ENHANCERS ############################ 
 
@@ -508,7 +661,7 @@ for(chr in chrs) {
                   stringsAsFactors=FALSE)
     
     if(nrow(df) > 0 ){ 
-      colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+      colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorBEnd",
                         "peak","metric")
       path <- paste0("common/MCF7/",chr,"/SUPER-ENHANCER/df")
       h5write(df, "data/data.h5",path)
@@ -522,7 +675,7 @@ for(chr in chrs) {
                   stringsAsFactors=FALSE)
     
     if(nrow(df) > 0 ){
-      colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+      colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorBEnd",
                         "peak","metric")
       path <- paste0("common/K562/",chr,"/SUPER-ENHANCER/df")
       h5write(df, "data/data.h5",path)
@@ -535,7 +688,7 @@ for(chr in chrs) {
     df = read.csv(my.file, sep="\t", header= FALSE, 
                   stringsAsFactors=FALSE)
     if(nrow(df) > 0){
-      colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
+      colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorBEnd",
                         "peak","metric")
       path <- paste0("common/HMEC/",chr,"/SUPER-ENHANCER/df")
       h5write(df, "data/data.h5",path)
