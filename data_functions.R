@@ -8,10 +8,19 @@ suppressMessages(library(rhdf5))
 
 load3DData <- function(current_chr, my.dataset) {
   
-  ### chiapet 
+  ### chiapet
+  #pol2
   k562_chiapet = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/ChIA-PET/df"))}, error = function(e) {return(data.frame())} )
   mcf7_chiapet = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/ChIA-PET/df"))}, error = function(e) {return(data.frame())} )
   hmec_chiapet = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/ChIA-PET/df"))}, error = function(e) {return(data.frame())} )
+  
+  #ctcf
+  k562_chiapet_ctcf = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/ChIA-PET/CTCF/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_chiapet_ctcf = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/ChIA-PET/CTCF/df"))}, error = function(e) {return(data.frame())} )
+  
+  #er
+  mcf7_chiapet_er = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/ChIA-PET/ER/df"))}, error = function(e) {return(data.frame())} )
+  
   
   ### hic
   k562_hic = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/K562/",current_chr,"/Hi-C/df"))}, error = function(e) {return(data.frame())} )
@@ -33,31 +42,13 @@ load3DData <- function(current_chr, my.dataset) {
   mcf7_5c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/MCF7/",current_chr,"/5C/df"))}, error = function(e) {return(data.frame())} )
   hmec_5c = tryCatch({h5read(file = "data/data.h5",name = paste0(my.dataset,"/HMEC/",current_chr,"/5C/df"))}, error = function(e) {return(data.frame())} )
   
-  #   sgp_k562_lane13 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13.Rda"))
-  #   sgp_k562_lane24 <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane24.Rda")) 
-  #   sgp_mcf7_lane11 <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane11.Rda")) 
-  #   sgp_mcf7_lane23 <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane23.Rda"))
-  #   sgp_k562_lane13_inter <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane13_inter.Rda"))
-  #   sgp_k562_lane24_inter <- readRDS(paste0("data/",current_chr,"_sgp_k562_lane24_inter.Rda")) 
-  #   sgp_mcf7_lane11_inter <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane11_inter.Rda"))
-  #   sgp_mcf7_lane23_inter <- readRDS(paste0("data/",current_chr,"_sgp_mcf7_lane23_inter.Rda"))
-  #   sfd_k562_rep1 <- readRDS(paste0("data/",current_chr,"_sfd_k562_rep1.Rda"))  
-  #   sfd_k562_rep2 <- readRDS(paste0("data/",current_chr,"_sfd_k562_rep2.Rda"))
-  #   sfd_mcf7_rep3 <- readRDS(paste0("data/",current_chr,"_sfd_mcf7_rep3.Rda"))
-  #   sfd_mcf7_rep4 <- readRDS(paste0("data/",current_chr,"_sfd_mcf7_rep4.Rda"))
-  
-  
-  
-  
-  #   hmec_file_1 <- readRDS(paste0("data/",current_chr,"_hmec_file_1.Rda"))
-  #   hmec_file_2 <- readRDS(paste0("data/",current_chr,"_hmec_file_2.Rda"))
-  #   k562_file_1 <- readRDS(paste0("data/",current_chr,"_k562_file_1.Rda"))
-  #   k562_file_2 <- readRDS(paste0("data/",current_chr,"_k562_file_2.Rda"))
-  
   my.data = list(
     mcf7_chiapet = mcf7_chiapet, 
     hmec_chiapet = hmec_chiapet, 
     k562_chiapet = k562_chiapet,
+    k562_chiapet_ctcf = k562_chiapet_ctcf,
+    mcf7_chiapet_ctcf = mcf7_chiapet_ctcf,
+    mcf7_chiapet_er = mcf7_chiapet_er,
     mcf7_hic = mcf7_hic, 
     hmec_hic = hmec_hic, 
     k562_hic = k562_hic,
@@ -77,24 +68,49 @@ load3DData <- function(current_chr, my.dataset) {
 }
 
 load1DData <- function(current_chr) {
+  ### lncrna 
+  lncrna = tryCatch({h5read(file = "data/data.h5",name = paste0("common/",current_chr,"/LNCRNA/df"))}, error = function(e) {return(data.frame())} )
   
-  ### lncrna
-  lncrna <- readRDS(paste0("data/",current_chr,"_mitrans.Rda"))
-  lncrna_expr <- readRDS(paste0("data/lncrna_expr.Rda"))
+  ### lncrna_expr 
+  lncrna_expr = tryCatch({h5read(file = "data/data.h5",name = paste0("common/misc/LNCRNA-EXP/df"))}, error = function(e) {return(data.frame())} )
+  
+  ### enhancers
+  enhancers = tryCatch({h5read(file = "data/data.h5",name = paste0("common/",current_chr,"/ENHANCER/df"))}, error = function(e) {return(data.frame())} )
+  
+  ### super-enhancers
+  k562_super_enhancers = tryCatch({h5read(file = "data/data.h5",name = paste0("common/K562/",current_chr,"/SUPER-ENHANCER/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_super_enhancers = tryCatch({h5read(file = "data/data.h5",name = paste0("common/MCF7/",current_chr,"/SUPER-ENHANCER/df"))}, error = function(e) {return(data.frame())} )
+  hmec_super_enhancers = tryCatch({h5read(file = "data/data.h5",name = paste0("common/HMEC/",current_chr,"/SUPER-ENHANCER/df"))}, error = function(e) {return(data.frame())} )
+  
+  ### impet
+  k562_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/K562/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/MCF7/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
+  hmec_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/HMEC/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
   
   my.data = list(
-    lncrna = lncrna,
-    lncrna_expr = lncrna_expr
+    lncrna = lncrna, 
+    lncrna_expr = lncrna_expr, 
+    enhancers = enhancers,
+    k562_super_enhancers = k562_super_enhancers, 
+    mcf7_super_enhancers = mcf7_super_enhancers, 
+    hmec_super_enhancers = hmec_super_enhancers,
+    k562_impet = k562_impet, 
+    mcf7_impet = mcf7_impet, 
+    hmec_impet = hmec_impet
   )
   
   invisible(my.data)
+ 
   
 }
 
 
 subsetData <- function(M, current_range){
-  subset(M, (M$InteractorAChr == M$InteractorBChr & M$InteractorAStart >= start(current_range) & M$InteractorAStart <= end(current_range)) | 
-           (M$InteractorBEnd >= start(current_range) & M$InteractorBEnd <= end(current_range)))
+  subset(M, (M$InteractorAChr == as.character(seqnames(current_range)) & 
+               M$InteractorAStart >= start(current_range) & 
+               M$InteractorAStart <= end(current_range)) | 
+           (M$InteractorBEnd >= start(current_range) & 
+              M$InteractorBEnd <= end(current_range)))
 }
 
 convert2GRange <- function(S, current_chr, label) {
@@ -129,11 +145,31 @@ create_gr_from_df <- function(current_range, my.df, label) {
   
 }
 
+get1DDataOverview <- function(my.data, current_range) {
+  
+  my.ranges = list(
+    lncrna = create_gr_from_df(my.df = my.data$lncrna,current_range = current_range, label = "LNCRNA"), 
+    enhancers = create_gr_from_df(my.df = my.data$enhancers,current_range = current_range, label = "ENHANCERS"), 
+    k562_super_enhancers = create_gr_from_df(my.df = my.data$k562_super_enhancers,current_range = current_range, label = "K562 SUPER ENHANCERS"),
+    mcf7_super_enhancers = create_gr_from_df(my.df = my.data$mcf7_super_enhancers,current_range = current_range, label = "MCF7 SUPER ENHANCERS"), 
+    hmec_super_enhancers = create_gr_from_df(my.df = my.data$hmec_super_enhancers,current_range = current_range, label = "HMEC SUPER ENHANCERS"), 
+    k562_impet = create_gr_from_df(my.df = my.data$k562_impet,current_range = current_range, label = "K562 IM-PET"),
+    mcf7_impet = create_gr_from_df(my.df = my.data$mcf7_impet,current_range = current_range, label = "MCF7 IM-PET"), 
+    hmec_impet = create_gr_from_df(my.df = my.data$hmec_impet,current_range = current_range, label = "HMEC IM-PET"))
+  
+  invisible(my.ranges)
+}
+
+
 get3DDataOverview <- function(my.data, current_range) {
   
   my.ranges = list(
     mcf7_chiapet = create_gr_from_df(my.df = my.data$mcf7_chiapet,current_range = current_range, label = "MCF7 ChIA-PET"), 
-    hmec_chiapet = create_gr_from_df(my.df = my.data$hmec_chiapet,current_range = current_range, label = "HMEC ChIA-PET"), 
+    hmec_chiapet = create_gr_from_df(my.df = my.data$hmec_chiapet,current_range = current_range, label = "HMEC ChIA-PET"),
+    k562_chiapet = create_gr_from_df(my.df = my.data$k562_chiapet_ctcf,current_range = current_range, label = "K562 ChIA-PET"),
+    k562_chiapet_ctcf = create_gr_from_df(my.df = my.data$k562_chiapet_ctcf,current_range = current_range, label = "K562 ChIA-PET CTCF"),
+    mcf7_chiapet_ctcf = create_gr_from_df(my.df = my.data$mcf7_chiapet_ctcf,current_range = current_range, label = "MCF7 ChIA-PET CTCF"), 
+    mcf7_chiapet_er = create_gr_from_df(my.df = my.data$mcf7_chiapet_er,current_range = current_range, label = "MCF7 ChIA-PET ER"), 
     k562_chiapet = create_gr_from_df(my.df = my.data$k562_chiapet,current_range = current_range, label = "K562 ChIA-PET"),
     mcf7_hic = create_gr_from_df(my.df = my.data$mcf7_hic,current_range = current_range, label = "MCF7 Hi-C"), 
     hmec_hic = create_gr_from_df(my.df = my.data$hmec_hic,current_range = current_range, label = "HMEC Hi-C"), 
@@ -150,7 +186,6 @@ get3DDataOverview <- function(my.data, current_range) {
   
   invisible(my.ranges)
 }
-
 
 drawArchs <- function(ranges_list = NULL, highlight_range_list = NULL, current_range) {
   #highlight_range_list : start, stop, highlight method
@@ -175,12 +210,6 @@ drawArchs <- function(ranges_list = NULL, highlight_range_list = NULL, current_r
 
 drawSegment <- function(ranges_list = NULL, current_range) {
   
-  if(is.null(ranges_list))
-  {
-    ranges_list = my.ranges$ranges$lncrna
-  }
-  
-  print(ranges_list)
   my.tracks = c()
   
   for(i in seq_along(ranges_list)) {
@@ -188,9 +217,9 @@ drawSegment <- function(ranges_list = NULL, current_range) {
     if(length(range) > 0) {
       track_title = gsub(x = range[1]$color, pattern = " ", replacement = "\n")
       range_track =  ggplot(data = range) + 
-        geom_segment(mapping=aes(x=start, xend=end, color=exp), size = 10) + ylab("") +
-        geom_text(aes(x = start, y = 1, label=tsID, vjust=3), size = 2, color = "blue") + 
-        theme_bw() + xlim(current_range) + guides(color= TRUE)
+        geom_segment(size = 1) + ylab(track_title) +
+        theme_bw() + xlim(current_range) + guides(color= TRUE) +
+        theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
       my.tracks = c(my.tracks, range_track)
     }   
   }
@@ -270,8 +299,8 @@ drawAnnotations <- function(label = "Annotations", current_range) {
 
 drawSNP <- function(current_range, snps_df, label) {
   
-  snp_ids <- snps_df$snp_id
-  
+  snp_ids <- as.character(snps_df$snp_id)
+
   snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
   snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
   snps$name <- snp_ids

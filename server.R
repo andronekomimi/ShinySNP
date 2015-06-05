@@ -14,7 +14,8 @@ todornaseqfile = paste0("todo/rnaseq_", tempid)
 todochipseqfile = paste0("todo/chipseq_", tempid)
 
 USER = "Audrey Lemacon"
-print("27950000-28735000")
+USERMAIL = "audrey.lemacon.1@ulaval.ca"
+OPERATOR = "audrey.lemacon.1@ulaval.ca"
 
 if(!file.exists(logfile)) {
   file.create(logfile)
@@ -66,6 +67,21 @@ shinyServer(function(input, output, session) {
                        min = selected_chr_min + 1, max = selected_chr_max)    
   })
   
+  observe({
+    
+    if(input$runEx == 0)
+      return()
+    
+    isolate({
+      updateNumericInput(session, "position_min", value = 27950000)
+      updateNumericInput(session, "position_max", value = 28735000)
+      updateNumericInput(session, "snp_position_min", value = 28155080)
+      updateNumericInput(session, "snp_position_max", value = 28155080)
+      
+    })
+  })
+  
+  
   observe ({
     if(!is.na(input$position_min)) {
       
@@ -91,9 +107,6 @@ shinyServer(function(input, output, session) {
         
         error_msg <- c()
         iserror <- FALSE
-        
-        print(paste("start", snpstart))
-        print(paste("end", snpend))
         
         if(snpend < snpstart){
           error_msg <- "SNP end must be greater than SNP start"
@@ -160,7 +173,6 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  #   outputOptions(output, "addhg_msg", suspendWhenHidden=FALSE)
   
   output$addhg_msg <- renderText({
     if(!is.na(input$position_min)) {
@@ -230,6 +242,16 @@ shinyServer(function(input, output, session) {
       return()
     
     isolate ({
+      if(!is.null(snpcon) && isOpen(snpcon, "a+b")){
+        close(con = snpcon)
+        # effacer le fichier
+      }
+      
+      if(!is.null(hgcon) && isOpen(hgcon, "a+b")){
+        close(hgcon)
+        # effacer le fichier
+      }
+      
       my.data <- load3DData(current_chr = input$chr, my.dataset = input$my.dataset)
       current_range <- setStudyRange(current_chr = input$chr, 
                                      current_start = input$position_min, 
@@ -243,18 +265,15 @@ shinyServer(function(input, output, session) {
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
-      
-      lines = unlist(strsplit(readLines(con = snpcon), split = "\t", 
-                              fixed = TRUE))
-      snpsdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], 
-                                 byrow = TRUE))
-      colnames(snpsdf) <- lines[1:4]
-      
+      snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       print(snpsdf)
       
-      snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
-      
-      t = c(archs_tracks, snp_track, annot_track)
+      if(nrow(snpsdf) > 0 ){
+        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        t = c(archs_tracks, snp_track, annot_track)
+      } else {
+        t = c(archs_tracks, annot_track)
+      }
       
       warning("DONE calculate the tracks",call. = FALSE)
       tracks(t) + xlim(current_range)
@@ -272,32 +291,34 @@ shinyServer(function(input, output, session) {
       return()
     
     isolate ({
+      
       my.data <- load1DData(current_chr = input$chr)
+      
       current_range <- setStudyRange(current_chr = input$chr, 
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
-      #       my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
-      #       
-      #       archs_tracks <- drawArchs(ranges_list = my.ranges$arch, 
-      #                                 current_range = current_range,
-      #                                 highlight_range_list = NULL)
-      #       
-      #       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
-      #       
-      #       ### READ SNP FILE THEN CONVERT IN DATAFRAME
-      #       lines = unlist(strsplit(readLines(con = snpcon), split = "\t", 
-      #                               fixed = TRUE))
-      #       snpsdf = data.frame(matrix(ncol = 4,data = lines[5:length(lines)], 
-      #                                  byrow = TRUE))
-      #       colnames(snpsdf) <- lines[1:4]
-      #       
-      #       snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
-      #       
-      #       t = c(archs_tracks, snp_track, annot_track)
-      #       
-      #       warning("DONE calculate the tracks",call. = FALSE)
-      #       
-      #       tracks(t) + xlim(current_range)
+      my.ranges <- get1DDataOverview(my.data = my.data, current_range = current_range)
+      
+      segments_tracks <- drawSegment(ranges_list = my.ranges, 
+                                current_range = current_range)
+      
+      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      
+      ### READ SNP FILE THEN CONVERT IN DATAFRAME
+      snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      
+      print(snpsdf)
+      
+      if(nrow(snpsdf) > 0 ){
+        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        t = c(segments_tracks, snp_track, annot_track)
+      } else {
+        t = c(segments_tracks, annot_track)
+      }
+      
+      warning("DONE calculate the tracks",call. = FALSE)
+      
+      tracks(t) + xlim(current_range)
     })
     
   })
@@ -311,94 +332,82 @@ shinyServer(function(input, output, session) {
                     filetypes=c('','csv','txt'))
     pfile = parseFilePaths(roots, input$loadsnp)
     updateTextInput(session, "path",  value = pfile$datapath)
-    
   })
   
+  
   observe({
-    if(file.exists(input$path)) {
-      # desactive le bouton addsnp
-      updateButton(session, "addsnp", disabled = TRUE)
-      
-      tryCatch ({
-        # get data from imported snp file
-        imported_snp = read.table(input$path, header=TRUE, 
-                                  stringsAsFactors=FALSE, quote = "\"", sep="\t")
-        if(is.null(snpcon)) {
-          print('ok')
-        }
-        print(imported_snp)
+    
+    if (is.null(input$loadsnp))
+      return()
+    
+    isolate ({
+      if (file.exists(input$path)) {
         
-        if((!"snp_id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
-             (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
-          stop(paste0("File format error : waiting for a tab delimited file containing ",
-                      "at least the following 4 columns : snp_id, start, end, metadata"))
-        } else {
-          for (i in (1:nrow(imported_snp))) {
-            new_snp = imported_snp[i,]
-            writeLines(text = paste(new_snp$snp_id,new_snp$start,new_snp$end,
-                                    new_snp$metadata,sep="\t"), con = snpcon)
+        print("craquage")
+        output$addsnp_msg <- renderText({
+          return("PARRCE")
+        })
+        
+        output$addsnp_err <- renderText({
+          return("QUOI ???")
+        })
+        
+        print("total")
+        # desactive le bouton addsnp
+        updateButton(session, "addsnp", disabled = TRUE)
+        
+        tryCatch ({
+          # get data from imported snp file
+          imported_snp = read.table(input$path, header=TRUE, 
+                                    stringsAsFactors=FALSE, quote = "\"", sep="\t")
+          if(is.null(snpcon)) {
+            print('ok')
           }
+          print(imported_snp)
           
-          print(paste0("Importing following snps : ", paste(imported_snp$snp_id, 
-                                                            collapse = ",")))
-          output$addsnp_msg <- renderText({
-            return(paste0("Importing following snps : ", paste(imported_snp$snp_id, 
-                                                               collapse = ",")))
+          if((!"snp_id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
+               (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
+            stop(paste0("File format error : waiting for a tab delimited file containing ",
+                        "at least the following 4 columns : snp_id, start, end, metadata"))
+          } else {
+            for (i in (1:nrow(imported_snp))) {
+              new_snp = imported_snp[i,]
+              writeLines(text = paste(new_snp$snp_id,new_snp$start,new_snp$end,
+                                      new_snp$metadata,sep="\t"), con = snpcon)
+            }
+            
+            print(paste0("Importing following snps : ", paste(imported_snp$snp_id, 
+                                                              collapse = ",")))
+            
+            updateButton(session = session, label = "RHOOOOO",inputId = "loadsnp")
+            
+            output$addsnp_msg <- renderText({
+              return(paste0("Importing following snps : ", paste(imported_snp$snp_id, 
+                                                                 collapse = ",")))})
+            
+          }
+        },
+        error = function(e) {
+          print(e)
+          output$addsnp_err <- renderText({
+            return(paste0("Error while trying to import snps file : ", e))
           })
         }
-      },
-      error = function(e) {
-        print(e)
-        output$addsnp_err <- renderText({
-          return(paste0("Error while trying to import snps file : ", e))
-        })
+        )
+        
       }
-      )
-    } else {
-      updateButton(session, "addsnp", disabled = FALSE)
-    }
+    })
+  })
+  
+  observe({
     
-  })
-  
-  observe({
-    if(input$run > 0) {
+    if(input$run == 0)
+      return()
+    
+    isolate({
       updateButton(session, "run", disabled = TRUE)
-    }
-  })
-  
-  observe({
-    if(input$reset > 0) {
-      print("RESET ALL VALUE AND CLEAN ALL FILE CONNECTION")
-    }
-  })
-  
-  observe({
-    if(input$end > 0) {
-      updateButton(session, "end", disabled = TRUE)
-      if(!is.null(snpcon) && isOpen(snpcon)){
-        close(snpcon)
-        # effacer le fichier
-      }
       
-      if(!is.null(hgcon) && isOpen(hgcon)){
-        close(hgcon)
-        # effacer le fichier
-      }
-      
-      if(!is.null(todornaseqcon) && isOpen(todornaseqcon)){close(todornaseqcon)}
-      
-      if(!is.null(todochipseqcon) && isOpen(todochipseqcon)){close(todochipseqcon)}
-      
-      if(!is.null(logcon) && isOpen(logcon)){
-        writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
-        close(logcon)
-      }
-      
-      H5close()
-      # TROUVER UNE MANIERE MOINS LAIDE DE FERMER L'APPLI
-      
-      stopApp()
-    }
+    })
   })
   
   observe ({
@@ -449,10 +458,11 @@ shinyServer(function(input, output, session) {
         }
       }
       
-      if(isOpen(todornaseqcon)) {
+      if(isOpen(todornaseqcon,"w")) {
         writeLines(command_line, todornaseqcon)
         output$addrnaseq_msg <- renderText({
           return("Adding RNA-Seq analysis")})
+        updateButton(session, "runRNASeq", disabled = FALSE)
       } else {
         output$addrnaseq_msg <- renderText({
           return("Fail adding RNA-Seq analysis")})
@@ -467,8 +477,22 @@ shinyServer(function(input, output, session) {
     if(input$runRNASeq > 0) {
       updateButton(session, "addRNASeq", disabled = TRUE)
       updateButton(session, "runRNASeq", disabled = TRUE)
+      
       # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
-      if(!is.null(todornaseqcon) && isOpen(todornaseqcon)){close(todornaseqcon)}
+      # Mail de confirmation de soummision
+      
+      from <- "no-reply@ShinySNP"
+      to <- OPERATOR
+      subject <- "RNA-Seq Submission"
+      msg <- paste0(USER," has just submitted a RNA-Seq request with id:",tempid,".")
+      sendmail(from, to, subject, msg)
+      
+      from <- "no-reply@ShinySNP"
+      to <- USERMAIL
+      subject <- "RNA-Seq Submission"
+      msg <- paste0("Your request has just been submitted with id:",tempid,".")
+      sendmail(from, to, subject, msg)
+      
       output$runrnaseq_msg <- renderText({
         return("Sending RNA-Seq analysis request")})
     }
@@ -497,16 +521,58 @@ shinyServer(function(input, output, session) {
       command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file)
       
       # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
-      if(isOpen(todornaseqcon)) {
+      if(isOpen(todornaseqcon, "w")) {
         writeLines(command_line, todochipseqcon)
         output$runchipseq_msg <- renderText({
           return("Sending ChIP-Seq analysis request")})
-        close(todochipseqcon)
+        
+        # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
+        # Mail de confirmation de soummision
+        
+        from <- "no-reply@ShinySNP"
+        to <- OPERATOR
+        subject <- "ChIP-Seq Submission"
+        msg <- paste0(USER," has just submitted a ChIP-Seq request with id:",tempid,".")
+        sendmail(from, to, subject, msg)
+        
+        from <- "no-reply@ShinySNP"
+        to <- USERMAIL
+        subject <- "ChIP-Seq Submission"
+        msg <- paste0("Your request has just been submitted with id:",tempid,".")
+        sendmail(from, to, subject, msg)
+        
       } else {
         output$runchipseq_msg <- renderText({
-          return("Fail adding RNA-Seq analysis")})
+          return("Fail adding ChIP-Seq analysis")})
       }
     })
+  })
+  
+  
+  observe({
+    if(input$reset > 0) {
+      print("RESET ALL VALUE AND CLEAN ALL FILE CONNECTION")
+    }
+  })
+  
+  observe({
+    if(input$end > 0) {
+      updateButton(session, "end", disabled = TRUE)
+      
+      if(!is.null(todornaseqcon) && isOpen(todornaseqcon, "w")){close(todornaseqcon)}
+      
+      if(!is.null(todochipseqcon) && isOpen(todochipseqcon, "w")){close(todochipseqcon)}
+      
+      if(!is.null(logcon) && isOpen(logcon, "w")){
+        writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+        close(logcon)
+      }
+      
+      H5close()
+      # TROUVER UNE MANIERE MOINS LAIDE DE FERMER L'APPLI
+      
+      stopApp(42)
+    }
   })
   
 })

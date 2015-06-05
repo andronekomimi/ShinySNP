@@ -30,7 +30,6 @@ shinyUI(fluidPage(
                             label = "end",
                             value = NA))
       ),
-      h6("27950000-28735000"),
       bsCollapse(id = "param", open = NULL, multiple = FALSE,
                  bsCollapsePanel('Advanced parameters',uiOutput("highlight"), 
                                  style = "default")
@@ -72,7 +71,10 @@ shinyUI(fluidPage(
         column(width = 4,
                bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary")),
         column(width = 4,
-               bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
+               bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary"))),
+      br(),
+      actionButton(inputId = "runEx", label = "Run Example"),
+      br()
     ),
     mainPanel(
       bsAlert("alert1"),
@@ -82,7 +84,7 @@ shinyUI(fluidPage(
       bsAlert("alert5"),
       bsAlert("alert6"),
       navbarPage(span("Analysis", style = "color:green"),
-                 tabPanel("Conformation",
+                 tabPanel("3D Conformation",
 #                                 conditionalPanel(condition = "input.draw > 0 && output.plot1",
 #                                                  list(
 #                                                    img(src = "page_loader.gif",
@@ -96,6 +98,7 @@ shinyUI(fluidPage(
                  ),
                  tabPanel("Lncrna & Enhancers",
                           plotOutput("plot2"),
+                          plotOutput("plot3"),
                           br(),
                           br()
                  ),
@@ -103,10 +106,10 @@ shinyUI(fluidPage(
                           h3("RNA-Seq"),
                           helpText("We are working with the following dataset : ",
                                    tags$ul(list(
-                                     tags$li("MCF7 : 7 experiments with 2 replicates each 
-                                   and 1 experiment with 3 replicates"),
-                                     tags$li("K562 : 3 experiments with 2 replicates for each"),
-                                     tags$li("HMEC : 1 experiment with 2 replicates")
+                                     tags$li("MCF7 : 7 experiments (2 replicates/exp) 
+                                   and 1 experiment (3 replicates/exp)"),
+                                     tags$li("K562 : 3 experiments (2 replicates/exp)"),
+                                     tags$li("HMEC : 1 experiment (2 replicates/exp)")
                                    ))),
                           br(),
                           fluidRow(
@@ -127,10 +130,10 @@ shinyUI(fluidPage(
                           fluidRow(
                             column(width = 6,
                                    bsButton(inputId = "addRNASeq", label = "Add RNA-Seq analysis"),
-                                   br(), br(), span(textOutput("addrnaseq_msg"), style = "color:green")),
+                                   br(), span(textOutput("addrnaseq_msg"), style = "color:green"), br()),
                             column(width = 6,
-                                   bsButton(inputId = "runRNASeq",label = "Send analysis request", style = "btn btn-primary"),
-                                   br(), br(), span(textOutput("runrnaseq_msg"), style = "color:green")))
+                                   bsButton(inputId = "runRNASeq",label = "Send analysis request", style = "btn btn-primary", disabled = TRUE),
+                                   br(), span(textOutput("runrnaseq_msg"), style = "color:green")))
                  ),
                  tabPanel("ChIP-Seq",
                           h3("ChIP-Seq"),
