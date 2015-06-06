@@ -54,6 +54,7 @@ options(scipen=999) # virer l'annotation scientifique
 
 shinyServer(function(input, output, session) {
   
+  
   #### CHANGE POSITION VALUE ACCORDING TO THE SELECTED CHROM
   observe({
     selected_chr = input$chr
@@ -237,7 +238,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$plot1 <- renderPlot({
+  drawPlot1 <- reactive({
     if (input$run == 0)
       return()
     
@@ -270,23 +271,23 @@ shinyServer(function(input, output, session) {
       
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
-        t = c(archs_tracks, snp_track, annot_track)
+        my.tracks = c(archs_tracks, snp_track, annot_track)
       } else {
-        t = c(archs_tracks, annot_track)
+        my.tracks = c(archs_tracks, annot_track)
       }
       
       warning("DONE calculate the tracks",call. = FALSE)
-      tracks(t) + xlim(current_range)
+      
+      tracks(my.tracks) + xlim(current_range)
     })
-    
     
   })
   
-  outputOptions(output, "plot1", suspendWhenHidden=FALSE)
+  output$plot1 <- renderPlot({
+    drawPlot1()
+  })
   
-  
-  
-  output$plot2 <- renderPlot({
+  drawPlot23 <- reactive({
     if (input$run == 0)
       return()
     
@@ -300,31 +301,72 @@ shinyServer(function(input, output, session) {
       my.ranges <- get1DDataOverview(my.data = my.data, current_range = current_range)
       
       segments_tracks <- drawSegment(ranges_list = my.ranges, 
-                                current_range = current_range)
+                                     current_range = current_range)
       
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      
+      lncrna_figures = drawLNCRNAFigures(my.data$lncrna, current_range) 
+      
+      my.tracks = c(segments_tracks)
+      
+      if(!is.null(lncrna_figures$lncrna_track)){
+        my.tracks = c(my.tracks, lncrna_figures$lncrna_track)
+      }
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       
-      print(snpsdf)
-      
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
-        t = c(segments_tracks, snp_track, annot_track)
-      } else {
-        t = c(segments_tracks, annot_track)
+        my.tracks = c(my.tracks, snp_track)
       }
+      
+      my.tracks = c(my.tracks, annot_track)
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      tracks(t) + xlim(current_range)
+      #       output$plot3 <- renderPlot({
+      #         
+      #       })
+      
+      list(plot2 = tracks(my.tracks) + xlim(current_range), plot3 = tracks(lncrna_figures$lncrna_hist))
     })
-    
   })
   
-  outputOptions(output, "plot2", suspendWhenHidden=FALSE)
+  output$plot2 <- renderPlot({
+    drawPlot23()$plot2
+  })
   
+  output$plot3 <- renderPlot({
+    drawPlot23()$plot3
+  })
+  
+  output$download_plot1 <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D.png"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot1())
+    }
+  )
+  
+  output$download_plot2 <- downloadHandler(
+    filename = function() {
+      "shinysnp_1D.png"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot23()$plot2)
+    }
+  )
+  
+  output$download_plot3 <- downloadHandler(
+    filename = function() {
+      "shinysnp_hist.png"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot23()$plot3)
+    }
+  )
   
   observe({
     roots = c(wd='.')

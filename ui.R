@@ -10,11 +10,7 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      #       helpText(p("1/ Select region"),
-      #                p("2/ Add SNPs"),
-      #                p("3/ Set advanced options (optional)"),
-      #                p("4/ Search for experiments"),
-      #                p("5/ Draw !")),
+      helpText(p("Welcome on Shiny SNP")),
       h3("Select region"),
       selectInput("chr", 
                   label = "Choose a chromosome",
@@ -65,16 +61,14 @@ shinyUI(fluidPage(
                                   "4DGenome" = "externe"),
                    selected = "interne"),
       br(),
+      actionButton(inputId = "runEx", label = "Run Example"),
       fluidRow(
         column(width = 4,
                bsButton(inputId = "run", label = "Run Analysis", style = "btn btn-primary")),
         column(width = 4,
                bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary")),
         column(width = 4,
-               bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary"))),
-      br(),
-      actionButton(inputId = "runEx", label = "Run Example"),
-      br()
+               bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
     ),
     mainPanel(
       bsAlert("alert1"),
@@ -85,20 +79,46 @@ shinyUI(fluidPage(
       bsAlert("alert6"),
       navbarPage(span("Analysis", style = "color:green"),
                  tabPanel("3D Conformation",
-#                                 conditionalPanel(condition = "input.draw > 0 && output.plot1",
-#                                                  list(
-#                                                    img(src = "page_loader.gif",
-#                                                        filetype = "image/gif",
-#                                                        alt = "Please wait... I'm processing your query")
-#                                                  )
-#                                 ),
                           plotOutput("plot1"),
+                          conditionalPanel(condition = "input.run > 0 && !output.plot1",
+                                           list(
+                                             img(src = "page_loader.gif",
+                                                 filetype = "image/gif",
+                                                 alt = "Please wait... I'm processing your query")
+                                           )
+                          ),
+                          conditionalPanel(condition = "input.run > 0 && output.plot1",
+                                           list(
+                                             br(),
+                                             downloadButton(outputId = "download_plot1", label = "Download")
+                                           )
+                          ),
                           br(),
                           br()
                  ),
                  tabPanel("Lncrna & Enhancers",
                           plotOutput("plot2"),
+                          conditionalPanel(condition = "input.run > 0 && !output.plot2",
+                                           list(
+                                             img(src = "page_loader.gif",
+                                                 filetype = "image/gif",
+                                                 alt = "Please wait... I'm processing your query")
+                                           )
+                          ),
+                          conditionalPanel(condition = "input.run > 0 && output.plot2",
+                                           list(
+                                             br(),
+                                             downloadButton(outputId = "download_plot2", label = "Download")
+                                           )
+                          ),
+                          hr(),
                           plotOutput("plot3"),
+                          conditionalPanel(condition = "input.run > 0 && output.plot3",
+                                           list(
+                                             br(),
+                                             downloadButton(outputId = "download_plot3", label = "Download")
+                                           )
+                          ),
                           br(),
                           br()
                  ),

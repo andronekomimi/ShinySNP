@@ -100,7 +100,7 @@ load1DData <- function(current_chr) {
   )
   
   invisible(my.data)
- 
+  
   
 }
 
@@ -129,6 +129,23 @@ convert2GRange <- function(S, current_chr, label) {
   invisible(g_ranges)
 }
 
+convert2GRange4LNCRNA <- function(S, current_chr, label) {
+  
+  bool = (S$InteractorAStart < S$InteractorBEnd)
+  
+  left = c(S$InteractorAStart[bool], S$InteractorBEnd[!bool])
+  right = c(S$InteractorBEnd[bool], S$InteractorAStart[!bool])
+  
+  ranges = IRanges(left,right)
+  
+  g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
+                      id = S$transcript_id,
+                      color = rep(label,nrow(S)),
+                      alpha = rep(0.5,nrow(S)))
+  cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
+  invisible(g_ranges)
+}
+
 
 create_gr_from_df <- function(current_range, my.df, label) {
   if(nrow(my.df) > 0){
@@ -145,10 +162,24 @@ create_gr_from_df <- function(current_range, my.df, label) {
   
 }
 
+create_gr_from_df_4LNCRNA <- function(current_range, my.df, label) {
+  if(nrow(my.df) > 0){
+    tmp = subsetData(my.df, current_range)
+    if(nrow(tmp) > 0) {
+      convert2GRange4LNCRNA(tmp, current_chr = as.character(seqnames(current_range)), 
+                            label = label)
+    } else {
+      invisible(GRanges())
+    }
+  } else  {
+    invisible(GRanges())
+  }
+  
+}
+
 get1DDataOverview <- function(my.data, current_range) {
   
   my.ranges = list(
-    lncrna = create_gr_from_df(my.df = my.data$lncrna,current_range = current_range, label = "LNCRNA"), 
     enhancers = create_gr_from_df(my.df = my.data$enhancers,current_range = current_range, label = "ENHANCERS"), 
     k562_super_enhancers = create_gr_from_df(my.df = my.data$k562_super_enhancers,current_range = current_range, label = "K562 SUPER ENHANCERS"),
     mcf7_super_enhancers = create_gr_from_df(my.df = my.data$mcf7_super_enhancers,current_range = current_range, label = "MCF7 SUPER ENHANCERS"), 
@@ -166,11 +197,10 @@ get3DDataOverview <- function(my.data, current_range) {
   my.ranges = list(
     mcf7_chiapet = create_gr_from_df(my.df = my.data$mcf7_chiapet,current_range = current_range, label = "MCF7 ChIA-PET"), 
     hmec_chiapet = create_gr_from_df(my.df = my.data$hmec_chiapet,current_range = current_range, label = "HMEC ChIA-PET"),
-    k562_chiapet = create_gr_from_df(my.df = my.data$k562_chiapet_ctcf,current_range = current_range, label = "K562 ChIA-PET"),
+    k562_chiapet = create_gr_from_df(my.df = my.data$k562_chiapet,current_range = current_range, label = "K562 ChIA-PET"),
     k562_chiapet_ctcf = create_gr_from_df(my.df = my.data$k562_chiapet_ctcf,current_range = current_range, label = "K562 ChIA-PET CTCF"),
     mcf7_chiapet_ctcf = create_gr_from_df(my.df = my.data$mcf7_chiapet_ctcf,current_range = current_range, label = "MCF7 ChIA-PET CTCF"), 
     mcf7_chiapet_er = create_gr_from_df(my.df = my.data$mcf7_chiapet_er,current_range = current_range, label = "MCF7 ChIA-PET ER"), 
-    k562_chiapet = create_gr_from_df(my.df = my.data$k562_chiapet,current_range = current_range, label = "K562 ChIA-PET"),
     mcf7_hic = create_gr_from_df(my.df = my.data$mcf7_hic,current_range = current_range, label = "MCF7 Hi-C"), 
     hmec_hic = create_gr_from_df(my.df = my.data$hmec_hic,current_range = current_range, label = "HMEC Hi-C"), 
     k562_hic = create_gr_from_df(my.df = my.data$k562_hic,current_range = current_range, label = "K562 Hi-C"),
@@ -214,6 +244,7 @@ drawSegment <- function(ranges_list = NULL, current_range) {
   
   for(i in seq_along(ranges_list)) {
     range = ranges_list[[i]]
+    
     if(length(range) > 0) {
       track_title = gsub(x = range[1]$color, pattern = " ", replacement = "\n")
       range_track =  ggplot(data = range) + 
@@ -300,7 +331,7 @@ drawAnnotations <- function(label = "Annotations", current_range) {
 drawSNP <- function(current_range, snps_df, label) {
   
   snp_ids <- as.character(snps_df$snp_id)
-
+  
   snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
   snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
   snps$name <- snp_ids
@@ -311,6 +342,71 @@ drawSNP <- function(current_range, snps_df, label) {
     theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
   
   snps_track
+}
+
+drawLNCRNAFigures <- function(my.df, current_range) {
+  
+  lncrna = create_gr_from_df_4LNCRNA(my.df,current_range = current_range, label = "LNCRNA")
+  
+  ts = unique(lncrna$id)
+  df = h5read(file = "data/data.h5", name = "/common/misc/LNCRNA-EXP/df")
+  ts_infos = unique(subset(df, df$transcript_id %in% ts))
+  
+  if(nrow(ts_infos) > 0) {
+    mcf7_data = c()
+    k562_data = c()
+    hmec_data = ts_infos$encode_breast_hmec_cshl_rep1
+    
+    for(i in seq(1:nrow(ts_infos))) {
+      mcf7_data = c(mcf7_data, mean(c(ts_infos$encode_breast_mcf7_caltech_rep1[i],
+                                      ts_infos$encode_breast_mcf7_caltech_rep2[i],
+                                      ts_infos$encode_breast_mcf7_caltech_rep3[i], 
+                                      ts_infos$encode_breast_mcf7_cshl_rep1[i],
+                                      ts_infos$encode_breast_mcf7_cshl_rep2[i])))
+      
+      k562_data = c(k562_data, mean(c(ts_infos$encode_cml_k562_cshl_rep1[i],
+                                      ts_infos$encode_cml_k562_cshl_rep2[i], 
+                                      ts_infos$encode_cml_k562_caltech_rep1[i],
+                                      ts_infos$encode_cml_k562_caltech_rep2[i])))
+      
+    }
+    
+    lncrna_df = data.frame(ts =  rep(times = 3, x = ts_infos$transcript_id),
+                           fpkm = c(k562_data, hmec_data, mcf7_data),
+                           cell = c(rep(times = length(ts_infos$transcript_id), x = c("K562")), 
+                                    rep(times = length(ts_infos$transcript_id), x = c("HMEC")), 
+                                    rep(times = length(ts_infos$transcript_id), x = c("MCF7"))))
+    
+    
+    ######## LNCRNA TRACK
+    
+    left = c()
+    right = c()
+    id = ts_infos$transcript_id
+    
+    #     # ranges
+    for(i in seq(1:nrow(ts_infos))) {
+      current_id = id[i]
+      left = c(left, as.numeric(subset(my.df,my.df$transcript_id ==  current_id, select = c(InteractorAStart)))[1])
+      right = c(right, as.numeric(subset(my.df,my.df$transcript_id ==  current_id, select = c(InteractorBEnd)))[1])
+      
+    }
+    
+    
+    my.ranges = GRanges(seqnames = as.character(seqnames(current_range)), 
+                        ranges = IRanges(left,right), id = id, 
+                        color = rep(x = "LNCRNA", times = length(left)))
+    
+    list(
+      lncrna_track = drawSegment(ranges_list = list(my.ranges), 
+                                 current_range = current_range),
+      lncrna_hist = (ggplot(lncrna_df, aes(x = cell, y = fpkm)) + 
+                       geom_bar(stat = "identity") + facet_grid(. ~ ts))
+    )
+  } else {
+    print("No TsInfos in the requested area")
+  }
+  
 }
 
 
