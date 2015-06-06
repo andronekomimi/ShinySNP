@@ -194,7 +194,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df3 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df3[,4]), '[:,-]')
-    df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df3) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -210,7 +210,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df4 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df4[,4]), '[:,-]')
-    df4 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df4 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df4) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -277,7 +277,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df3 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df3[,4]), '[:,-]')
-    df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df3) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -295,7 +295,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df4 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df4[,4]), '[:,-]')
-    df4 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df4 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df4) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
     
@@ -422,7 +422,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df1 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df1[,4]), '[:,-]')
-    df1 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df1 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df1) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -437,7 +437,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df2 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df2[,4]), '[:,-]')
-    df2 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df2 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df2) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -452,7 +452,7 @@ for (chr in chrs) {
 #   if(file.info(my.file)$size > 0) {
 #     df3 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
 #     my.data <- strsplit(gsub("\\.\\.", "-", df2[,4]), '[:,-]')
-#     df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+#     df3 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
 #     colnames(df3) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
 #                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
 #   }
@@ -483,7 +483,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df1 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df1[,4]), '[:,-]')
-    df1 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df1 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df1) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -498,7 +498,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df2 <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df2[,4]), '[:,-]')
-    df2 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df2 =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df2) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -529,7 +529,7 @@ for (chr in chrs) {
   if(file.info(my.file)$size > 0) {
     df <- read.table(my.file, header=FALSE, stringsAsFactors=FALSE)
     my.data <- strsplit(gsub("\\.\\.", "-", df[,4]), '[:,-]')
-    df =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE))
+    df =  data.frame(matrix(unlist(my.data), ncol = 7, byrow = TRUE), stringsAsFactors=FALSE)
     colnames(df) <- c("InteractorAChr","InteractorAStart","InteractorAEnd",
                        "InteractorBChr","InteractorBStart","InteractorBEnd","metric")
   }
@@ -557,7 +557,7 @@ for (chr in chrs) {
 # 4DGENOME
 print("start externe data loading")
 data_file <- "/home/nekomimi/Workspace/SNPVIZU/data/4DGenome_HomoSapiens_hg19.txt"
-df1 <- read.table(data_file, header=TRUE, stringsAsFactors=TRUE, sep = "\t")
+df1 <- read.table(data_file, header=TRUE, stringsAsFactors=FALSE, sep = "\t")
 
 for (chr in chrs) {
   chr_df <- subset(df1, df1$InteractorAChr == chrs[[chr]])
