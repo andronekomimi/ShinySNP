@@ -123,7 +123,8 @@ convert2GRange <- function(S, current_chr, label) {
   ranges = IRanges(left,right)
   
   g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
-                      color = rep(label,nrow(S)),
+                      label = rep(label,nrow(S)),
+                      color = rep("black",nrow(S)),
                       alpha = rep(0.5,nrow(S)))
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
   invisible(g_ranges)
@@ -140,7 +141,8 @@ convert2GRange4LNCRNA <- function(S, current_chr, label) {
   
   g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
                       id = S$transcript_id,
-                      color = rep(label,nrow(S)),
+                      color = rep("black",nrow(S)),
+                      label = rep(label,nrow(S)),
                       alpha = rep(0.5,nrow(S)))
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
   invisible(g_ranges)
@@ -149,7 +151,7 @@ convert2GRange4LNCRNA <- function(S, current_chr, label) {
 
 create_gr_from_df <- function(current_range, my.df, label) {
   if(nrow(my.df) > 0){
-    tmp = subsetData(my.df, current_range)
+    tmp = unique(subsetData(my.df, current_range))
     if(nrow(tmp) > 0) {
       convert2GRange(tmp, current_chr = as.character(seqnames(current_range)), 
                      label = label)
@@ -164,7 +166,7 @@ create_gr_from_df <- function(current_range, my.df, label) {
 
 create_gr_from_df_4LNCRNA <- function(current_range, my.df, label) {
   if(nrow(my.df) > 0){
-    tmp = subsetData(my.df, current_range)
+    tmp = unique(subsetData(my.df, current_range))
     if(nrow(tmp) > 0) {
       convert2GRange4LNCRNA(tmp, current_chr = as.character(seqnames(current_range)), 
                             label = label)
@@ -176,6 +178,21 @@ create_gr_from_df_4LNCRNA <- function(current_range, my.df, label) {
   }
   
 }
+
+# get1DDataOverview <- function(my.data, current_range) {
+#   
+#   my.dataframes = list(
+#     enhancers = list(df = (subsetData(my.data$enhancers,current_range = current_range)) , label = "ENHANCERS"), 
+#     k562_super_enhancers = list(df = (subsetData(my.data$k562_super_enhancers,current_range = current_range)), label = "K562 SUPER ENHANCERS"),
+#     mcf7_super_enhancers = list(df = (subsetData(my.data$mcf7_super_enhancers,current_range = current_range)), label = "MCF7 SUPER ENHANCERS"), 
+#     hmec_super_enhancers = list(df = (subsetData(my.data$hmec_super_enhancers,current_range = current_range)), label = "HMEC SUPER ENHANCERS"), 
+#     k562_impet = list(df = (subsetData(my.data$k562_impet,current_range = current_range)), label = "K562 IM-PET"),
+#     mcf7_impet = list(df = (subsetData(my.data$mcf7_impet,current_range = current_range)), label = "MCF7 IM-PET"), 
+#     hmec_impet = list(df = (subsetData(my.data$hmec_impet,current_range = current_range)), label = "HMEC IM-PET"))
+#   
+#   invisible(my.dataframes)
+# }
+
 
 get1DDataOverview <- function(my.data, current_range) {
   
@@ -190,7 +207,6 @@ get1DDataOverview <- function(my.data, current_range) {
   
   invisible(my.ranges)
 }
-
 
 get3DDataOverview <- function(my.data, current_range) {
   
@@ -217,20 +233,20 @@ get3DDataOverview <- function(my.data, current_range) {
   invisible(my.ranges)
 }
 
-drawArchs <- function(ranges_list = NULL, highlight_range_list = NULL, current_range) {
+drawArchs <- function(ranges_list, highlight_ranges, current_range) {
   #highlight_range_list : start, stop, highlight method
   
   my.tracks = c()
   
   for(i in seq_along(ranges_list)) {
-    range = ranges_list[[i]]
-    if(length(range) > 0) {
-      for( i in seq_along(highlight_range_list)) {
-        highlight_range = highlight_range_list[i]
-        range = make_emphasis(range, highlight_range)      
+    my.range = ranges_list[[i]]
+    if(length(my.range) > 0) {
+      if(!is.null(highlight_ranges)) {
+        my.range = make_emphasis(my.range, highlight_ranges)
       }
-      track_title = gsub(x = range[1]$color, pattern = " ", replacement = "\n")
-      range_track = get_chiapet_arch(range,track_title, current_range)
+      
+      track_title = gsub(x = my.range[1]$label, pattern = " ", replacement = "\n")
+      range_track = get_chiapet_arch(my.range,track_title, current_range)
       my.tracks = c(my.tracks, range_track)
     }   
   }
@@ -238,25 +254,60 @@ drawArchs <- function(ranges_list = NULL, highlight_range_list = NULL, current_r
   invisible(my.tracks)
 }
 
-drawSegment <- function(ranges_list = NULL, current_range) {
+drawSegment <- function(ranges_list, highlight_ranges, current_range) {
   
   my.tracks = c()
   
   for(i in seq_along(ranges_list)) {
-    range = ranges_list[[i]]
+    my.range = ranges_list[[i]]
     
-    if(length(range) > 0) {
-      track_title = gsub(x = range[1]$color, pattern = " ", replacement = "\n")
-      range_track =  ggplot(data = range) + 
-        geom_segment(size = 1) + ylab(track_title) +
-        theme_bw() + xlim(current_range) + guides(color= TRUE) +
-        theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+    if(length(my.range) > 0) {
+      if(!is.null(highlight_ranges)) {
+        my.range = make_emphasis(my.range, highlight_ranges)      
+      }
+      
+      track_title = gsub(x = my.range[1]$label, pattern = " ", replacement = "\n")
+      my.colors = unique(my.range$color)
+      names(my.colors) = my.colors
+      
+      range_track =  ggbio::autoplot(my.range, aes(color=color, alpha=alpha)) +
+        scale_colour_manual(values = my.colors) +
+        theme_bw() + xlim(current_range) + guides(color= FALSE,alpha=FALSE) + 
+        ylab(track_title) + theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+      
+      if(!is.null(my.range$id)) {
+        range_track = range_track + geom_text(aes(x = (start + ((end - start)/2)),
+                                                  y = 1, label=id, angle=45), size = 2, color = "blue")
+      }
+      
       my.tracks = c(my.tracks, range_track)
     }   
   }
   
   invisible(my.tracks)
 }
+
+# drawSegment <- function(dataframe_list, current_range) {
+#   
+#   my.tracks = c()
+#   
+#   for(i in seq_along(dataframe_list)) {
+#     my.df = dataframe_list[[i]]
+#     
+#     if(!is.null(my.df$df) && nrow(my.df$df) > 0) {
+#       track_title = gsub(x = my.df$label, pattern = " ", replacement = "\n")
+#       rand_y = sample(x = 1:10,size = nrow(my.df$df),replace = TRUE)
+#       temp = data.frame(x=my.df$df$InteractorAStart, xend=my.df$df$InteractorBEnd, y= rand_y)
+#       df_track =  ggbio::ggplot(data = temp) + geom_segment(mapping=aes(x=x, xend=xend, 
+#                                  y=y, yend=y), size = 10)
+#       print(df_track)
+#       my.tracks = c(my.tracks, df_track)
+#     }   
+#   }
+#   
+#   invisible(my.tracks)
+# }
+
 
 setStudyRange <- function(current_chr, current_start, current_stop) {
   current_range <- IRanges::IRanges(current_start, current_stop)
@@ -344,7 +395,7 @@ drawSNP <- function(current_range, snps_df, label) {
   snps_track
 }
 
-drawLNCRNAFigures <- function(my.df, current_range) {
+drawLNCRNAFigures <- function(my.df, current_range, highlight_ranges) {
   
   lncrna = create_gr_from_df_4LNCRNA(my.df,current_range = current_range, label = "LNCRNA")
   
@@ -393,13 +444,20 @@ drawLNCRNAFigures <- function(my.df, current_range) {
     }
     
     
-    my.ranges = GRanges(seqnames = as.character(seqnames(current_range)), 
-                        ranges = IRanges(left,right), id = id, 
-                        color = rep(x = "LNCRNA", times = length(left)))
+    my.dataframe = data.frame(InteractorAStart = left, 
+                              InteractorAStart = right, 
+                              id = id, stringsAsFactors = FALSE)
+    
+    my.range = GRanges(seqnames = as.character(seqnames(current_range)), 
+                       ranges = IRanges(left,right), id = id,  
+                       alpha = rep(0.5,times = length(left)),
+                       color = rep(x = "black", times = length(left)),
+                       label = rep(x = "LNCRNA", times = length(left)))
     
     list(
-      lncrna_track = drawSegment(ranges_list = list(my.ranges), 
-                                 current_range = current_range),
+      lncrna_track = drawSegment(ranges_list = list(my.range), 
+                                 current_range = current_range, 
+                                 highlight_ranges = highlight_ranges),
       lncrna_hist = (ggplot(lncrna_df, aes(x = cell, y = fpkm)) + 
                        geom_bar(stat = "identity") + facet_grid(. ~ ts))
     )
@@ -412,7 +470,7 @@ drawLNCRNAFigures <- function(my.df, current_range) {
 
 mergeRanges <- function(ranges, label) {
   can_run_6(label)
-  ranges$color = rep(x = label, times = length(ranges))
+  ranges$label = rep(x = label, times = length(ranges))
   ranges
 }
 
@@ -580,13 +638,16 @@ can_run_6 <- function(label) {
 }
 
 get_chiapet_arch <- function(rep, track_title, current_range) {
+  my.colors = unique(rep$color)
+  names(my.colors) = my.colors
   
   g = ggplot(rep) +
     geom_arch() +
     theme_bw() +
     aes(color=color, alpha = alpha) +
     #   aes(color=color) +
-    #   scale_colour_manual(values = c("gray","promoter"="black")) +
+    #scale_colour_manual(values = c("gray","promoter"="black")) +
+    scale_colour_manual(values = my.colors) +
     xlim(current_range) +
     theme(axis.ticks = element_blank(), axis.text.y = element_blank()) +
     ylab(track_title) + guides(alpha=FALSE, color=FALSE) +
@@ -594,4 +655,19 @@ get_chiapet_arch <- function(rep, track_title, current_range) {
   
   g
   
+}
+
+make_emphasis = function(my.ranges, hg.ranges) {
+  hits = findOverlaps(query = my.ranges, subject = hg.ranges)
+  
+  for(i in seq_along(hits)) {
+    hit = hits[i]
+    query_idx = queryHits(hit)
+    subject_idx = subjectHits(hit)
+    
+    my.ranges[query_idx]$alpha = hg.ranges[subject_idx]$alpha
+    my.ranges[query_idx]$color = hg.ranges[subject_idx]$color
+  }
+  
+  my.ranges
 }

@@ -32,7 +32,7 @@ if(!file.exists(snpsfile)) {
 if(!file.exists(hgsfile)) {
   file.create(hgsfile)
   hgcon=file(hgsfile,open="a+b")
-  writeLines(paste("start","end","method",sep = "\t"), hgcon)
+  writeLines(paste("start","end","color",sep = "\t"), hgcon)
 }
 
 if(!file.exists(todornaseqfile)) {
@@ -78,7 +78,8 @@ shinyServer(function(input, output, session) {
       updateNumericInput(session, "position_max", value = 28735000)
       updateNumericInput(session, "snp_position_min", value = 28155080)
       updateNumericInput(session, "snp_position_max", value = 28155080)
-      
+      updateNumericInput(session, "hgstart", value = 28111017)
+      updateNumericInput(session, "hgend", value = 28127138)
     })
   })
   
@@ -162,10 +163,18 @@ shinyServer(function(input, output, session) {
       ),
       br(),
       div(style="form-group shiny-input-container",
-          tags$label("Higlight method", `for` = "highlight-method"), 
-          checkboxGroupInput("hgmethod", label = NULL, 
-                             choices = list("alpha" = "alpha", "color" = "color"),
-                             inline = TRUE, selected = "alpha")
+          #           tags$label("Higlight method", `for` = "highlight-method"), 
+          #           checkboxGroupInput("hgmethod", label = NULL, 
+          #                              choices = list("alpha" = "alpha", "color" = "color"),
+          #                              inline = TRUE, selected = "alpha"),
+          selectInput(inputId = "hgcolor", label = "Choose a color", 
+                      choices = list("blue" = "steelblue",
+                                     "green" = "chartreuse4",
+                                     "orange" = "darkorange",
+                                     "violet" = "darkviolet",
+                                     "pink" = "deeppink",
+                                     "red" = "red3",
+                                     "yellow" = "gold"))
       ),
       actionButton(inputId = "addhg", label = "Add new Highlight Zone"),
       br(),
@@ -229,13 +238,24 @@ shinyServer(function(input, output, session) {
         }
         
         if(!iserror) {
-          writeLines(text = paste(hgstart,hgend,paste(input$hgmethod, collapse = ","),sep="\t"),
+          writeLines(text = paste(hgstart,hgend,input$hgcolor,sep="\t"),
                      con = hgcon)
           return(paste0("Adding Highlight zone at position [", hgstart,
-                        "-",hgend, "] with method : ",paste(input$hgmethod, collapse = ",")))
+                        "-",hgend, "] with color : ",input$hgcolor))
         }
       })
     }
+  })
+  
+  observe({
+    
+    if(input$run == 0)
+      return()
+    
+    isolate({
+      updateButton(session, "run", disabled = TRUE)
+      
+    })
   })
   
   drawPlot1 <- reactive({
@@ -259,9 +279,21 @@ shinyServer(function(input, output, session) {
                                      current_stop = input$position_max)
       my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
       
+      highlights = read.table(hgsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      print(highlights)
+      
+      my.hg.ranges = NULL
+      
+      if(nrow(highlights)){
+        my.hg.ranges = GRanges(seqnames = input$chr, 
+                               ranges = IRanges(highlights$start,highlights$end),  
+                               alpha = rep(0.5,times = nrow(highlights)),
+                               color = highlights$color)
+      }
+            
       archs_tracks <- drawArchs(ranges_list = my.ranges,
                                 current_range = current_range,
-                                highlight_range_list = NULL)
+                                highlight_ranges = my.hg.ranges)
       
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
@@ -300,12 +332,27 @@ shinyServer(function(input, output, session) {
                                      current_stop = input$position_max)
       my.ranges <- get1DDataOverview(my.data = my.data, current_range = current_range)
       
+      highlights = read.table(hgsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      print(highlights)
+      
+      my.hg.ranges = NULL
+      
+      if(nrow(highlights)){
+        my.hg.ranges = GRanges(seqnames = input$chr, 
+                               ranges = IRanges(highlights$start,highlights$end),  
+                               alpha = rep(0.5,times = nrow(highlights)),
+                               color = highlights$color)
+      }
+      
       segments_tracks <- drawSegment(ranges_list = my.ranges, 
-                                     current_range = current_range)
+                                     current_range = current_range,
+                                     highlight_ranges = my.hg.ranges)
       
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
-      lncrna_figures = drawLNCRNAFigures(my.data$lncrna, current_range) 
+      lncrna_figures = drawLNCRNAFigures(my.df = my.data$lncrna, 
+                                         current_range = current_range, 
+                                         highlight_ranges = my.hg.ranges) 
       
       my.tracks = c(segments_tracks)
       
@@ -438,17 +485,6 @@ shinyServer(function(input, output, session) {
         )
         
       }
-    })
-  })
-  
-  observe({
-    
-    if(input$run == 0)
-      return()
-    
-    isolate({
-      updateButton(session, "run", disabled = TRUE)
-      
     })
   })
   
