@@ -13,14 +13,23 @@ hgsfile = paste0("logs/hg_", tempid)
 todornaseqfile = paste0("todo/rnaseq_", tempid)
 todochipseqfile = paste0("todo/chipseq_", tempid)
 
-USER = "Audrey Lemacon"
-USERMAIL = "audrey.lemacon.1@ulaval.ca"
+
+Logged = FALSE;
+
+## Chargement de la DB d'authenfication
+membership_db = "admin/membership.sqlite"
+con = RSQLite::dbConnect(RSQLite::SQLite(), membership_db)
+members = dbGetQuery(con,'select * from membership')
+RSQLite::dbDisconnect(con)
+
 OPERATOR = "audrey.lemacon.1@ulaval.ca"
+USERMAIL = ""
+USERNAME = ""
 
 if(!file.exists(logfile)) {
   file.create(logfile)
   logcon=file(logfile,open="w")
-  writeLines(c(USER,format(Sys.time(), "%a %b %d %X %Y")), logcon)
+  writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
 }
 
 if(!file.exists(snpsfile)) {
@@ -38,22 +47,103 @@ if(!file.exists(hgsfile)) {
 if(!file.exists(todornaseqfile)) {
   file.create(todornaseqfile)
   todornaseqcon=file(todornaseqfile,open="w")
-  writeLines(paste0("#", USER), todornaseqcon)
-  writeLines(paste0("#", tempid), todornaseqcon)
 }
 
 if(!file.exists(todochipseqfile)) {
   file.create(todochipseqfile)
   todochipseqcon=file(todochipseqfile,open="w")
-  writeLines(paste0("#", USER), todornaseqcon)
-  writeLines(paste0("#", tempid), todornaseqcon)
 }
 
-print(snpsfile)
+footer<-function(){
+  tags$div(
+    class = "footer",
+    tags$div(class = "foot-inner", 
+             list(
+               "Shiny SNP is an ", 
+               tags$a(href="http://bioinformatique.genome.ulaval.ca/recherche/","Arnaud Droit Lab"),
+               " project (2015).",
+               br(),
+               "Functional design and Development ",
+               tags$a(href="https://ca.linkedin.com/in/audreylemacon", "Audrey Lemacon ")
+             )
+             
+    )
+  )
+}
+
 options(scipen=999) # virer l'annotation scientifique
 
 shinyServer(function(input, output, session) {
+  USER <- reactiveValues(Logged = FALSE)
   
+  output$uiLogin <- renderUI({
+    if (USER$Logged == FALSE) {
+      list(
+        h3("Please sign in"),
+        wellPanel(
+          textInput("Username", "User Name:"),
+          passwordInput("Password", "Password:"),
+          br(),
+          actionButton("Login", "Log in"),
+          br(),
+          span(textOutput("pass"), style = "color:red")
+        )
+      )
+    }
+  })
+  outputOptions(output, "uiLogin", suspendWhenHidden=FALSE)
+  
+  output$pass <- renderText({  
+    if (USER$Logged == FALSE) {
+      
+      if (!is.null(input$Login) && input$Login > 0) {
+        authentif_success = TRUE
+        
+        Username <- isolate(input$Username)
+        Password <- isolate(input$Password)
+        
+        if(!(Username %in% members$user)) {
+          authentif_success = FALSE
+        } else {
+          passw = subset(members, user==Username)$password
+          if(passw != Password) {
+            authentif_success = FALSE
+          }
+        }
+        
+        if (authentif_success) {
+          USER$Logged <- TRUE
+          USERNAME <<- as.character(subset(members, user==Username)$username)
+          USERMAIL <<- as.character(subset(members, user==Username)$email)
+          
+          if(isOpen(logcon)) {
+            writeLines(c(USERNAME), logcon)
+          }
+          
+          if(isOpen(logcon)) {
+            writeLines(paste0("#", USERNAME), todornaseqcon)
+            writeLines(paste0("#", tempid), todornaseqcon)
+          }
+          
+          if(isOpen(logcon)) {
+            writeLines(paste0("#", USERNAME), todochipseqcon)
+            writeLines(paste0("#", tempid), todochipseqcon)
+          }
+          
+          # Reactiver ts les boutons
+          updateButton(session, "addsnp", disabled = FALSE)
+          updateButton(session, "addhg", disabled = FALSE)
+          updateButton(session, "run", disabled = FALSE)
+          updateButton(session, "reset", disabled = FALSE)
+          updateButton(session, "addRNASeq", disabled = FALSE)
+          updateButton(session, "runCHIPSeq", disabled = FALSE)
+          
+        } else  {
+          "Authentication failed!"
+        }
+      } 
+    }
+  })
   
   #### CHANGE POSITION VALUE ACCORDING TO THE SELECTED CHROM
   observe({
@@ -176,7 +266,7 @@ shinyServer(function(input, output, session) {
                                      "red" = "red3",
                                      "yellow" = "gold"))
       ),
-      actionButton(inputId = "addhg", label = "Add new Highlight Zone"),
+      bsButton(inputId = "addhg", label = "Add new Highlight Zone", disabled = TRUE),
       br(),
       br(),
       span(textOutput("addhg_msg"), style = "color:green")
@@ -265,12 +355,10 @@ shinyServer(function(input, output, session) {
     isolate ({
       if(!is.null(snpcon) && isOpen(snpcon, "a+b")){
         close(con = snpcon)
-        # effacer le fichier
       }
       
       if(!is.null(hgcon) && isOpen(hgcon, "a+b")){
         close(hgcon)
-        # effacer le fichier
       }
       
       my.data <- load3DData(current_chr = input$chr, my.dataset = input$my.dataset)
@@ -290,7 +378,7 @@ shinyServer(function(input, output, session) {
                                alpha = rep(0.5,times = nrow(highlights)),
                                color = highlights$color)
       }
-            
+      
       archs_tracks <- drawArchs(ranges_list = my.ranges,
                                 current_range = current_range,
                                 highlight_ranges = my.hg.ranges)
@@ -298,6 +386,7 @@ shinyServer(function(input, output, session) {
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
+      print(snpsfile)
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       print(snpsdf)
       
@@ -371,10 +460,6 @@ shinyServer(function(input, output, session) {
       my.tracks = c(my.tracks, annot_track)
       
       warning("DONE calculate the tracks",call. = FALSE)
-      
-      #       output$plot3 <- renderPlot({
-      #         
-      #       })
       
       list(plot2 = tracks(my.tracks) + xlim(current_range), plot3 = tracks(lncrna_figures$lncrna_hist))
     })
@@ -495,6 +580,7 @@ shinyServer(function(input, output, session) {
     }
     
     isolate ({
+      
       # working files
       all_cell_merge_file = "all_cells_rnaseq.csv"
       all_cell_unmerge_file = "all_cells_unmerge_rnaseq.csv"
@@ -546,7 +632,6 @@ shinyServer(function(input, output, session) {
           return("Fail adding RNA-Seq analysis")})
       }
       
-      
     })
   })
   
@@ -555,24 +640,40 @@ shinyServer(function(input, output, session) {
     if(input$runRNASeq > 0) {
       updateButton(session, "addRNASeq", disabled = TRUE)
       updateButton(session, "runRNASeq", disabled = TRUE)
+      success = FALSE
+      
+      if(isOpen(todornaseqcon, "w")) {
+        close(todornaseqcon)
+        success = TRUE
+      } 
+      
       
       # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
       # Mail de confirmation de soummision
       
-      from <- "no-reply@ShinySNP"
-      to <- OPERATOR
-      subject <- "RNA-Seq Submission"
-      msg <- paste0(USER," has just submitted a RNA-Seq request with id:",tempid,".")
-      sendmail(from, to, subject, msg)
+      if(success){
+        output$runrnaseq_msg <- renderText({
+          return("Sending RNA-Seq analysis request")})
+        
+        from <- "no-reply@ShinySNP"
+        to <- OPERATOR
+        subject <- "RNA-Seq Submission Report"
+        msg <- paste0(USERNAME," has just submitted a RNA-Seq request with id:",tempid,".")
+        attachment <- mime_part(todornaseqfile, "command_line.txt")
+        msgWithAttachment <- list(msg,attachment)
+        sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
+        
+        
+        from <- "no-reply@ShinySNP"
+        to <- USERMAIL
+        subject <- "RNA-Seq Submission"
+        msg <- paste0("Your request has just been submitted with id:",tempid,".")
+        sendmail(from, to, subject, msg)
+      } else {
+        output$runrnaseq_msg <- renderText({
+          return("Fail submitting RNA-Seq analysis")})
+      }
       
-      from <- "no-reply@ShinySNP"
-      to <- USERMAIL
-      subject <- "RNA-Seq Submission"
-      msg <- paste0("Your request has just been submitted with id:",tempid,".")
-      sendmail(from, to, subject, msg)
-      
-      output$runrnaseq_msg <- renderText({
-        return("Sending RNA-Seq analysis request")})
     }
   })
   
@@ -584,7 +685,7 @@ shinyServer(function(input, output, session) {
     
     isolate ({
       updateButton(session, "runCHIPSeq", disabled = TRUE)
-      
+      success = FALSE
       # working files
       hmec_file = "hmec_chipseq.csv"
       k562_file = "k562_chipseq.csv"
@@ -599,8 +700,13 @@ shinyServer(function(input, output, session) {
       command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file)
       
       # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
-      if(isOpen(todornaseqcon, "w")) {
+      if(isOpen(todochipseqcon, "w")) {
         writeLines(command_line, todochipseqcon)
+        close(todochipseqcon)
+        success = TRUE
+      } 
+      
+      if(success){
         output$runchipseq_msg <- renderText({
           return("Sending ChIP-Seq analysis request")})
         
@@ -609,20 +715,23 @@ shinyServer(function(input, output, session) {
         
         from <- "no-reply@ShinySNP"
         to <- OPERATOR
-        subject <- "ChIP-Seq Submission"
-        msg <- paste0(USER," has just submitted a ChIP-Seq request with id:",tempid,".")
-        sendmail(from, to, subject, msg)
+        subject <- "ChIP-Seq Submission Report"
+        msg <- paste0(USERNAME," has just submitted a ChIP-Seq request with id:",tempid,".")
+        attachment <- mime_part(todochipseqfile, "command_line.txt")
+        msgWithAttachment <- list(msg,attachment)
+        sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
         
         from <- "no-reply@ShinySNP"
         to <- USERMAIL
         subject <- "ChIP-Seq Submission"
         msg <- paste0("Your request has just been submitted with id:",tempid,".")
         sendmail(from, to, subject, msg)
-        
       } else {
         output$runchipseq_msg <- renderText({
-          return("Fail adding ChIP-Seq analysis")})
+          return("Fail submitting ChIP-Seq analysis")})
       }
+      
+      
     })
   })
   
@@ -636,10 +745,6 @@ shinyServer(function(input, output, session) {
   observe({
     if(input$end > 0) {
       updateButton(session, "end", disabled = TRUE)
-      
-      if(!is.null(todornaseqcon) && isOpen(todornaseqcon, "w")){close(todornaseqcon)}
-      
-      if(!is.null(todochipseqcon) && isOpen(todochipseqcon, "w")){close(todochipseqcon)}
       
       if(!is.null(logcon) && isOpen(logcon, "w")){
         writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)

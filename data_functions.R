@@ -287,27 +287,6 @@ drawSegment <- function(ranges_list, highlight_ranges, current_range) {
   invisible(my.tracks)
 }
 
-# drawSegment <- function(dataframe_list, current_range) {
-#   
-#   my.tracks = c()
-#   
-#   for(i in seq_along(dataframe_list)) {
-#     my.df = dataframe_list[[i]]
-#     
-#     if(!is.null(my.df$df) && nrow(my.df$df) > 0) {
-#       track_title = gsub(x = my.df$label, pattern = " ", replacement = "\n")
-#       rand_y = sample(x = 1:10,size = nrow(my.df$df),replace = TRUE)
-#       temp = data.frame(x=my.df$df$InteractorAStart, xend=my.df$df$InteractorBEnd, y= rand_y)
-#       df_track =  ggbio::ggplot(data = temp) + geom_segment(mapping=aes(x=x, xend=xend, 
-#                                  y=y, yend=y), size = 10)
-#       print(df_track)
-#       my.tracks = c(my.tracks, df_track)
-#     }   
-#   }
-#   
-#   invisible(my.tracks)
-# }
-
 
 setStudyRange <- function(current_chr, current_start, current_stop) {
   current_range <- IRanges::IRanges(current_start, current_stop)
