@@ -6,13 +6,6 @@ library(sendmailR)
 # EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
-logfile = tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
-tempid = strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
-snpsfile = paste0("logs/snp_", tempid)
-hgsfile = paste0("logs/hg_", tempid)
-todornaseqfile = paste0("todo/rnaseq_", tempid)
-todochipseqfile = paste0("todo/chipseq_", tempid)
-
 
 Logged = FALSE;
 
@@ -26,32 +19,86 @@ OPERATOR = "audrey.lemacon.1@ulaval.ca"
 USERMAIL = ""
 USERNAME = ""
 
-if(!file.exists(logfile)) {
-  file.create(logfile)
-  logcon=file(logfile,open="w")
-  writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+# files connections
+tempid = 0
+
+logfile = ""
+logcon = ""
+
+snpcon = ""
+snpsfile = ""
+
+hgcon = ""
+hgsfile = ""
+
+todornaseqcon = ""
+todornaseqfile = ""
+
+todochipseqcon = ""
+todochipseqfile = ""
+
+setup_files <- function() {
+  
+  logfile <<- tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
+  tempid <<- strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
+  snpsfile <<- paste0("logs/snp_", tempid)
+  hgsfile <<- paste0("logs/hg_", tempid)
+  todornaseqfile <<- paste0("todo/rnaseq_", tempid)
+  todochipseqfile <<- paste0("todo/chipseq_", tempid)
+  
+  if(!file.exists(logfile)) {
+    file.create(logfile)
+    logcon <<- file(logfile,open="w")
+    writeLines(c(USERNAME), logcon)
+    writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+  }
+  
+  if(!file.exists(snpsfile)) {
+    file.create(snpsfile)
+    snpcon <<- file(snpsfile,open="a+b")
+    writeLines(paste("id","start","end","metadata",sep = "\t"), snpcon)
+  }
+  
+  if(!file.exists(hgsfile)) {
+    file.create(hgsfile)
+    hgcon <<- file(hgsfile,open="a+b")
+    writeLines(paste("start","end","color",sep = "\t"), hgcon)
+  }
+  
+  if(!file.exists(todornaseqfile)) {
+    file.create(todornaseqfile)
+    todornaseqcon <<- file(todornaseqfile,open="w")
+    writeLines(paste0("#", USERNAME), todornaseqcon)
+    writeLines(paste0("#", tempid), todornaseqcon)
+  }
+  
+  if(!file.exists(todochipseqfile)) {
+    file.create(todochipseqfile)
+    todochipseqcon <<- file(todochipseqfile,open="w")
+    writeLines(paste0("#", USERNAME), todochipseqcon)
+    writeLines(paste0("#", tempid), todochipseqcon)
+  }
+  
+  print(paste0("Files setup for id:",tempid))
 }
 
-if(!file.exists(snpsfile)) {
-  file.create(snpsfile)
-  snpcon=file(snpsfile,open="a+b")
-  writeLines(paste("snp_id","start","end","metadata",sep = "\t"), snpcon)
-}
 
-if(!file.exists(hgsfile)) {
-  file.create(hgsfile)
-  hgcon=file(hgsfile,open="a+b")
-  writeLines(paste("start","end","color",sep = "\t"), hgcon)
-}
-
-if(!file.exists(todornaseqfile)) {
-  file.create(todornaseqfile)
-  todornaseqcon=file(todornaseqfile,open="w")
-}
-
-if(!file.exists(todochipseqfile)) {
-  file.create(todochipseqfile)
-  todochipseqcon=file(todochipseqfile,open="w")
+close_files <- function() {
+  # close all resilient files
+  print("closing files")
+  tryCatch ({
+    close(snpcon)
+    close(hgcon)
+    close(todornaseqcon)
+    close(todochipseqcon)
+    if(!is.null(logcon) && isOpen(logcon, "w")){
+      writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+      close(logcon)
+    }
+    H5close()    
+  },error = function(e) {
+    print(e)
+  })
 }
 
 footer<-function(){
@@ -80,17 +127,18 @@ shinyServer(function(input, output, session) {
     if (USER$Logged == FALSE) {
       list(
         h3("Please sign in"),
-        wellPanel(
-          textInput("Username", "User Name:"),
-          passwordInput("Password", "Password:"),
-          br(),
-          actionButton("Login", "Log in"),
-          br(),
-          span(textOutput("pass"), style = "color:red")
+        wellPanel(style = "background-color: #B7EDB7;",
+                  textInput("Username", "User Name:"),
+                  passwordInput("Password", "Password:"),
+                  br(),
+                  actionButton("Login", "Log in"),
+                  br(),br(),
+                  span(textOutput("pass"), style = "color:red")
         )
       )
     }
   })
+  
   outputOptions(output, "uiLogin", suspendWhenHidden=FALSE)
   
   output$pass <- renderText({  
@@ -116,19 +164,7 @@ shinyServer(function(input, output, session) {
           USERNAME <<- as.character(subset(members, user==Username)$username)
           USERMAIL <<- as.character(subset(members, user==Username)$email)
           
-          if(isOpen(logcon)) {
-            writeLines(c(USERNAME), logcon)
-          }
-          
-          if(isOpen(logcon)) {
-            writeLines(paste0("#", USERNAME), todornaseqcon)
-            writeLines(paste0("#", tempid), todornaseqcon)
-          }
-          
-          if(isOpen(logcon)) {
-            writeLines(paste0("#", USERNAME), todochipseqcon)
-            writeLines(paste0("#", tempid), todochipseqcon)
-          }
+          setup_files()
           
           # Reactiver ts les boutons
           updateButton(session, "addsnp", disabled = FALSE)
@@ -234,8 +270,8 @@ shinyServer(function(input, output, session) {
           output$addsnp_msg <- renderText({
             return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
                           "-",snpend, "]"))})
-          # si snpadd alors desactivation loadsnp
-          updateButton(session, "loadsnp", disabled = TRUE)
+          # si snpadd alors desactivation loadfile
+          updateButton(session, "loadfile", disabled = TRUE)
         }
       })
     }
@@ -243,13 +279,15 @@ shinyServer(function(input, output, session) {
   
   output$highlight <- renderUI({
     list(
-      div(style="form-inline",
-          tags$label("Higlight zone", `for` = "highlight-zone"), 
-          div(style="input-daterange input-group",
-              tags$input(id = "hgstart", type = "number", value = "start",class="input-small"),
-              tags$span("to",style = "input-group-addon"),
-              tags$input(id = "hgend", type = "number", value = "end",class="input-small")
-          )
+      fluidRow(
+        column(width = 6,
+               numericInput(inputId = "hgstart", 
+                            label = "start", 
+                            value = NA)),
+        column(width = 6,
+               numericInput(inputId = "hgend", 
+                            label = "start", 
+                            value = NA))
       ),
       br(),
       div(style="form-group shiny-input-container",
@@ -266,7 +304,7 @@ shinyServer(function(input, output, session) {
                                      "red" = "red3",
                                      "yellow" = "gold"))
       ),
-      bsButton(inputId = "addhg", label = "Add new Highlight Zone", disabled = TRUE),
+      bsButton(inputId = "addhg", label = "Add new Highlight Zone"),
       br(),
       br(),
       span(textOutput("addhg_msg"), style = "color:green")
@@ -500,76 +538,43 @@ shinyServer(function(input, output, session) {
     }
   )
   
-  observe({
-    roots = c(wd='.')
-    shinyFileChoose(input, 'loadsnp', session=session, roots=roots,
-                    filetypes=c('','csv','txt'))
-    pfile = parseFilePaths(roots, input$loadsnp)
-    updateTextInput(session, "path",  value = pfile$datapath)
-  })
-  
-  
-  observe({
+  output$addsnp_msg <- renderText({
     
-    if (is.null(input$loadsnp))
-      return()
+    inFile <- input$loadfile
     
-    isolate ({
-      if (file.exists(input$path)) {
+    if (is.null(inFile))
+      return(NULL)
+    
+    tryCatch ({
+      # get data from imported snp file
+      imported_snp = read.table(inFile$datapath, header=TRUE, 
+                                stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      if(is.null(snpcon)) {
+        print('ok')
+      }
+      
+      if((!"id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
+           (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
+        stop(paste0("File format error : waiting for a tab delimited file containing ",
+                    "at least the following 4 columns : id, start, end, metadata"))
+      } else {
+        updateButton(session,inputId = "addsnp", disabled = TRUE)
         
-        print("craquage")
-        output$addsnp_msg <- renderText({
-          return("PARRCE")
-        })
-        
-        output$addsnp_err <- renderText({
-          return("QUOI ???")
-        })
-        
-        print("total")
-        # desactive le bouton addsnp
-        updateButton(session, "addsnp", disabled = TRUE)
-        
-        tryCatch ({
-          # get data from imported snp file
-          imported_snp = read.table(input$path, header=TRUE, 
-                                    stringsAsFactors=FALSE, quote = "\"", sep="\t")
-          if(is.null(snpcon)) {
-            print('ok')
-          }
-          print(imported_snp)
-          
-          if((!"snp_id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
-               (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
-            stop(paste0("File format error : waiting for a tab delimited file containing ",
-                        "at least the following 4 columns : snp_id, start, end, metadata"))
-          } else {
-            for (i in (1:nrow(imported_snp))) {
-              new_snp = imported_snp[i,]
-              writeLines(text = paste(new_snp$snp_id,new_snp$start,new_snp$end,
-                                      new_snp$metadata,sep="\t"), con = snpcon)
-            }
-            
-            print(paste0("Importing following snps : ", paste(imported_snp$snp_id, 
-                                                              collapse = ",")))
-            
-            updateButton(session = session, label = "RHOOOOO",inputId = "loadsnp")
-            
-            output$addsnp_msg <- renderText({
-              return(paste0("Importing following snps : ", paste(imported_snp$snp_id, 
-                                                                 collapse = ",")))})
-            
-          }
-        },
-        error = function(e) {
-          print(e)
-          output$addsnp_err <- renderText({
-            return(paste0("Error while trying to import snps file : ", e))
-          })
+        for (i in (1:nrow(imported_snp))) {
+          new_snp = imported_snp[i,]
+          writeLines(text = paste(new_snp$id,new_snp$start,new_snp$end,
+                                  new_snp$metadata,sep="\t"), con = snpcon)
         }
-        )
+        
+        
+        return(paste0("Importing following snps : ", paste(imported_snp$id, 
+                                                           collapse = ", ")))
         
       }
+    },
+    error = function(e) {
+      print(e)
+      return(paste0("Error while trying to import snps file : ", e))
     })
   })
   
@@ -736,22 +741,48 @@ shinyServer(function(input, output, session) {
   })
   
   
-  observe({
-    if(input$reset > 0) {
-      print("RESET ALL VALUE AND CLEAN ALL FILE CONNECTION")
-    }
+  observeEvent(input$reset, {
+    
+    # close previous log file
+    close_files()
+    
+    # open new set of files
+    setup_files()
+    
+    # RESET PARAMETERS
+    shinyjs::reset("params")
+    updateButton(session, "addsnp", disabled = FALSE)
+    updateButton(session, "addhg", disabled = FALSE)
+    updateButton(session, "run", disabled = FALSE)
+    updateButton(session, "loadfile", disabled = FALSE)
+    updateButton(session, "reset", disabled = FALSE)
+    updateNumericInput(session, "hgstart", value = NA)
+    updateNumericInput(session, "hgend", value = NA)
+    output$addsnp_msg <- renderText({return("")})
+    output$addhg_msg <- renderText({return("")})
+    
+    # RESET RESULTS
+    shinyjs::reset("results")
+    updateButton(session, "addRNASeq", disabled = FALSE)
+    updateButton(session, "runCHIPSeq", disabled = FALSE)
+    updateButton(session, "runRNASeq", disabled = TRUE)
+    output$addrnaseq_msg <- renderText({return("")})
+    output$runrnaseq_msg <- renderText({return("")})
+    output$runchipseq_msg <- renderText({return("")})
+    
+    output$plot1 <- renderPlot({})
+    output$plot2 <- renderPlot({})
+    output$plot3 <- renderPlot({})
   })
+  
   
   observe({
     if(input$end > 0) {
       updateButton(session, "end", disabled = TRUE)
       
-      if(!is.null(logcon) && isOpen(logcon, "w")){
-        writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
-        close(logcon)
+      if (USER$Logged == TRUE) {
+        close_files()
       }
-      
-      H5close()
       # TROUVER UNE MANIERE MOINS LAIDE DE FERMER L'APPLI
       
       stopApp(42)

@@ -1,6 +1,7 @@
 # SHINYSNP ui.R
 library(shinyBS)
 library(shinyFiles)
+library(shinyjs)
 
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
@@ -25,15 +26,18 @@ footer<-function(){
 
 
 shinyUI(fluidPage(
+  useShinyjs(),
   tags$head(
-    tags$link(rel = "icon", type = "image/x-icon", href = "logo.png")
+    tags$link(rel = "icon", type = "image/x-icon", href = "logo.jpg")
   ),
   titlePanel("Shiny SNP"),
   sidebarLayout(
     
     sidebarPanel(
       helpText(p("Welcome on Shiny SNP")),
+      uiOutput(outputId ="uiLogin"),
       h3("Select region"),
+      div(id = "params",
       selectInput("chr", 
                   label = "Choose a chromosome",
                   choices = as.character(chroms$chr),
@@ -49,12 +53,20 @@ shinyUI(fluidPage(
                             value = NA))
       ),
       bsCollapse(id = "param", open = NULL, multiple = FALSE,
-                 bsCollapsePanel('Advanced parameters',uiOutput("highlight"), 
+                 bsCollapsePanel('Highlight regions',
+                                 uiOutput("highlight"),
                                  style = "default")
       ),
       br(),
-      h3("Add SNPs"),
-      textInput(inputId = "snp_label",label = "SNP Label", value = "My SNP"),
+      h3("Add variants"),
+      helpText("Add your variants manually or load a file conaining the variants list"),
+      helpText("File format : ",
+      tags$ul(
+        tags$li("Tab-delimited, with 4 named column 'id,start,stop,metadata'"),
+        tags$li("One variant per line"),
+        tags$li("The metadata column enables to make variants groups. 
+               The variants of the same group will be represent with the same color"))),
+      textInput(inputId = "snp_label",label = "Variant Label", value = "My SNP"),
       fluidRow(
         column(width = 6,
                numericInput(inputId = 'snp_position_min', 
@@ -66,14 +78,17 @@ shinyUI(fluidPage(
                             value = 0))),
       bsButton(inputId = "addsnp",label = "Add new SNP", disabled = TRUE),
       hr(),
-      h4(" OR "),
-      shinyFilesButton('loadsnp', 'Load SNP file', 
-                       'Please select a file', FALSE),
-      textInput(inputId = "path", label = ""),
-      br(),
-      br(),
+      fileInput('loadfile', 'Choose file to upload',
+                accept = c(
+                  'text/csv',
+                  'text/comma-separated-values',
+                  'text/tab-separated-values',
+                  'text/plain',
+                  '.csv',
+                  '.tsv'
+                )
+      ),
       span(textOutput("addsnp_msg"), style = "color:green"),
-      span(textOutput("addsnp_err"), style = "color:red"),
       br(),
       h3("Choose the dataset"),
       radioButtons(inputId = 'my.dataset', 
@@ -91,13 +106,13 @@ shinyUI(fluidPage(
                bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary", disabled = TRUE)),
         column(width = 4,
                bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
-      ,
+      ),
       br(),
       br(),
       footer()
     ),
     mainPanel(
-      uiOutput(outputId ="uiLogin"),
+      div(id = "results",
       conditionalPanel(condition = "!output.uiLogin",
                        list(
                          bsAlert("alert1"),
@@ -201,6 +216,8 @@ shinyUI(fluidPage(
                                     )
                                     
                          )
-                       )))
+                       )
+                       ))
+      )
   )
 ))
