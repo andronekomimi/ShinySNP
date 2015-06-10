@@ -442,6 +442,20 @@ drawLNCRNAFigures <- function(my.df, current_range, highlight_ranges) {
     )
   } else {
     print("No TsInfos in the requested area")
+    df = data.frame(x=c(1), 
+                    y=c(1), 
+                    name = c("No annotated LNCRNA in this area"))
+    
+    list(
+      lncrna_track = NULL,
+      lncrna_hist = ggplot(data=df, mapping=aes(x=x, y=y)) +
+        geom_blank() + ylab("") + xlab("") + 
+        geom_text(aes(x = x, y = y, label=name), size = 7, color = "red") +
+        theme(
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank())
+    )
   }
   
 }

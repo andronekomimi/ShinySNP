@@ -10,7 +10,7 @@ chroms = read.csv("data/chromosomes.txt", header = TRUE)
 Logged = FALSE;
 
 ## Chargement de la DB d'authenfication
-membership_db = "admin/membership.sqlite"
+membership_db = "/etc/shiny-apps/ShinySNP_membership.sqlite"
 con = RSQLite::dbConnect(RSQLite::SQLite(), membership_db)
 members = dbGetQuery(con,'select * from membership')
 RSQLite::dbDisconnect(con)
@@ -18,6 +18,7 @@ RSQLite::dbDisconnect(con)
 OPERATOR = "audrey.lemacon.1@ulaval.ca"
 USERMAIL = ""
 USERNAME = ""
+USERROLE = ""
 
 # files connections
 tempid = 0
@@ -101,23 +102,6 @@ close_files <- function() {
   })
 }
 
-footer<-function(){
-  tags$div(
-    class = "footer",
-    tags$div(class = "foot-inner", 
-             list(
-               "Shiny SNP is an ", 
-               tags$a(href="http://bioinformatique.genome.ulaval.ca/recherche/","Arnaud Droit Lab"),
-               " project (2015).",
-               br(),
-               "Functional design and Development ",
-               tags$a(href="https://ca.linkedin.com/in/audreylemacon", "Audrey Lemacon ")
-             )
-             
-    )
-  )
-}
-
 options(scipen=999) # virer l'annotation scientifique
 
 shinyServer(function(input, output, session) {
@@ -127,7 +111,7 @@ shinyServer(function(input, output, session) {
     if (USER$Logged == FALSE) {
       list(
         h3("Please sign in"),
-        wellPanel(style = "background-color: #B7EDB7;",
+        wellPanel(style = "background-color: #ffffff;",
                   textInput("Username", "User Name:"),
                   passwordInput("Password", "Password:"),
                   br(),
@@ -163,6 +147,7 @@ shinyServer(function(input, output, session) {
           USER$Logged <- TRUE
           USERNAME <<- as.character(subset(members, user==Username)$username)
           USERMAIL <<- as.character(subset(members, user==Username)$email)
+          USERROLE <<- as.character(subset(members, user==Username)$role)
           
           setup_files()
           
@@ -174,12 +159,21 @@ shinyServer(function(input, output, session) {
           updateButton(session, "addRNASeq", disabled = FALSE)
           updateButton(session, "runCHIPSeq", disabled = FALSE)
           
+          output$runEx <- renderUI({
+            if(USERROLE == "admin") {
+              return(list(actionButton(inputId = "runEx", label = "Run Example")))
+            }
+          })
+          
+          "Authentication succeed!"
+          
         } else  {
           "Authentication failed!"
         }
       } 
     }
   })
+  
   
   #### CHANGE POSITION VALUE ACCORDING TO THE SELECTED CHROM
   observe({
@@ -195,184 +189,201 @@ shinyServer(function(input, output, session) {
   })
   
   observe({
+    if(!is.null(input$runEx)){
+      if(input$runEx == 0)
+        return()
+      
+      isolate({
+        updateNumericInput(session, "position_min", value = 27950000)
+        updateNumericInput(session, "position_max", value = 28735000)
+        updateNumericInput(session, "snp_position_min", value = 28155080)
+        updateNumericInput(session, "snp_position_max", value = 28155080)
+        updateNumericInput(session, "hgstart", value = 28111017)
+        updateNumericInput(session, "hgend", value = 28127138)
+      })}
+  })
+  
+  
+  addSNPs <- eventReactive(input$addsnp, {
+    if(is.na(input$snp_position_min)) {
+      snpstart <- 0
+    } else {
+      snpstart <- input$snp_position_min
+    }
     
-    if(input$runEx == 0)
-      return()
+    if(is.na(input$snp_position_max)) {
+      snpend <- 0
+    } else {
+      snpend <- input$snp_position_max
+    }
     
-    isolate({
-      updateNumericInput(session, "position_min", value = 27950000)
-      updateNumericInput(session, "position_max", value = 28735000)
-      updateNumericInput(session, "snp_position_min", value = 28155080)
-      updateNumericInput(session, "snp_position_max", value = 28155080)
-      updateNumericInput(session, "hgstart", value = 28111017)
-      updateNumericInput(session, "hgend", value = 28127138)
+    selected_chr_min <- input$position_min
+    selected_chr_max <- input$position_max
+    
+    error_msg <- c()
+    iserror <- FALSE
+    
+    if(snpend < snpstart){
+      error_msg <- "SNP end must be greater than SNP start"
+      iserror <- TRUE
+      createAlert(session, "alert1", "exampleAlert1", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    } else {
+      closeAlert(session, "exampleAlert1")
+    }
+    
+    if(snpend == 0 || snpstart == 0){
+      error_msg <- "SNP positions are mandatory"
+      iserror <- TRUE
+      createAlert(session, "alert2", "exampleAlert2", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    } else {
+      closeAlert(session, "exampleAlert2")
+    }
+    
+    if(snpstart >= selected_chr_min && snpstart <= selected_chr_max &&
+         snpend >= selected_chr_min && snpend <= selected_chr_max) {
+      closeAlert(session, "exampleAlert3")          
+    } else {
+      error_msg <- "The variant must be inclued in the selected region"
+      iserror <- TRUE
+      createAlert(session, "alert3", "exampleAlert3", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    }
+    
+    if(!iserror) {
+      writeLines(text = paste(input$snp_label,snpstart,snpend,"n",sep="\t"),
+                 con = snpcon)
+      updateButton(session, "loadfile", disabled = TRUE)
+      
+      
+      return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
+                    "-",snpend, "]"))
+    }
+    else
+    {
+      return("Fail while Adding SNP ")
+    }
+  })
+  
+  observe({
+    output$addsnp_msg <- renderText({
+      addSNPs()
     })
   })
   
   
-  observe ({
-    if(!is.na(input$position_min)) {
+  loadSNPs <- eventReactive(input$loadfile, {
+    inFile <- input$loadfile
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    tryCatch ({
+      # get data from imported snp file
+      imported_snp = read.table(inFile$datapath, header=TRUE, 
+                                stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      if(is.null(snpcon)) {
+        print('ok')
+      }
       
-      if (input$addsnp == 0)
-        return()
-      
-      isolate ({
+      if((!"id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
+           (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
+        stop(paste0("File format error : waiting for a tab delimited file containing ",
+                    "at least the following 4 columns : id, start, end, metadata"))
+      } else {
+        updateButton(session,inputId = "addsnp", disabled = TRUE)
         
-        if(is.na(input$snp_position_min)) {
-          snpstart <- 0
-        } else {
-          snpstart <- input$snp_position_min
+        for (i in (1:nrow(imported_snp))) {
+          new_snp = imported_snp[i,]
+          writeLines(text = paste(new_snp$id,new_snp$start,new_snp$end,
+                                  new_snp$metadata,sep="\t"), con = snpcon)
         }
         
-        if(is.na(input$snp_position_max)) {
-          snpend <- 0
-        } else {
-          snpend <- input$snp_position_max
-        }
         
-        selected_chr_min <- input$position_min
-        selected_chr_max <- input$position_max
+        return(paste0("Importing following snps : ", paste(imported_snp$id, 
+                                                           collapse = ", ")))
         
-        error_msg <- c()
-        iserror <- FALSE
-        
-        if(snpend < snpstart){
-          error_msg <- "SNP end must be greater than SNP start"
-          iserror <- TRUE
-          createAlert(session, "alert1", "exampleAlert1", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = TRUE)
-        } else {
-          closeAlert(session, "exampleAlert1")
-        }
-        
-        if(snpend == 0 || snpstart == 0){
-          error_msg <- "SNP positions are mandatory"
-          iserror <- TRUE
-          createAlert(session, "alert2", "exampleAlert2", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = TRUE)
-        } else {
-          closeAlert(session, "exampleAlert2")
-        }
-        
-        if(snpstart >= selected_chr_min && snpstart <= selected_chr_max &&
-             snpend >= selected_chr_min && snpend <= selected_chr_max) {
-          closeAlert(session, "exampleAlert3")          
-        } else {
-          error_msg <- "The variant must be inclued in the selected region"
-          iserror <- TRUE
-          createAlert(session, "alert3", "exampleAlert3", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = TRUE)
-        }
-        
-        if(!iserror) {
-          writeLines(text = paste(input$snp_label,snpstart,snpend,"n",sep="\t"),
-                     con = snpcon)
-          output$addsnp_msg <- renderText({
-            return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
-                          "-",snpend, "]"))})
-          # si snpadd alors desactivation loadfile
-          updateButton(session, "loadfile", disabled = TRUE)
-        }
-      })
-    }
-  })
-  
-  output$highlight <- renderUI({
-    list(
-      fluidRow(
-        column(width = 6,
-               numericInput(inputId = "hgstart", 
-                            label = "start", 
-                            value = NA)),
-        column(width = 6,
-               numericInput(inputId = "hgend", 
-                            label = "start", 
-                            value = NA))
-      ),
-      br(),
-      div(style="form-group shiny-input-container",
-          #           tags$label("Higlight method", `for` = "highlight-method"), 
-          #           checkboxGroupInput("hgmethod", label = NULL, 
-          #                              choices = list("alpha" = "alpha", "color" = "color"),
-          #                              inline = TRUE, selected = "alpha"),
-          selectInput(inputId = "hgcolor", label = "Choose a color", 
-                      choices = list("blue" = "steelblue",
-                                     "green" = "chartreuse4",
-                                     "orange" = "darkorange",
-                                     "violet" = "darkviolet",
-                                     "pink" = "deeppink",
-                                     "red" = "red3",
-                                     "yellow" = "gold"))
-      ),
-      bsButton(inputId = "addhg", label = "Add new Highlight Zone"),
-      br(),
-      br(),
-      span(textOutput("addhg_msg"), style = "color:green")
-    )
+      }
+    },
+    error = function(e) {
+      print(e)
+      return(paste0("Error while trying to import snps file : ", e))
+    })
   })
   
   
-  output$addhg_msg <- renderText({
-    if(!is.na(input$position_min)) {
-      
-      if (input$addhg == 0)
-        return()
-      
-      isolate ({
-        if(is.na(input$hgstart)) {
-          hgstart <- 0
-        } else {
-          hgstart <- input$hgstart
-        }
-        
-        if(is.na(input$hgend)) {
-          hgend <- 0
-        } else {
-          hgend <- input$hgend
-        }
-        
-        selected_chr_min <- input$position_min
-        selected_chr_max <- input$position_max
-        
-        error_msg <- c()
-        iserror <- FALSE
-        
-        if(hgend < hgstart){
-          error_msg <- "HG Zone end must be greater than HG Zone start"
-          iserror <- TRUE
-          createAlert(session, "alert4", "exampleAlert4", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = TRUE)
-        } else {
-          closeAlert(session, "exampleAlert4")
-        }
-        
-        if(hgend == 0 || hgstart == 0){
-          error_msg <- "HG Zone positions are mandatory"
-          iserror <- TRUE
-          createAlert(session, "alert5", "exampleAlert5", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = TRUE)
-        } else {
-          closeAlert(session, "exampleAlert5")
-        }
-        
-        if(hgstart >= selected_chr_min && hgstart <= selected_chr_max &&
-             hgend >= selected_chr_min && hgend <= selected_chr_max) {
-          closeAlert(session, "exampleAlert6")          
-        } else {
-          error_msg <- "The HG Zone must be inclued in the selected region"
-          iserror <- TRUE
-          createAlert(session, "alert6", "exampleAlert6", title = "Warning",
-                      content = error_msg, append = TRUE, dismiss = TRUE)
-        }
-        
-        if(!iserror) {
-          writeLines(text = paste(hgstart,hgend,input$hgcolor,sep="\t"),
-                     con = hgcon)
-          return(paste0("Adding Highlight zone at position [", hgstart,
-                        "-",hgend, "] with color : ",input$hgcolor))
-        }
-      })
+  observe({
+    output$loadsnp_msg <- renderText({
+      loadSNPs()
+    })
+  })
+  
+  
+  addHGs <- eventReactive(input$addhg,{
+    if(is.na(input$hgstart)) {
+      hgstart <- 0
+    } else {
+      hgstart <- input$hgstart
     }
+    
+    if(is.na(input$hgend)) {
+      hgend <- 0
+    } else {
+      hgend <- input$hgend
+    }
+    
+    selected_chr_min <- input$position_min
+    selected_chr_max <- input$position_max
+    
+    error_msg <- c()
+    iserror <- FALSE
+    
+    if(hgend < hgstart){
+      error_msg <- "HG Zone end must be greater than HG Zone start"
+      iserror <- TRUE
+      createAlert(session, "alert4", "exampleAlert4", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    } else {
+      closeAlert(session, "exampleAlert4")
+    }
+    
+    if(hgend == 0 || hgstart == 0){
+      error_msg <- "HG Zone positions are mandatory"
+      iserror <- TRUE
+      createAlert(session, "alert5", "exampleAlert5", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    } else {
+      closeAlert(session, "exampleAlert5")
+    }
+    
+    if(hgstart >= selected_chr_min && hgstart <= selected_chr_max &&
+         hgend >= selected_chr_min && hgend <= selected_chr_max) {
+      closeAlert(session, "exampleAlert6")          
+    } else {
+      error_msg <- "The HG Zone must be inclued in the selected region"
+      iserror <- TRUE
+      createAlert(session, "alert6", "exampleAlert6", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    }
+    
+    if(!iserror) {
+      writeLines(text = paste(hgstart,hgend,input$hgcolor,sep="\t"),
+                 con = hgcon)
+      return(paste0("Adding Highlight zone at position [", hgstart,
+                    "-",hgend, "] with color : ",input$hgcolor))
+    }
+    
+  })
+  
+  
+  observe({
+    output$addhg_msg <- renderText({
+      if(!is.na(input$position_min)) {     
+        print("test !!")
+        addHGs()
+      }
+    })
   })
   
   observe({
@@ -382,6 +393,8 @@ shinyServer(function(input, output, session) {
     
     isolate({
       updateButton(session, "run", disabled = TRUE)
+      updateButton(session, "addsnp", disabled = TRUE)
+      updateButton(session, "addhg", disabled = TRUE)
       
     })
   })
@@ -540,42 +553,7 @@ shinyServer(function(input, output, session) {
   
   output$addsnp_msg <- renderText({
     
-    inFile <- input$loadfile
     
-    if (is.null(inFile))
-      return(NULL)
-    
-    tryCatch ({
-      # get data from imported snp file
-      imported_snp = read.table(inFile$datapath, header=TRUE, 
-                                stringsAsFactors=FALSE, quote = "\"", sep="\t")
-      if(is.null(snpcon)) {
-        print('ok')
-      }
-      
-      if((!"id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
-           (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
-        stop(paste0("File format error : waiting for a tab delimited file containing ",
-                    "at least the following 4 columns : id, start, end, metadata"))
-      } else {
-        updateButton(session,inputId = "addsnp", disabled = TRUE)
-        
-        for (i in (1:nrow(imported_snp))) {
-          new_snp = imported_snp[i,]
-          writeLines(text = paste(new_snp$id,new_snp$start,new_snp$end,
-                                  new_snp$metadata,sep="\t"), con = snpcon)
-        }
-        
-        
-        return(paste0("Importing following snps : ", paste(imported_snp$id, 
-                                                           collapse = ", ")))
-        
-      }
-    },
-    error = function(e) {
-      print(e)
-      return(paste0("Error while trying to import snps file : ", e))
-    })
   })
   
   observe ({
@@ -740,7 +718,6 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  
   observeEvent(input$reset, {
     
     # close previous log file
@@ -750,19 +727,23 @@ shinyServer(function(input, output, session) {
     setup_files()
     
     # RESET PARAMETERS
-    shinyjs::reset("params")
+    updateNumericInput(session, "position_min", value = NA)
+    updateNumericInput(session, "position_max", value = NA)
+    updateNumericInput(session, "snp_position_min", value = NA)
+    updateNumericInput(session, "snp_position_max", value = NA)
+    updateNumericInput(session, "hgstart", value = NA)
+    updateNumericInput(session, "hgend", value = NA)
     updateButton(session, "addsnp", disabled = FALSE)
     updateButton(session, "addhg", disabled = FALSE)
     updateButton(session, "run", disabled = FALSE)
     updateButton(session, "loadfile", disabled = FALSE)
     updateButton(session, "reset", disabled = FALSE)
-    updateNumericInput(session, "hgstart", value = NA)
-    updateNumericInput(session, "hgend", value = NA)
     output$addsnp_msg <- renderText({return("")})
+    output$loadsnp_msg <- renderText({return("")})
     output$addhg_msg <- renderText({return("")})
     
     # RESET RESULTS
-    shinyjs::reset("results")
+    
     updateButton(session, "addRNASeq", disabled = FALSE)
     updateButton(session, "runCHIPSeq", disabled = FALSE)
     updateButton(session, "runRNASeq", disabled = TRUE)

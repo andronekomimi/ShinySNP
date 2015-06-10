@@ -1,7 +1,6 @@
 # SHINYSNP ui.R
 library(shinyBS)
 library(shinyFiles)
-library(shinyjs)
 
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
@@ -26,103 +25,124 @@ footer<-function(){
 
 
 shinyUI(fluidPage(
-  useShinyjs(),
   tags$head(
     tags$link(rel = "icon", type = "image/x-icon", href = "logo.jpg")
   ),
   titlePanel("Shiny SNP"),
+  uiOutput(outputId ="uiLogin"),
   sidebarLayout(
-    
-    sidebarPanel(
-      helpText(p("Welcome on Shiny SNP")),
-      uiOutput(outputId ="uiLogin"),
-      h3("Select region"),
-      div(id = "params",
-      selectInput("chr", 
-                  label = "Choose a chromosome",
-                  choices = as.character(chroms$chr),
-                  selected = "chr12"),
-      fluidRow(
-        column(width = 6,
-               numericInput(inputId = 'position_min', 
-                            label = "start",
-                            value = NA)),
-        column(width = 6,
-               numericInput(inputId = 'position_max', 
-                            label = "end",
-                            value = NA))
-      ),
-      bsCollapse(id = "param", open = NULL, multiple = FALSE,
-                 bsCollapsePanel('Highlight regions',
-                                 uiOutput("highlight"),
-                                 style = "default")
-      ),
-      br(),
-      h3("Add variants"),
-      helpText("Add your variants manually or load a file conaining the variants list"),
-      helpText("File format : ",
-      tags$ul(
-        tags$li("Tab-delimited, with 4 named column 'id,start,stop,metadata'"),
-        tags$li("One variant per line"),
-        tags$li("The metadata column enables to make variants groups. 
+    conditionalPanel(condition = "!output.uiLogin",
+                     list(
+                       sidebarPanel(
+                         helpText(p("Welcome on Shiny SNP")),
+                         h3("Select region"),
+                         selectInput("chr", 
+                                     label = "Choose a chromosome",
+                                     choices = as.character(chroms$chr),
+                                     selected = "chr12"),
+                         fluidRow(
+                           column(width = 6,
+                                  numericInput(inputId = 'position_min', 
+                                               label = "start",
+                                               value = NA)),
+                           column(width = 6,
+                                  numericInput(inputId = 'position_max', 
+                                               label = "end",
+                                               value = NA))
+                         ),
+                         hr(),
+                         h3("Select regions to highlight"),
+                         fluidRow(
+                           column(width = 6,
+                                  numericInput(inputId = "hgstart", 
+                                               label = "start", 
+                                               value = NA)),
+                           column(width = 6,
+                                  numericInput(inputId = "hgend", 
+                                               label = "end", 
+                                               value = NA))
+                         ),
+                         br(),
+                         div(style="form-group shiny-input-container",
+                             selectInput(inputId = "hgcolor", label = "Choose a color", 
+                                         choices = list("blue" = "steelblue",
+                                                        "green" = "chartreuse4",
+                                                        "orange" = "darkorange",
+                                                        "violet" = "darkviolet",
+                                                        "pink" = "deeppink",
+                                                        "red" = "red3",
+                                                        "yellow" = "gold"))
+                         ),
+                         bsButton(inputId = "addhg", label = "Add new Highlight Zone"),
+                         br(),
+                         br(),
+                         span(textOutput("addhg_msg"), style = "color:green"),
+                         hr(),
+                         h3("Add variants"),
+                         helpText("Add your variants manually or load a file conaining the variants list"),
+                         helpText("File format : ",
+                                  tags$ul(
+                                    tags$li("Tab-delimited, with 4 named column 'id,start,stop,metadata'"),
+                                    tags$li("One variant per line"),
+                                    tags$li("The metadata column enables to make variants groups. 
                The variants of the same group will be represent with the same color"))),
-      textInput(inputId = "snp_label",label = "Variant Label", value = "My SNP"),
-      fluidRow(
-        column(width = 6,
-               numericInput(inputId = 'snp_position_min', 
-                            label = "start",
-                            value = 0)),
-        column(width = 6,
-               numericInput(inputId = 'snp_position_max', 
-                            label = "end",
-                            value = 0))),
-      bsButton(inputId = "addsnp",label = "Add new SNP", disabled = TRUE),
-      hr(),
-      fileInput('loadfile', 'Choose file to upload',
-                accept = c(
-                  'text/csv',
-                  'text/comma-separated-values',
-                  'text/tab-separated-values',
-                  'text/plain',
-                  '.csv',
-                  '.tsv'
-                )
-      ),
-      span(textOutput("addsnp_msg"), style = "color:green"),
-      br(),
-      h3("Choose the dataset"),
-      radioButtons(inputId = 'my.dataset', 
-                   inline = TRUE,
-                   label = NULL,
-                   choices = list("local" = "interne", 
-                                  "4DGenome" = "externe"),
-                   selected = "interne"),
-      br(),
-      actionButton(inputId = "runEx", label = "Run Example"),
-      fluidRow(
-        column(width = 4,
-               bsButton(inputId = "run", label = "Run Analysis", style = "btn btn-primary", disabled = TRUE)),
-        column(width = 4,
-               bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary", disabled = TRUE)),
-        column(width = 4,
-               bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
-      ),
-      br(),
-      br(),
-      footer()
+                         textInput(inputId = "snp_label",label = "Variant Label", value = "My SNP"),
+                         fluidRow(
+                           column(width = 6,
+                                  numericInput(inputId = 'snp_position_min', 
+                                               label = "start",
+                                               value = NA)),
+                           column(width = 6,
+                                  numericInput(inputId = 'snp_position_max', 
+                                               label = "end",
+                                               value = NA))),
+                         bsButton(inputId = "addsnp",label = "Add new SNP"),
+                         br(),br(),
+                         span(textOutput("addsnp_msg"), style = "color:green"),
+                         hr(),
+                         fileInput('loadfile', 'Choose file to upload',
+                                   accept = c(
+                                     'text/csv',
+                                     'text/comma-separated-values',
+                                     'text/tab-separated-values',
+                                     'text/plain',
+                                     '.csv',
+                                     '.tsv',
+                                     '.txt',
+                                     ''
+                                   )
+                         ),
+                         span(textOutput("loadsnp_msg"), style = "color:green"),
+                         hr(),
+                         h3("Choose the dataset"),
+                         radioButtons(inputId = 'my.dataset', 
+                                      inline = TRUE,
+                                      label = NULL,
+                                      choices = list("local" = "interne", 
+                                                     "4DGenome" = "externe"),
+                                      selected = "interne"),
+                         br(),
+                         uiOutput(outputId = "runEx"),
+                         fluidRow(
+                           column(width = 4,
+                                  bsButton(inputId = "run", label = "Run Analysis", style = "btn btn-primary", disabled = TRUE)),
+                           column(width = 4,
+                                  bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary", disabled = TRUE)),
+                           column(width = 4,
+                                  bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
+                       ))
     ),
     mainPanel(
-      div(id = "results",
       conditionalPanel(condition = "!output.uiLogin",
                        list(
-                         bsAlert("alert1"),
-                         bsAlert("alert2"),
-                         bsAlert("alert3"),
-                         bsAlert("alert4"),
-                         bsAlert("alert5"),
-                         bsAlert("alert6"),
                          navbarPage(span("Analysis", style = "color:green"),
                                     tabPanel("3D Conformation",
+                                             bsAlert("alert1"),
+                                             bsAlert("alert2"),
+                                             bsAlert("alert3"),
+                                             bsAlert("alert4"),
+                                             bsAlert("alert5"),
+                                             bsAlert("alert6"),
                                              plotOutput("plot1"),
                                              conditionalPanel(condition = "input.run > 0 && !output.plot1",
                                                               list(
@@ -217,7 +237,7 @@ shinyUI(fluidPage(
                                     
                          )
                        )
-                       ))
       )
-  )
+    )
+  ),footer()
 ))
