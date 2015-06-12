@@ -1,6 +1,5 @@
 # SHINYSNP ui.R
 library(shinyBS)
-library(shinyFiles)
 
 # chrom_list dans les parametres
 chroms = read.csv("data/chromosomes.txt", header = TRUE)
@@ -76,7 +75,7 @@ shinyUI(fluidPage(
                          bsButton(inputId = "addhg", label = "Add new Highlight Zone"),
                          br(),
                          br(),
-                         span(textOutput("addhg_msg"), style = "color:green"),
+                         bsAlert("addhg_msg_i"),
                          hr(),
                          h3("Add variants"),
                          helpText("Add your variants manually or load a file conaining the variants list"),
@@ -98,7 +97,7 @@ shinyUI(fluidPage(
                                                value = NA))),
                          bsButton(inputId = "addsnp",label = "Add new SNP"),
                          br(),br(),
-                         span(textOutput("addsnp_msg"), style = "color:green"),
+                         bsAlert("addsnp_msg_i"),
                          hr(),
                          fileInput('loadfile', 'Choose file to upload',
                                    accept = c(
@@ -112,7 +111,7 @@ shinyUI(fluidPage(
                                      ''
                                    )
                          ),
-                         span(textOutput("loadsnp_msg"), style = "color:green"),
+                         bsAlert("loadsnp_msg_i"),
                          hr(),
                          h3("Choose the dataset"),
                          radioButtons(inputId = 'my.dataset', 
@@ -129,7 +128,9 @@ shinyUI(fluidPage(
                            column(width = 4,
                                   bsButton(inputId = "reset", label = "New Analysis", style = "btn btn-primary", disabled = TRUE)),
                            column(width = 4,
-                                  bsButton(inputId = "end",label = "End Analysis", style = "btn btn-primary")))
+                                  tags$button(type = "button", class="btn btn-default action-button shiny-bound-input",
+                                              id = "end", "End Analysis", onClick="history.go(0)")
+                           ))
                        ))
     ),
     mainPanel(
@@ -137,6 +138,7 @@ shinyUI(fluidPage(
                        list(
                          navbarPage(span("Analysis", style = "color:green"),
                                     tabPanel("3D Conformation",
+                                             bsAlert("alert0"),
                                              bsAlert("alert1"),
                                              bsAlert("alert2"),
                                              bsAlert("alert3"),
@@ -154,7 +156,13 @@ shinyUI(fluidPage(
                                              conditionalPanel(condition = "input.run > 0 && output.plot1",
                                                               list(
                                                                 br(),
-                                                                downloadButton(outputId = "download_plot1", label = "Download")
+                                                                fluidRow(
+                                                                  column(width = 6,
+                                                                         downloadButton(outputId = "download_plot1_png", label = "Download PNG")),
+                                                                  column(width = 6,
+                                                                         downloadButton(outputId = "download_plot1_pdf", label = "Download PDF"))
+                                                                )
+                                                                
                                                               )
                                              ),
                                              br(),
@@ -172,15 +180,25 @@ shinyUI(fluidPage(
                                              conditionalPanel(condition = "input.run > 0 && output.plot2",
                                                               list(
                                                                 br(),
-                                                                downloadButton(outputId = "download_plot2", label = "Download")
+                                                                fluidRow(
+                                                                  column(width = 6,
+                                                                         downloadButton(outputId = "download_plot2_png", label = "Download PNG")),
+                                                                  column(width = 6,
+                                                                         downloadButton(outputId = "download_plot2_pdf", label = "Download PDF"))
+                                                                )
                                                               )
                                              ),
-                                             hr(),
+                                             br(),
                                              plotOutput("plot3"),
                                              conditionalPanel(condition = "input.run > 0 && output.plot3",
                                                               list(
                                                                 br(),
-                                                                downloadButton(outputId = "download_plot3", label = "Download")
+                                                                fluidRow(
+                                                                  column(width = 6,
+                                                                         downloadButton(outputId = "download_plot3_png", label = "Download PNG")),
+                                                                  column(width = 6,
+                                                                         downloadButton(outputId = "download_plot3_pdf", label = "Download PDF"))
+                                                                )
                                                               )
                                              ),
                                              br(),
@@ -214,10 +232,10 @@ shinyUI(fluidPage(
                                              fluidRow(
                                                column(width = 6,
                                                       bsButton(inputId = "addRNASeq", label = "Add RNA-Seq analysis", disabled = TRUE),
-                                                      br(), br(), span(textOutput("addrnaseq_msg"), style = "color:green"), br()),
+                                                      br(), br(), bsAlert("addrnaseq_msg_i"), br()),
                                                column(width = 6,
                                                       bsButton(inputId = "runRNASeq",label = "Send analysis request", style = "btn btn-primary", disabled = TRUE),
-                                                      br(), br(), span(textOutput("runrnaseq_msg"), style = "color:green")))
+                                                      br(), br(), bsAlert("runrnaseq_msg_i")))
                                     ),
                                     tabPanel("ChIP-Seq",
                                              h3("ChIP-Seq"),
@@ -232,7 +250,7 @@ shinyUI(fluidPage(
                                              br(),
                                              br(),
                                              bsButton(inputId = "runCHIPSeq",label = "Send analysis request", style = "btn btn-primary",disabled = TRUE),
-                                             br(), br(), span(textOutput("runchipseq_msg"), style = "color:green")
+                                             br(), br(), bsAlert("runchipseq_msg_i")
                                     )
                                     
                          )

@@ -1,5 +1,4 @@
 # SHINYSNP server.R
-
 source("data_functions.R")
 library(sendmailR)
 
@@ -104,7 +103,9 @@ close_files <- function() {
 
 options(scipen=999) # virer l'annotation scientifique
 
+
 shinyServer(function(input, output, session) {
+  
   USER <- reactiveValues(Logged = FALSE)
   
   output$uiLogin <- renderUI({
@@ -155,7 +156,7 @@ shinyServer(function(input, output, session) {
           updateButton(session, "addsnp", disabled = FALSE)
           updateButton(session, "addhg", disabled = FALSE)
           updateButton(session, "run", disabled = FALSE)
-          updateButton(session, "reset", disabled = FALSE)
+          updateButton(session, "reset", disabled = TRUE)
           updateButton(session, "addRNASeq", disabled = FALSE)
           updateButton(session, "runCHIPSeq", disabled = FALSE)
           
@@ -205,6 +206,7 @@ shinyServer(function(input, output, session) {
   
   
   addSNPs <- eventReactive(input$addsnp, {
+    print("addSNPs")
     if(is.na(input$snp_position_min)) {
       snpstart <- 0
     } else {
@@ -222,6 +224,16 @@ shinyServer(function(input, output, session) {
     
     error_msg <- c()
     iserror <- FALSE
+    
+    if(is.na(selected_chr_min) || is.na(selected_chr_max)) {
+      error_msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+      iserror <- TRUE
+      createAlert(session, "alert0", "exampleAlert0", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    } else {
+      closeAlert(session, "exampleAlert0")
+    }
+    
     
     if(snpend < snpstart){
       error_msg <- "SNP end must be greater than SNP start"
@@ -241,14 +253,16 @@ shinyServer(function(input, output, session) {
       closeAlert(session, "exampleAlert2")
     }
     
-    if(snpstart >= selected_chr_min && snpstart <= selected_chr_max &&
-         snpend >= selected_chr_min && snpend <= selected_chr_max) {
-      closeAlert(session, "exampleAlert3")          
-    } else {
-      error_msg <- "The variant must be inclued in the selected region"
-      iserror <- TRUE
-      createAlert(session, "alert3", "exampleAlert3", title = "Warning",
-                  content = error_msg, append = TRUE, dismiss = TRUE)
+    if(!is.na(selected_chr_min) && !is.na(selected_chr_max)){
+      if(snpstart >= selected_chr_min && snpstart <= selected_chr_max &&
+           snpend >= selected_chr_min && snpend <= selected_chr_max) {
+        closeAlert(session, "exampleAlert3")          
+      } else {
+        error_msg <- "The variant must be inclued in the selected region"
+        iserror <- TRUE
+        createAlert(session, "alert3", "exampleAlert3", title = "Warning",
+                    content = error_msg, append = TRUE, dismiss = TRUE)
+      }
     }
     
     if(!iserror) {
@@ -257,20 +271,25 @@ shinyServer(function(input, output, session) {
       updateButton(session, "loadfile", disabled = TRUE)
       
       
-      return(paste0("Adding SNP ",input$snp_label," position : [", snpstart,
-                    "-",snpend, "]"))
+      msg = paste0("Adding SNP ",input$snp_label," position : [", snpstart,
+                   "-",snpend, "]")
     }
     else
     {
-      return("Fail while Adding SNP ")
+      msg = "Fail while Adding SNP "
     }
+    
+    closeAlert(session, alertId = "addsnp_msg")
+    createAlert(session, anchorId = "addsnp_msg_i", alertId = "addsnp_msg",
+                content = msg, append = FALSE)
   })
   
   observe({
-    output$addsnp_msg <- renderText({
-      addSNPs()
-    })
+    addSNPs()
   })
+  
+  
+  
   
   
   loadSNPs <- eventReactive(input$loadfile, {
@@ -301,26 +320,29 @@ shinyServer(function(input, output, session) {
         }
         
         
-        return(paste0("Importing following snps : ", paste(imported_snp$id, 
-                                                           collapse = ", ")))
+        msg = paste0("Importing following snps : ", paste(imported_snp$id, 
+                                                          collapse = ", "))
         
       }
     },
     error = function(e) {
       print(e)
-      return(paste0("Error while trying to import snps file : ", e))
+      msg = paste0("Error while trying to import snps file : ", e)
     })
+    
+    closeAlert(session, alertId = "loadsnp_msg")
+    createAlert(session, anchorId = "loadsnp_msg_i", alertId = "loadsnp_msg",
+                content = msg, append = FALSE)
   })
   
   
   observe({
-    output$loadsnp_msg <- renderText({
-      loadSNPs()
-    })
+    loadSNPs()
   })
   
   
   addHGs <- eventReactive(input$addhg,{
+    print("addHGs")
     if(is.na(input$hgstart)) {
       hgstart <- 0
     } else {
@@ -338,6 +360,15 @@ shinyServer(function(input, output, session) {
     
     error_msg <- c()
     iserror <- FALSE
+    
+    if(is.na(selected_chr_min) || is.na(selected_chr_max)) {
+      error_msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+      iserror <- TRUE
+      createAlert(session, "alert0", "exampleAlert0", title = "Warning",
+                  content = error_msg, append = TRUE, dismiss = TRUE)
+    } else {
+      closeAlert(session, "exampleAlert0")
+    }
     
     if(hgend < hgstart){
       error_msg <- "HG Zone end must be greater than HG Zone start"
@@ -357,34 +388,35 @@ shinyServer(function(input, output, session) {
       closeAlert(session, "exampleAlert5")
     }
     
-    if(hgstart >= selected_chr_min && hgstart <= selected_chr_max &&
-         hgend >= selected_chr_min && hgend <= selected_chr_max) {
-      closeAlert(session, "exampleAlert6")          
-    } else {
-      error_msg <- "The HG Zone must be inclued in the selected region"
-      iserror <- TRUE
-      createAlert(session, "alert6", "exampleAlert6", title = "Warning",
-                  content = error_msg, append = TRUE, dismiss = TRUE)
+    if(!is.na(selected_chr_min) && !is.na(selected_chr_max)){
+      if(hgstart >= selected_chr_min && hgstart <= selected_chr_max &&
+           hgend >= selected_chr_min && hgend <= selected_chr_max) {
+        closeAlert(session, "exampleAlert6")          
+      } else {
+        error_msg <- "The HG Zone must be inclued in the selected region"
+        iserror <- TRUE
+        createAlert(session, "alert6", "exampleAlert6", title = "Warning",
+                    content = error_msg, append = TRUE, dismiss = TRUE)
+      }
     }
     
     if(!iserror) {
       writeLines(text = paste(hgstart,hgend,input$hgcolor,sep="\t"),
                  con = hgcon)
-      return(paste0("Adding Highlight zone at position [", hgstart,
-                    "-",hgend, "] with color : ",input$hgcolor))
+      msg = paste0("Adding Highlight zone at position [", hgstart,"-",hgend, "] with color : ",input$hgcolor)
+      
+    } else {
+      msg = "Fail while adding Highlight zone"
     }
-    
+    closeAlert(session, alertId = "addhg_msg")
+    createAlert(session, anchorId = "addhg_msg_i", alertId = "addhg_msg",
+                content = msg, append = FALSE)
   })
-  
   
   observe({
-    output$addhg_msg <- renderText({
-      if(!is.na(input$position_min)) {     
-        print("test !!")
-        addHGs()
-      }
-    })
+    addHGs()
   })
+  
   
   observe({
     
@@ -392,18 +424,31 @@ shinyServer(function(input, output, session) {
       return()
     
     isolate({
+      updateButton(session, "reset", disabled = FALSE)
       updateButton(session, "run", disabled = TRUE)
       updateButton(session, "addsnp", disabled = TRUE)
       updateButton(session, "addhg", disabled = TRUE)
-      
     })
   })
   
   drawPlot1 <- reactive({
-    if (input$run == 0)
+    if (input$run == 0 || input$reset >= (input$run + input$runRNASeq + input$runCHIPSeq))
       return()
     
     isolate ({
+      
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        error_msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+        iserror <- TRUE
+        createAlert(session, "alert0", "exampleAlert0", title = "Warning",
+                    content = error_msg, append = TRUE, dismiss = TRUE)
+        return()
+        
+      } else {
+        closeAlert(session, "exampleAlert0")
+      }
+      
+      print("RUN Plot1")
       if(!is.null(snpcon) && isOpen(snpcon, "a+b")){
         close(con = snpcon)
       }
@@ -460,10 +505,22 @@ shinyServer(function(input, output, session) {
   })
   
   drawPlot23 <- reactive({
-    if (input$run == 0)
+    if (input$run == 0 || input$reset >= input$run)
       return()
     
     isolate ({
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        error_msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+        iserror <- TRUE
+        createAlert(session, "alert0", "exampleAlert0", title = "Warning",
+                    content = error_msg, append = TRUE, dismiss = TRUE)
+        return()
+        
+      } else {
+        closeAlert(session, "exampleAlert0")
+      }
+      
+      print("RUN Plot23")
       
       my.data <- load1DData(current_chr = input$chr)
       
@@ -524,7 +581,7 @@ shinyServer(function(input, output, session) {
     drawPlot23()$plot3
   })
   
-  output$download_plot1 <- downloadHandler(
+  output$download_plot1_png <- downloadHandler(
     filename = function() {
       "shinysnp_3D.png"
     },
@@ -533,7 +590,16 @@ shinyServer(function(input, output, session) {
     }
   )
   
-  output$download_plot2 <- downloadHandler(
+  output$download_plot1_pdf <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D.pdf"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot1())
+    }
+  )
+  
+  output$download_plot2_png <- downloadHandler(
     filename = function() {
       "shinysnp_1D.png"
     },
@@ -542,7 +608,7 @@ shinyServer(function(input, output, session) {
     }
   )
   
-  output$download_plot3 <- downloadHandler(
+  output$download_plot3_png <- downloadHandler(
     filename = function() {
       "shinysnp_hist.png"
     },
@@ -551,10 +617,23 @@ shinyServer(function(input, output, session) {
     }
   )
   
-  output$addsnp_msg <- renderText({
-    
-    
-  })
+  output$download_plot2_pdf <- downloadHandler(
+    filename = function() {
+      "shinysnp_1D.pdf"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot23()$plot2)
+    }
+  )
+  
+  output$download_plot3_pdf <- downloadHandler(
+    filename = function() {
+      "shinysnp_hist.pdf"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot23()$plot3)
+    }
+  )
   
   observe ({
     
@@ -564,56 +643,62 @@ shinyServer(function(input, output, session) {
     
     isolate ({
       
-      # working files
-      all_cell_merge_file = "all_cells_rnaseq.csv"
-      all_cell_unmerge_file = "all_cells_unmerge_rnaseq.csv"
-      hmec_merge_file = "hmec_rnaseq.csv"
-      hmec_unmerge_file = "hmec_unmerge_rnaseq.csv"
-      k562_merge_file = "k562_rnaseq.csv"
-      k562_unmerge_file = "k562_unmerge_rnaseq.csv"
-      mcf7_merge_file = "mcf7_rnaseq.csv"
-      mcf7_unmerge_file = "mcf7_unmerge_rnaseq.csv"
-      
-      # construire la ligne de commande pour le calcul du rnaseq
-      # Rscript rnaseq.R chr4 84100000 84600000 PENNY ../merge_rnaseq_cells
-      command_line = "Rscript rnaseq.R "
-      
-      # position
-      command_line = paste0(command_line, input$chr, " ", input$position_min,
-                            " ", input$position_max)
-      
-      # unique ID
-      command_line = paste0(command_line, " ", tempid)
-      
-      # si merge file : 1 seul commande
-      if(input$merge_rnaseq_file) {
-        if (input$merge_rnaseq_experiment){
-          command_line = paste0(command_line, "_all ", all_cell_merge_file)
-        } else {
-          command_line = paste0(command_line, "_all ", all_cell_unmerge_file)
-        }
-      } else { # sinon 3 commandes, 1 par cell type
-        root_command_line <- command_line
-        if (input$merge_rnaseq_experiment){
-          command_line = paste0(command_line, "_hmec ", hmec_merge_file)
-          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file)
-          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file)
-        } else {
-          command_line = paste0(command_line, "_hmec ", hmec_unmerge_file)
-          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file)
-          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file)
-        }
-      }
-      
-      if(isOpen(todornaseqcon,"w")) {
-        writeLines(command_line, todornaseqcon)
-        output$addrnaseq_msg <- renderText({
-          return("Adding RNA-Seq analysis")})
-        updateButton(session, "runRNASeq", disabled = FALSE)
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        msg <- "You need to define at least the region to study (chromosome, start and stop position)"
       } else {
-        output$addrnaseq_msg <- renderText({
-          return("Fail adding RNA-Seq analysis")})
+        # working files
+        all_cell_merge_file = "all_cells_rnaseq.csv"
+        all_cell_unmerge_file = "all_cells_unmerge_rnaseq.csv"
+        hmec_merge_file = "hmec_rnaseq.csv"
+        hmec_unmerge_file = "hmec_unmerge_rnaseq.csv"
+        k562_merge_file = "k562_rnaseq.csv"
+        k562_unmerge_file = "k562_unmerge_rnaseq.csv"
+        mcf7_merge_file = "mcf7_rnaseq.csv"
+        mcf7_unmerge_file = "mcf7_unmerge_rnaseq.csv"
+        
+        # construire la ligne de commande pour le calcul du rnaseq
+        # Rscript rnaseq.R chr4 84100000 84600000 PENNY ../merge_rnaseq_cells
+        command_line = "Rscript rnaseq.R "
+        
+        # position
+        command_line = paste0(command_line, input$chr, " ", input$position_min,
+                              " ", input$position_max)
+        
+        # unique ID
+        command_line = paste0(command_line, " ", tempid)
+        
+        # si merge file : 1 seul commande
+        if(input$merge_rnaseq_file) {
+          if (input$merge_rnaseq_experiment){
+            command_line = paste0(command_line, "_all ", all_cell_merge_file)
+          } else {
+            command_line = paste0(command_line, "_all ", all_cell_unmerge_file)
+          }
+        } else { # sinon 3 commandes, 1 par cell type
+          root_command_line <- command_line
+          if (input$merge_rnaseq_experiment){
+            command_line = paste0(command_line, "_hmec ", hmec_merge_file)
+            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file)
+            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file)
+          } else {
+            command_line = paste0(command_line, "_hmec ", hmec_unmerge_file)
+            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file)
+            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file)
+          }
+        }
+        
+        if(isOpen(todornaseqcon,"w")) {
+          writeLines(command_line, todornaseqcon)
+          msg = "Adding RNA-Seq analysis"
+          updateButton(session, "runRNASeq", disabled = FALSE)
+        } else {
+          msg = "Fail adding RNA-Seq analysis"
+        }
       }
+      
+      closeAlert(session, alertId = "addrnaseq_msg")
+      createAlert(session, anchorId = "addrnaseq_msg_i", alertId = "addrnaseq_msg",
+                  content = msg, append = FALSE)
       
     })
   })
@@ -621,41 +706,51 @@ shinyServer(function(input, output, session) {
   
   observe({
     if(input$runRNASeq > 0) {
-      updateButton(session, "addRNASeq", disabled = TRUE)
-      updateButton(session, "runRNASeq", disabled = TRUE)
-      success = FALSE
       
-      if(isOpen(todornaseqcon, "w")) {
-        close(todornaseqcon)
-        success = TRUE
-      } 
-      
-      
-      # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
-      # Mail de confirmation de soummision
-      
-      if(success){
-        output$runrnaseq_msg <- renderText({
-          return("Sending RNA-Seq analysis request")})
-        
-        from <- "no-reply@ShinySNP"
-        to <- OPERATOR
-        subject <- "RNA-Seq Submission Report"
-        msg <- paste0(USERNAME," has just submitted a RNA-Seq request with id:",tempid,".")
-        attachment <- mime_part(todornaseqfile, "command_line.txt")
-        msgWithAttachment <- list(msg,attachment)
-        sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
-        
-        
-        from <- "no-reply@ShinySNP"
-        to <- USERMAIL
-        subject <- "RNA-Seq Submission"
-        msg <- paste0("Your request has just been submitted with id:",tempid,".")
-        sendmail(from, to, subject, msg)
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        msg <- "You need to define at least the region to study (chromosome, start and stop position)"
       } else {
-        output$runrnaseq_msg <- renderText({
-          return("Fail submitting RNA-Seq analysis")})
+        
+        updateButton(session, "addRNASeq", disabled = TRUE)
+        updateButton(session, "runRNASeq", disabled = TRUE)
+        updateButton(session, "reset", disabled = FALSE)
+        
+        success = FALSE
+        
+        if(isOpen(todornaseqcon, "w")) {
+          close(todornaseqcon)
+          success = TRUE
+        } 
+        
+        
+        # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
+        # Mail de confirmation de soummision
+        
+        if(success){
+          output$runrnaseq_msg <- renderText({
+            return("Sending RNA-Seq analysis request")})
+          
+          from <- "no-reply@ShinySNP"
+          to <- OPERATOR
+          subject <- "RNA-Seq Submission Report"
+          msg <- paste0(USERNAME," has just submitted a RNA-Seq request with id:",tempid,".")
+          attachment <- mime_part(todornaseqfile, "command_line.txt")
+          msgWithAttachment <- list(msg,attachment)
+          sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
+          
+          
+          from <- "no-reply@ShinySNP"
+          to <- USERMAIL
+          subject <- "RNA-Seq Submission"
+          msg <- paste0("Your request has just been submitted with id:",tempid,".")
+          sendmail(from, to, subject, msg)
+        } else {
+          msg = "Fail submitting RNA-Seq analysis"
+        }
       }
+      closeAlert(session, alertId = "runrnaseq_msg")
+      createAlert(session, anchorId = "runrnaseq_msg_i", alertId = "runrnaseq_msg",
+                  content = msg, append = FALSE)
       
     }
   })
@@ -667,59 +762,71 @@ shinyServer(function(input, output, session) {
     }
     
     isolate ({
-      updateButton(session, "runCHIPSeq", disabled = TRUE)
-      success = FALSE
-      # working files
-      hmec_file = "hmec_chipseq.csv"
-      k562_file = "k562_chipseq.csv"
-      mcf7_file = "mcf7_chipseq.csv"
       
-      command_line = paste0("Rscript chipseq.R ", input$chr, " ", input$position_min,
-                            " ", input$position_max, " ", tempid)
-      
-      root_command_line <- command_line
-      command_line = paste0(command_line, "_hmec ", hmec_file)
-      command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file)
-      command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file)
-      
-      # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
-      if(isOpen(todochipseqcon, "w")) {
-        writeLines(command_line, todochipseqcon)
-        close(todochipseqcon)
-        success = TRUE
-      } 
-      
-      if(success){
-        output$runchipseq_msg <- renderText({
-          return("Sending ChIP-Seq analysis request")})
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+      } else {
+        updateButton(session, "runCHIPSeq", disabled = TRUE)
+        updateButton(session, "reset", disabled = FALSE)
+        
+        success = FALSE
+        # working files
+        hmec_file = "hmec_chipseq.csv"
+        k562_file = "k562_chipseq.csv"
+        mcf7_file = "mcf7_chipseq.csv"
+        
+        command_line = paste0("Rscript chipseq.R ", input$chr, " ", input$position_min,
+                              " ", input$position_max, " ", tempid)
+        
+        root_command_line <- command_line
+        command_line = paste0(command_line, "_hmec ", hmec_file)
+        command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file)
+        command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file)
         
         # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
-        # Mail de confirmation de soummision
+        if(isOpen(todochipseqcon, "w")) {
+          writeLines(command_line, todochipseqcon)
+          close(todochipseqcon)
+          success = TRUE
+        } 
         
-        from <- "no-reply@ShinySNP"
-        to <- OPERATOR
-        subject <- "ChIP-Seq Submission Report"
-        msg <- paste0(USERNAME," has just submitted a ChIP-Seq request with id:",tempid,".")
-        attachment <- mime_part(todochipseqfile, "command_line.txt")
-        msgWithAttachment <- list(msg,attachment)
-        sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
-        
-        from <- "no-reply@ShinySNP"
-        to <- USERMAIL
-        subject <- "ChIP-Seq Submission"
-        msg <- paste0("Your request has just been submitted with id:",tempid,".")
-        sendmail(from, to, subject, msg)
-      } else {
-        output$runchipseq_msg <- renderText({
-          return("Fail submitting ChIP-Seq analysis")})
+        if(success){
+          output$runchipseq_msg <- renderText({
+            return("Sending ChIP-Seq analysis request")})
+          
+          # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
+          # Mail de confirmation de soummision
+          
+          from <- "no-reply@ShinySNP"
+          to <- OPERATOR
+          subject <- "ChIP-Seq Submission Report"
+          msg <- paste0(USERNAME," has just submitted a ChIP-Seq request with id:",tempid,".")
+          attachment <- mime_part(todochipseqfile, "command_line.txt")
+          msgWithAttachment <- list(msg,attachment)
+          sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
+          
+          from <- "no-reply@ShinySNP"
+          to <- USERMAIL
+          subject <- "ChIP-Seq Submission"
+          msg <- paste0("Your request has just been submitted with id:",tempid,".")
+          sendmail(from, to, subject, msg)
+        } else {
+          
+          msg = "Fail submitting ChIP-Seq analysis"
+        }
       }
       
-      
+      closeAlert(session, alertId = "runchipseq_msg")
+      createAlert(session, anchorId = "runchipseq_msg_i", alertId = "runchipseq_msg",
+                  content = msg, append = FALSE)
     })
   })
   
   observeEvent(input$reset, {
+    #Desactiver reset pour eviter double click
+    updateButton(session, "reset", disabled = TRUE)
     
+    print("Im IN")
     # close previous log file
     close_files()
     
@@ -737,25 +844,25 @@ shinyServer(function(input, output, session) {
     updateButton(session, "addhg", disabled = FALSE)
     updateButton(session, "run", disabled = FALSE)
     updateButton(session, "loadfile", disabled = FALSE)
-    updateButton(session, "reset", disabled = FALSE)
-    output$addsnp_msg <- renderText({return("")})
-    output$loadsnp_msg <- renderText({return("")})
-    output$addhg_msg <- renderText({return("")})
+    
     
     # RESET RESULTS
     
     updateButton(session, "addRNASeq", disabled = FALSE)
     updateButton(session, "runCHIPSeq", disabled = FALSE)
     updateButton(session, "runRNASeq", disabled = TRUE)
-    output$addrnaseq_msg <- renderText({return("")})
-    output$runrnaseq_msg <- renderText({return("")})
-    output$runchipseq_msg <- renderText({return("")})
     
-    output$plot1 <- renderPlot({})
-    output$plot2 <- renderPlot({})
-    output$plot3 <- renderPlot({})
+    
+    # CLOSING ALL ALERT BOX
+    closeAlert(session, alertId = "addhg_msg")
+    closeAlert(session, alertId = "addsnp_msg")
+    closeAlert(session, alertId = "loadsnp_msg")
+    closeAlert(session, alertId = "addrnaseq_msg")
+    closeAlert(session, alertId = "runrnaseq_msg")
+    closeAlert(session, alertId = "runchipseq_msg")
+    
+    print("Resetting the analysis parameters...")
   })
-  
   
   observe({
     if(input$end > 0) {
@@ -764,9 +871,7 @@ shinyServer(function(input, output, session) {
       if (USER$Logged == TRUE) {
         close_files()
       }
-      # TROUVER UNE MANIERE MOINS LAIDE DE FERMER L'APPLI
       
-      stopApp(42)
     }
   })
   
