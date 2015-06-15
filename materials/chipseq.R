@@ -1,6 +1,6 @@
 args <- commandArgs(trailingOnly = TRUE)
 
-if(length(args) != 5) {
+if(length(args) < 5) {
   stop("Argument missing! Usage : scrip.R chrX start stop target_name path_to_file_list [path_to_snp_file]")
 }
 

@@ -1,0 +1,20 @@
+H3K4me3	/is1/users/lemaud01/data-pasteur/ENCFF000BJA.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BJB.bam	control1
+H2AFZ 	/is1/users/lemaud01/data-pasteur/ENCFF000BHN.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BHO.bam	control1
+H3K9me3 	/is1/users/lemaud01/data-pasteur/ENCFF000BHQ.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BHR.bam	control1
+H3K36me3 	/is1/users/lemaud01/data-pasteur/ENCFF000BII.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BIJ.bam	control1
+H3K4me3 	/is1/users/lemaud01/data-pasteur/ENCFF001FNZ.bam,/is1/users/lemaud01/data-pasteur/ENCFF001FOB.bam	control2
+H3K27ac 	/is1/users/lemaud01/data-pasteur/ENCFF000BHY.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BHZ.bam	control1
+H3K4me1 	/is1/users/lemaud01/data-pasteur/ENCFF000BIO.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BIP.bam	control1
+H3K79me2 	/is1/users/lemaud01/data-pasteur/ENCFF000BJH.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BJK.bam	control1
+CTCF	/is1/users/lemaud01/data-pasteur/ENCFF000BGZ.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BHA.bam	control1
+H3K9ac	/is1/users/lemaud01/data-pasteur/ENCFF000BJM.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BJQ.bam	control1
+CTCF_2	/is1/users/lemaud01/data-pasteur/ENCFF001HOZ.bam,/is1/users/lemaud01/data-pasteur/ENCFF001HPC.bam	control1
+H3K4me2 	/is1/users/lemaud01/data-pasteur/ENCFF000BIV.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BIX.bam	 control1
+H4K20me1 	/is1/users/lemaud01/data-pasteur/ENCFF000BJS.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BJU.bam	control1
+H3K27me3	/is1/users/lemaud01/data-pasteur/ENCFF001FNO.bam	control2
+H3K27me3_2 	/is1/users/lemaud01/data-pasteur/ENCFF000BID.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BIE.bam	control1
+EZH2 	/is1/users/lemaud01/data-pasteur/ENCFF000BHG.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BHK.bam	control1
+control1 	/is1/users/lemaud01/data-pasteur/ENCFF000BGU.bam,/is1/users/lemaud01/data-pasteur/ENCFF000BGV.bam	NA
+control2	/is1/users/lemaud01/data-pasteur/ENCFF001HPJ.bam	NA
+
+
