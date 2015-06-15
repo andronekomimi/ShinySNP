@@ -14,10 +14,13 @@ con = RSQLite::dbConnect(RSQLite::SQLite(), membership_db)
 members = dbGetQuery(con,'select * from membership')
 RSQLite::dbDisconnect(con)
 
+##### GLOBALS
+
 OPERATOR = "audrey.lemacon.1@ulaval.ca"
 USERMAIL = ""
 USERNAME = ""
 USERROLE = ""
+
 
 # files connections
 tempid = 0
@@ -36,6 +39,13 @@ todornaseqfile = ""
 
 todochipseqcon = ""
 todochipseqfile = ""
+
+# buttons
+run = FALSE
+reset = FALSE
+rnaseq = FALSE
+chipseq = FALSE
+
 
 setup_files <- function() {
   
@@ -424,15 +434,19 @@ shinyServer(function(input, output, session) {
       return()
     
     isolate({
-      updateButton(session, "reset", disabled = FALSE)
-      updateButton(session, "run", disabled = TRUE)
-      updateButton(session, "addsnp", disabled = TRUE)
-      updateButton(session, "addhg", disabled = TRUE)
+      run <<- TRUE
+      reset <<- FALSE
     })
   })
   
   drawPlot1 <- reactive({
-    if (input$run == 0 || input$reset >= (input$run + input$runRNASeq + input$runCHIPSeq))
+    
+    if (input$run == 0)
+      return()
+    
+    input$reset
+    
+    if (!run || reset)
       return()
     
     isolate ({
@@ -442,13 +456,23 @@ shinyServer(function(input, output, session) {
         iserror <- TRUE
         createAlert(session, "alert0", "exampleAlert0", title = "Warning",
                     content = error_msg, append = TRUE, dismiss = TRUE)
+        run <<- FALSE
         return()
         
       } else {
         closeAlert(session, "exampleAlert0")
       }
       
+      
+      # go ! 
+      
+      updateButton(session, "reset", disabled = FALSE)
+      updateButton(session, "run", disabled = TRUE)
+      updateButton(session, "addsnp", disabled = TRUE)
+      updateButton(session, "addhg", disabled = TRUE)
+      
       print("RUN Plot1")
+      
       if(!is.null(snpcon) && isOpen(snpcon, "a+b")){
         close(con = snpcon)
       }
@@ -505,7 +529,12 @@ shinyServer(function(input, output, session) {
   })
   
   drawPlot23 <- reactive({
-    if (input$run == 0 || input$reset >= input$run)
+    if (input$run == 0)
+      return()
+    
+    input$reset
+    
+    if (!run || reset)
       return()
     
     isolate ({
@@ -514,11 +543,20 @@ shinyServer(function(input, output, session) {
         iserror <- TRUE
         createAlert(session, "alert0", "exampleAlert0", title = "Warning",
                     content = error_msg, append = TRUE, dismiss = TRUE)
+        run <<- FALSE
         return()
         
       } else {
         closeAlert(session, "exampleAlert0")
       }
+      
+     
+      # go ! 
+      
+      updateButton(session, "reset", disabled = FALSE)
+      updateButton(session, "run", disabled = TRUE)
+      updateButton(session, "addsnp", disabled = TRUE)
+      updateButton(session, "addhg", disabled = TRUE)
       
       print("RUN Plot23")
       
@@ -705,10 +743,29 @@ shinyServer(function(input, output, session) {
   
   
   observe({
-    if(input$runRNASeq > 0) {
+    
+    if(input$runRNASeq == 0)
+      return()
+    
+    isolate({
+      rnaseq <<- TRUE
+    })
+  })
+  
+  
+  observe({
+    if(input$runRNASeq == 0)
+      return()
+    
+    if(!rnaseq)
+      return()
+    
+    isolate ({
       
       if(is.na(input$position_min) || is.na(input$position_max)) {
         msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+        rnaseq <<- FALSE
+        
       } else {
         
         updateButton(session, "addRNASeq", disabled = TRUE)
@@ -745,6 +802,7 @@ shinyServer(function(input, output, session) {
           msg <- paste0("Your request has just been submitted with id:",tempid,".")
           sendmail(from, to, subject, msg)
         } else {
+          rnaseq <<- FALSE
           msg = "Fail submitting RNA-Seq analysis"
         }
       }
@@ -752,8 +810,20 @@ shinyServer(function(input, output, session) {
       createAlert(session, anchorId = "runrnaseq_msg_i", alertId = "runrnaseq_msg",
                   content = msg, append = FALSE)
       
-    }
+    })
   })
+  
+  observe({
+    
+    if(input$runCHIPSeq == 0)
+      return()
+    
+    isolate({
+      chipseq <<- TRUE
+    })
+  })
+  
+  
   
   observe({
     
@@ -761,10 +831,14 @@ shinyServer(function(input, output, session) {
       return()
     }
     
+    if(!chipseq)
+      return()
+    
     isolate ({
       
       if(is.na(input$position_min) || is.na(input$position_max)) {
         msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+        chipseq <<- FALSE
       } else {
         updateButton(session, "runCHIPSeq", disabled = TRUE)
         updateButton(session, "reset", disabled = FALSE)
@@ -811,7 +885,7 @@ shinyServer(function(input, output, session) {
           msg <- paste0("Your request has just been submitted with id:",tempid,".")
           sendmail(from, to, subject, msg)
         } else {
-          
+          chipseq <<- FALSE
           msg = "Fail submitting ChIP-Seq analysis"
         }
       }
@@ -825,6 +899,7 @@ shinyServer(function(input, output, session) {
   observeEvent(input$reset, {
     #Desactiver reset pour eviter double click
     updateButton(session, "reset", disabled = TRUE)
+    reset <<- TRUE
     
     print("Im IN")
     # close previous log file
@@ -847,11 +922,14 @@ shinyServer(function(input, output, session) {
     
     
     # RESET RESULTS
-    
     updateButton(session, "addRNASeq", disabled = FALSE)
     updateButton(session, "runCHIPSeq", disabled = FALSE)
     updateButton(session, "runRNASeq", disabled = TRUE)
     
+    # RESET GLOBALS
+    run <<- FALSE
+    chipseq <<- FALSE
+    rnaseq <<- FALSE
     
     # CLOSING ALL ALERT BOX
     closeAlert(session, alertId = "addhg_msg")
