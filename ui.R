@@ -29,11 +29,23 @@ shinyUI(fluidPage(
   ),
   titlePanel("Shiny SNP"),
   uiOutput(outputId ="uiLogin"),
+  conditionalPanel(condition = "output.uiLogin",
+                   list(
+                     wellPanel(style = "background-color: #ffffff;",
+                               textInput("Username", "User Name:"),
+                               passwordInput("Password", "Password:"),
+                               br(),
+                               actionButton("Login", "Log in"),
+                               br(),br(),
+                               span(textOutput("pass"), style = "color:red")
+                     )
+                   )
+  ),
   sidebarLayout(
     conditionalPanel(condition = "!output.uiLogin",
                      list(
                        sidebarPanel(
-                         helpText(p("Welcome on Shiny SNP")),
+
                          h3("Select region"),
                          selectInput("chr", 
                                      label = "Choose a chromosome",
@@ -153,18 +165,7 @@ shinyUI(fluidPage(
                                                                     alt = "Please wait... I'm processing your query")
                                                               )
                                              ),
-                                             conditionalPanel(condition = "input.run > 0 && output.plot1",
-                                                              list(
-                                                                br(),
-                                                                fluidRow(
-                                                                  column(width = 6,
-                                                                         downloadButton(outputId = "download_plot1_png", label = "Download PNG")),
-                                                                  column(width = 6,
-                                                                         downloadButton(outputId = "download_plot1_pdf", label = "Download PDF"))
-                                                                )
-                                                                
-                                                              )
-                                             ),
+                                             uiOutput(outputId = "download_plot1"),
                                              br(),
                                              br()
                                     ),
@@ -177,30 +178,10 @@ shinyUI(fluidPage(
                                                                     alt = "Please wait... I'm processing your query")
                                                               )
                                              ),
-                                             conditionalPanel(condition = "input.run > 0 && output.plot2",
-                                                              list(
-                                                                br(),
-                                                                fluidRow(
-                                                                  column(width = 6,
-                                                                         downloadButton(outputId = "download_plot2_png", label = "Download PNG")),
-                                                                  column(width = 6,
-                                                                         downloadButton(outputId = "download_plot2_pdf", label = "Download PDF"))
-                                                                )
-                                                              )
-                                             ),
+                                             uiOutput(outputId = "download_plot2"),
                                              br(),
                                              plotOutput("plot3"),
-                                             conditionalPanel(condition = "input.run > 0 && output.plot3",
-                                                              list(
-                                                                br(),
-                                                                fluidRow(
-                                                                  column(width = 6,
-                                                                         downloadButton(outputId = "download_plot3_png", label = "Download PNG")),
-                                                                  column(width = 6,
-                                                                         downloadButton(outputId = "download_plot3_pdf", label = "Download PDF"))
-                                                                )
-                                                              )
-                                             ),
+                                             uiOutput(outputId = "download_plot3"),
                                              br(),
                                              br()
                                     ),

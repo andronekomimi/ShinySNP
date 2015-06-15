@@ -121,15 +121,7 @@ shinyServer(function(input, output, session) {
   output$uiLogin <- renderUI({
     if (USER$Logged == FALSE) {
       list(
-        h3("Please sign in"),
-        wellPanel(style = "background-color: #ffffff;",
-                  textInput("Username", "User Name:"),
-                  passwordInput("Password", "Password:"),
-                  br(),
-                  actionButton("Login", "Log in"),
-                  br(),br(),
-                  span(textOutput("pass"), style = "color:red")
-        )
+        h3("Please sign in")
       )
     }
   })
@@ -472,14 +464,12 @@ shinyServer(function(input, output, session) {
       updateButton(session, "addhg", disabled = TRUE)
       
       print("RUN Plot1")
-      
-      if(!is.null(snpcon) && isOpen(snpcon, "a+b")){
+      tryCatch ({
         close(con = snpcon)
-      }
-      
-      if(!is.null(hgcon) && isOpen(hgcon, "a+b")){
         close(hgcon)
-      }
+      },error = function(e) {
+        print(e)
+      })
       
       my.data <- load3DData(current_chr = input$chr, my.dataset = input$my.dataset)
       current_range <- setStudyRange(current_chr = input$chr, 
@@ -526,6 +516,29 @@ shinyServer(function(input, output, session) {
   
   output$plot1 <- renderPlot({
     drawPlot1()
+  })
+  
+  
+  # affichage de boutons download
+  output$download_plot1 <- renderUI ({
+    
+    if (input$run == 0)
+      return()
+    
+    input$reset
+    
+    if (!run || reset)
+      return()
+    
+    list(
+      br(),
+      fluidRow(
+        column(width = 6,
+               downloadButton(outputId = "download_plot1_png", label = "Download PNG")),
+        column(width = 6,
+               downloadButton(outputId = "download_plot1_pdf", label = "Download PDF"))
+      )
+    )
   })
   
   drawPlot23 <- reactive({
@@ -615,9 +628,53 @@ shinyServer(function(input, output, session) {
     drawPlot23()$plot2
   })
   
+  output$download_plot2 <- renderUI ({
+    
+    if (input$run == 0)
+      return()
+    
+    input$reset
+    
+    if (!run || reset)
+      return()
+    
+    list(
+      br(),
+      fluidRow(
+        column(width = 6,
+               downloadButton(outputId = "download_plot2_png", label = "Download PNG")),
+        column(width = 6,
+               downloadButton(outputId = "download_plot2_pdf", label = "Download PDF"))
+      )
+    )
+  })
+  
+  
   output$plot3 <- renderPlot({
     drawPlot23()$plot3
   })
+  
+  output$download_plot3 <- renderUI ({
+    
+    if (input$run == 0)
+      return()
+    
+    input$reset
+    
+    if (!run || reset)
+      return()
+    
+    list(
+      br(),
+      fluidRow(
+        column(width = 6,
+               downloadButton(outputId = "download_plot3_png", label = "Download PNG")),
+        column(width = 6,
+               downloadButton(outputId = "download_plot3_pdf", label = "Download PDF"))
+      )
+    )
+  })
+  
   
   output$download_plot1_png <- downloadHandler(
     filename = function() {
@@ -708,20 +765,20 @@ shinyServer(function(input, output, session) {
         # si merge file : 1 seul commande
         if(input$merge_rnaseq_file) {
           if (input$merge_rnaseq_experiment){
-            command_line = paste0(command_line, "_all ", all_cell_merge_file)
+            command_line = paste0(command_line, "_all ", all_cell_merge_file, " snpsfile.txt")
           } else {
-            command_line = paste0(command_line, "_all ", all_cell_unmerge_file)
+            command_line = paste0(command_line, "_all ", all_cell_unmerge_file, " snpsfile.txt")
           }
         } else { # sinon 3 commandes, 1 par cell type
           root_command_line <- command_line
           if (input$merge_rnaseq_experiment){
             command_line = paste0(command_line, "_hmec ", hmec_merge_file)
-            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file)
-            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file)
+            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file," snpsfile.txt")
+            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file," snpsfile.txt")
           } else {
             command_line = paste0(command_line, "_hmec ", hmec_unmerge_file)
-            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file)
-            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file)
+            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file," snpsfile.txt")
+            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file," snpsfile.txt")
           }
         }
         
@@ -768,14 +825,24 @@ shinyServer(function(input, output, session) {
         
       } else {
         
+        
+        
+        
         updateButton(session, "addRNASeq", disabled = TRUE)
         updateButton(session, "runRNASeq", disabled = TRUE)
         updateButton(session, "reset", disabled = FALSE)
         
         success = FALSE
         
+        tryCatch ({
+          close(con = snpcon)
+          close(hgcon)
+        },error = function(e) {
+          print(e)
+        })
+        
+        
         if(isOpen(todornaseqcon, "w")) {
-          close(todornaseqcon)
           success = TRUE
         } 
         
@@ -791,8 +858,9 @@ shinyServer(function(input, output, session) {
           to <- OPERATOR
           subject <- "RNA-Seq Submission Report"
           msg <- paste0(USERNAME," has just submitted a RNA-Seq request with id:",tempid,".")
-          attachment <- mime_part(todornaseqfile, "command_line.txt")
-          msgWithAttachment <- list(msg,attachment)
+          attachment1 <- mime_part(todornaseqfile, "command_line.txt")
+          attachment2 <- mime_part(snpsfile, "snpsfile.txt")
+          msgWithAttachment <- list(msg,attachment1, attachment2)
           sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
           
           
@@ -843,6 +911,13 @@ shinyServer(function(input, output, session) {
         updateButton(session, "runCHIPSeq", disabled = TRUE)
         updateButton(session, "reset", disabled = FALSE)
         
+        tryCatch ({
+          close(con = snpcon)
+          close(hgcon)
+        },error = function(e) {
+          print(e)
+        })
+        
         success = FALSE
         # working files
         hmec_file = "hmec_chipseq.csv"
@@ -853,9 +928,9 @@ shinyServer(function(input, output, session) {
                               " ", input$position_max, " ", tempid)
         
         root_command_line <- command_line
-        command_line = paste0(command_line, "_hmec ", hmec_file)
-        command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file)
-        command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file)
+        command_line = paste0(command_line, "_hmec ", hmec_file, " snpsfile.txt")
+        command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file, " snpsfile.txt")
+        command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file, " snpsfile.txt")
         
         # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
         if(isOpen(todochipseqcon, "w")) {
@@ -875,8 +950,9 @@ shinyServer(function(input, output, session) {
           to <- OPERATOR
           subject <- "ChIP-Seq Submission Report"
           msg <- paste0(USERNAME," has just submitted a ChIP-Seq request with id:",tempid,".")
-          attachment <- mime_part(todochipseqfile, "command_line.txt")
-          msgWithAttachment <- list(msg,attachment)
+          attachment1 <- mime_part(todochipseqfile, "command_line.txt")
+          attachment2 <- mime_part(snpsfile, "snpsfile.txt")
+          msgWithAttachment <- list(msg,attachment1,attachment2)
           sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
           
           from <- "no-reply@ShinySNP"
