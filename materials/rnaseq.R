@@ -112,17 +112,19 @@ snps_track = NULL
 if(!is.null(snp_file) && file.exists(snp_file)) {
   snps_df <- read.table(snp_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
   
-  ids <- as.character(snps_df$id)
-  
-  snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
-  snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
-  snps$name <- ids
-  
-  snps_track <- autoplot(snps, aes(color=imp)) +
-    geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-    theme_bw() + xlim(current_range) + ylab("Variants") + guides(color= FALSE)
-  
-  print("Track snps -> DONE")
+  if(nrow(snps_df) > 0){
+    ids <- as.character(snps_df$id)
+    
+    snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
+    snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
+    snps$name <- ids
+    
+    snps_track <- autoplot(snps, aes(color=imp)) +
+      geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
+      theme_bw() + xlim(current_range) + ylab("Variants") + guides(color= FALSE)
+    
+    print("Track snps -> DONE")
+  }
 }
 
 ###################### GENE DATA ###################### 

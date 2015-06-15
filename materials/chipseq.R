@@ -1,7 +1,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 if(length(args) != 5) {
-    stop("Argument missing! Usage : scrip.R chrX start stop target_name path_to_file_list [path_to_snp_file]")
+  stop("Argument missing! Usage : scrip.R chrX start stop target_name path_to_file_list [path_to_snp_file]")
 }
 
 
@@ -151,24 +151,24 @@ print(paste0("bam_files_list length : ",length(bam_files_list)))
 means = list()
 
 for (i in (1:length(bam_files_list))) {	
-	bam_files_4_an_exp = bam_files_list[[i]]
-	names(bam_files_4_an_exp) <- file_path_sans_ext(bam_files_4_an_exp)
-	param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))
-	counts <- mclapply(bam_files_4_an_exp, function(x) countBam(x, param = param)$records, mc.cores = 4)
-	names(counts) <- names(bam_files_4_an_exp)
-	param <- ScanBamParam(which = current_range)
-	alignments <- mclapply(bam_files_4_an_exp, readGAlignments, param=param, mc.cores = 4)
-	
-	get_coverage <- function(bam_file) {
-		weight <- 1 / (counts[[bam_file]] / 1000000)
-		coverage <- coverage(alignments[[bam_file]], weight=weight)[current_range]
-		coverage <- as.numeric(coverage[[1]])
-		coverage[coverage < 0] <- 0
-		coverage
-	}
-
-	coverages <- mclapply(names(bam_files_4_an_exp), get_coverage, mc.cores = 4)
-	means <- c(means, list(colMeans(do.call("rbind", coverages))))
+  bam_files_4_an_exp = bam_files_list[[i]]
+  names(bam_files_4_an_exp) <- file_path_sans_ext(bam_files_4_an_exp)
+  param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))
+  counts <- mclapply(bam_files_4_an_exp, function(x) countBam(x, param = param)$records, mc.cores = 4)
+  names(counts) <- names(bam_files_4_an_exp)
+  param <- ScanBamParam(which = current_range)
+  alignments <- mclapply(bam_files_4_an_exp, readGAlignments, param=param, mc.cores = 4)
+  
+  get_coverage <- function(bam_file) {
+    weight <- 1 / (counts[[bam_file]] / 1000000)
+    coverage <- coverage(alignments[[bam_file]], weight=weight)[current_range]
+    coverage <- as.numeric(coverage[[1]])
+    coverage[coverage < 0] <- 0
+    coverage
+  }
+  
+  coverages <- mclapply(names(bam_files_4_an_exp), get_coverage, mc.cores = 4)
+  means <- c(means, list(colMeans(do.call("rbind", coverages))))
 }
 
 top_value <- max(unlist(mclapply(means, max, mc.cores = 4)))
@@ -207,11 +207,11 @@ print(names(means))
 trackname <- character()
 
 get_plot <- function(bam_file_name) {
-	coverage <- means[[bam_file_name]]
-	position <- seq(start(current_range), end(current_range))
-    	trackname <- bam_file_name
-	data <- data.frame(position = position, coverage = coverage)
-	ggplot(data, aes(x = position, y = coverage)) + geom_line() + ylim(0,top_value) + ylab(trackname) + theme_bw() + theme(axis.title.y = element_text(size = rel(0.5), angle = 90), axis.text.y = element_text(size = rel(0.5))) +  xlim(current_range) 
+  coverage <- means[[bam_file_name]]
+  position <- seq(start(current_range), end(current_range))
+  trackname <- bam_file_name
+  data <- data.frame(position = position, coverage = coverage)
+  ggplot(data, aes(x = position, y = coverage)) + geom_line() + ylim(0,top_value) + ylab(trackname) + theme_bw() + theme(axis.title.y = element_text(size = rel(0.5), angle = 90), axis.text.y = element_text(size = rel(0.5))) +  xlim(current_range) 
 }
 
 plots <- mclapply(names(means), get_plot, mc.cores = 4)
@@ -224,17 +224,19 @@ snps_track = NULL
 if(!is.null(snp_file) && file.exists(snp_file)) {
   snps_df <- read.table(snp_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
   
-  ids <- as.character(snps_df$id)
-  
-  snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
-  snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
-  snps$name <- ids
-  
-  snps_track <- autoplot(snps, aes(color=imp)) +
-    geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-    theme_bw() + xlim(current_range) + ylab("Variants") + guides(color= FALSE)
-  
-  print("Track snps -> DONE")
+  if(nrow(snps_df) > 0){
+    ids <- as.character(snps_df$id)
+    
+    snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
+    snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
+    snps$name <- ids
+    
+    snps_track <- autoplot(snps, aes(color=imp)) +
+      geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
+      theme_bw() + xlim(current_range) + ylab("Variants") + guides(color= FALSE)
+    
+    print("Track snps -> DONE")
+  }
 }
 
 ###################### GENE DATA ###################### 

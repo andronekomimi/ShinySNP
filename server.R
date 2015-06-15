@@ -291,9 +291,6 @@ shinyServer(function(input, output, session) {
   })
   
   
-  
-  
-  
   loadSNPs <- eventReactive(input$loadfile, {
     inFile <- input$loadfile
     
@@ -882,7 +879,17 @@ shinyServer(function(input, output, session) {
   })
   
   observe({
+    if(is.null(input$chipseq_analysis)){
+      updateButton(session, inputId = "runCHIPSeq", disabled = TRUE)
+    } else {
+      updateButton(session, inputId = "runCHIPSeq", disabled = FALSE)
+    }
     
+  })
+  
+  
+  
+  observe({
     if(input$runCHIPSeq == 0)
       return()
     
@@ -924,13 +931,17 @@ shinyServer(function(input, output, session) {
         k562_file = "k562_chipseq.csv"
         mcf7_file = "mcf7_chipseq.csv"
         
-        command_line = paste0("Rscript chipseq.R ", input$chr, " ", input$position_min,
-                              " ", input$position_max, " ", tempid)
+        command_line = ""
         
-        root_command_line <- command_line
-        command_line = paste0(command_line, "_hmec ", hmec_file, " snpsfile.txt")
-        command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file, " snpsfile.txt")
-        command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file, " snpsfile.txt")
+        root_command_line <-paste0("Rscript chipseq.R ", input$chr, " ", input$position_min,
+                                   " ", input$position_max, " ", tempid)
+        
+        if("HMEC" %in% input$chipseq_analysis)
+          command_line = paste0(command_line, ";",root_command_line, "_hmec ", hmec_file, " snpsfile.txt")
+        if("K562" %in% input$chipseq_analysis) 
+          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file, " snpsfile.txt")
+        if("MCF7" %in% input$chipseq_analysis) 
+          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file, " snpsfile.txt")
         
         # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
         if(isOpen(todochipseqcon, "w")) {
