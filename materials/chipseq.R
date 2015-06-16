@@ -139,13 +139,17 @@ create_plots_list = function(myplots) {
     mylist = c(mylist, list(myplot))
   }
   
+  if(! is.null(myplots$snps)) {
+    myplot = myplots$snps
+    mylist = c(mylist, list(myplot))
+  }
+  
   mylist
 }
 
 
 ######################### PROCESS ########################
 
-#current_range <- GRanges("chr11", IRanges(102803724, 102836463))
 current_range <- GRanges(current_chr, IRanges(current_start, current_stop))
 
 ret <- parse_file_list(file_list)
@@ -229,7 +233,9 @@ get_plot <- function(bam_file_name) {
   
   g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
     geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
-    ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+    ylim(0,top_value) + ylab(trackname) + theme_bw() + 
+    theme(axis.title.y = element_text(size = rel(0.5), angle = 90), axis.text.y = element_text(size = rel(0.5)))+ 
+    xlim(current_range)
   
   print(paste0("Track plot for ", trackname," -> DONE"))
   
@@ -253,9 +259,9 @@ if(!is.null(snp_file) && file.exists(snp_file)) {
     snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
     snps$name <- ids
     
-    snps_track <- autoplot(snps, aes(color=imp)) +
+    snps_track <- autoplot(snps, aes(fill=imp)) +
       geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-      theme_bw() + xlim(current_range) + ylab("Variants") + guides(color= FALSE)
+      theme_bw() + xlim(current_range) + ylab("Variants") + guides(fill= FALSE)
     
     print("Track snps -> DONE")
   }
@@ -281,14 +287,14 @@ print("Track gene -> DONE")
 if(is.null(snps_track)){
   plots = c(plots,  annotation = genes)
 } else {
-  plots = c(plots, snps_track,  annotation = genes)
+  plots = c(plots, snps = snps_track,  annotation = genes)
 }
 
 pdf(paste0("done/",uniq_id,"_chipseq.pdf"))
 
 selected_plots = create_plots_list(plots)
 
-tracks(selected_plots) +  xlim(current_range) + ggtitle(fig_title)
+tracks(selected_plots, title = fig_title) +  xlim(current_range)
 #tracks(c(plots[1:6], plots[19]), label.text.cex = 0.5)
 #tracks(c(plots[7:12], plots[19]), label.text.cex = 0.5)
 #tracks(plots[13:19], label.text.cex = 0.5)

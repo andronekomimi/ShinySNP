@@ -270,9 +270,9 @@ drawSegment <- function(ranges_list, highlight_ranges, current_range) {
       my.colors = unique(my.range$color)
       names(my.colors) = my.colors
       
-      range_track =  ggbio::autoplot(my.range, aes(color=color, alpha=alpha)) +
-        scale_colour_manual(values = my.colors) +
-        theme_bw() + xlim(current_range) + guides(color= FALSE,alpha=FALSE) + 
+      range_track =  ggbio::autoplot(my.range, aes(fill=color, alpha=alpha)) +
+        scale_fill_manual(values = my.colors) +
+        theme_bw() + xlim(current_range) + guides(fill= FALSE,alpha=FALSE) + 
         ylab(track_title) + theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
       
       if(!is.null(my.range$id)) {
@@ -366,9 +366,9 @@ drawSNP <- function(current_range, snps_df, label) {
   snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
   snps$name <- ids
   
-  snps_track <- autoplot(snps, aes(color=imp)) +
+  snps_track <- autoplot(snps, aes(fill=imp)) +
     geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-    theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
+    theme_bw() + xlim(current_range) + ylab(label) + guides(fill= FALSE) + 
     theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
   
   snps_track

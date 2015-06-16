@@ -158,26 +158,12 @@ shinyUI(fluidPage(
                                              bsAlert("alert5"),
                                              bsAlert("alert6"),
                                              plotOutput("plot1"),
-                                             conditionalPanel(condition = "input.run > 0 && !output.plot1",
-                                                              list(
-                                                                img(src = "page_loader.gif",
-                                                                    filetype = "image/gif",
-                                                                    alt = "Please wait... I'm processing your query")
-                                                              )
-                                             ),
                                              uiOutput(outputId = "download_plot1"),
                                              br(),
                                              br()
                                     ),
                                     tabPanel("Lncrna & Enhancers",
                                              plotOutput("plot2"),
-                                             conditionalPanel(condition = "input.run > 0 && !output.plot2",
-                                                              list(
-                                                                img(src = "page_loader.gif",
-                                                                    filetype = "image/gif",
-                                                                    alt = "Please wait... I'm processing your query")
-                                                              )
-                                             ),
                                              uiOutput(outputId = "download_plot2"),
                                              br(),
                                              plotOutput("plot3"),

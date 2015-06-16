@@ -102,7 +102,7 @@ get_plot <- function(bam_file_name) {
   if(!is.null(highlight_file) && file.exists(highlight_file)) {
     hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
     #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
-    d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=1, col = hgs_df$color)
+    d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=top_value, col = hgs_df$color)
     my.colors = d$col
     names(my.colors) = my.colors
   } else {
@@ -135,9 +135,9 @@ if(!is.null(snp_file) && file.exists(snp_file)) {
     snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
     snps$name <- ids
     
-    snps_track <- autoplot(snps, aes(color=imp)) +
+    snps_track <- autoplot(snps, aes(fill=imp)) +
       geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-      theme_bw() + xlim(current_range) + ylab("Variants") + guides(color= FALSE)
+      theme_bw() + xlim(current_range) + ylab("Variants") + guides(fill= FALSE)
     
     print("Track snps -> DONE")
   }
@@ -170,7 +170,7 @@ if(is.null(snps_track)){
 
 pdf(paste0("done/",uniq_id,"_rnaseq.pdf"))
 
-tracks(plots, label.text.cex = 0.5) + (xlim(current_range - border)) + ggtitle(fig_title)
+tracks(plots, label.text.cex = 0.5, title = fig_title) + (xlim(current_range - border))
 
 dev.off()
 

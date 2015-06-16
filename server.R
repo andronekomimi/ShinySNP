@@ -46,21 +46,39 @@ reset = FALSE
 rnaseq = FALSE
 chipseq = FALSE
 
+# create empty plot
+waiting_plot <- function(msg) {
+  df = data.frame(x=c(1), 
+                  y=c(1), 
+                  name = c(msg))
+  g = ggplot(data=df, mapping=aes(x=x, y=y)) +
+    geom_blank() + ylab("") + xlab("") + 
+    geom_text(aes(x = x, y = y, label=name), size = 7, color = "darkgreen") +
+    theme(
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank())
+  g
+}
+
 
 setup_files <- function() {
   
   logfile <<- tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
   tempid <<- strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
-  snpsfile <<- paste0("logs/snp_", tempid)
-  hgsfile <<- paste0("logs/hg_", tempid)
+  snpsfile <<- paste0("todo/snp_", tempid)
+  hgsfile <<- paste0("todo/hg_", tempid)
   todornaseqfile <<- paste0("todo/rnaseq_", tempid)
   todochipseqfile <<- paste0("todo/chipseq_", tempid)
   
   if(!file.exists(logfile)) {
     file.create(logfile)
+    print("create log file")
     logcon <<- file(logfile,open="w")
+    print("open connection to log file")
     writeLines(c(USERNAME), logcon)
     writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+    print("write in log file")
   }
   
   if(!file.exists(snpsfile)) {
@@ -97,18 +115,49 @@ close_files <- function() {
   # close all resilient files
   print("closing files")
   tryCatch ({
-    close(snpcon)
-    close(hgcon)
+    close(snpcon)   
+  },error = function(e) {
+    print(e)
+  })
+  
+  tryCatch ({
+    close(hgcon)  
+  },error = function(e) {
+    print(e)
+  })
+  
+  
+  tryCatch ({
     close(todornaseqcon)
+  },error = function(e) {
+    print(e)
+  })
+  
+  tryCatch ({
     close(todochipseqcon)
-    if(!is.null(logcon) && isOpen(logcon, "w")){
+  },error = function(e) {
+    print(e)
+  })
+  
+  tryCatch ({
+    if(isOpen(logcon, "w")){
       writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+      print("write in log file before closing")
       close(logcon)
+      print("close log file")
     }
     H5close()    
   },error = function(e) {
     print(e)
   })
+  
+  
+  tryCatch ({
+    H5close()    
+  },error = function(e) {
+    print(e)
+  })
+  
 }
 
 options(scipen=999) # virer l'annotation scientifique
@@ -431,7 +480,7 @@ shinyServer(function(input, output, session) {
   drawPlot1 <- reactive({
     
     if (input$run == 0)
-      return()
+      return(waiting_plot("Waiting for your request..."))
     
     input$reset
     
@@ -493,7 +542,6 @@ shinyServer(function(input, output, session) {
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
-      print(snpsfile)
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       print(snpsdf)
       
@@ -540,7 +588,9 @@ shinyServer(function(input, output, session) {
   
   drawPlot23 <- reactive({
     if (input$run == 0)
-      return()
+      return(
+        list(plot2 = waiting_plot("Waiting for your request..."), 
+             waiting_plot("Waiting for your request...")))
     
     input$reset
     
@@ -560,7 +610,7 @@ shinyServer(function(input, output, session) {
         closeAlert(session, "exampleAlert0")
       }
       
-     
+      
       # go ! 
       
       updateButton(session, "reset", disabled = FALSE)
@@ -749,8 +799,8 @@ shinyServer(function(input, output, session) {
         mcf7_unmerge_file = "mcf7_unmerge_rnaseq.csv"
         
         # construire la ligne de commande pour le calcul du rnaseq
-        # Rscript rnaseq.R chr4 84100000 84600000 PENNY ../merge_rnaseq_cells
-        command_line = "Rscript rnaseq.R "
+        # Rscript src/rnaseq.R chr4 84100000 84600000 PENNY ../merge_rnaseq_cells
+        command_line = "Rscript src/rnaseq.R "
         
         # position
         command_line = paste0(command_line, input$chr, " ", input$position_min,
@@ -762,20 +812,20 @@ shinyServer(function(input, output, session) {
         # si merge file : 1 seul commande
         if(input$merge_rnaseq_file) {
           if (input$merge_rnaseq_experiment){
-            command_line = paste0(command_line, "_all ", all_cell_merge_file, " snpsfile.txt")
+            command_line = paste0(command_line, "_all ", all_cell_merge_file, " RNA-Seq_ALLCELLS todo/snp_", tempid," todo/hg_", tempid)
           } else {
-            command_line = paste0(command_line, "_all ", all_cell_unmerge_file, " snpsfile.txt")
+            command_line = paste0(command_line, "_all ", all_cell_unmerge_file, " RNA-Seq_ALLCELLS todo/snp_", tempid," todo/hg_", tempid)
           }
         } else { # sinon 3 commandes, 1 par cell type
           root_command_line <- command_line
           if (input$merge_rnaseq_experiment){
-            command_line = paste0(command_line, "_hmec ", hmec_merge_file)
-            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file," snpsfile.txt")
-            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file," snpsfile.txt")
+            command_line = paste0(command_line, "_hmec ", hmec_merge_file," RNA-Seq_HMEC todo/snp_", tempid," todo/hg_", tempid)
+            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_merge_file," RNA-Seq_K562 todo/snp_", tempid," todo/hg_", tempid)
+            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_merge_file," RNA-Seq_MCF7 todo/snp_", tempid," todo/hg_", tempid)
           } else {
-            command_line = paste0(command_line, "_hmec ", hmec_unmerge_file)
-            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file," snpsfile.txt")
-            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file," snpsfile.txt")
+            command_line = paste0(command_line, "_hmec ", hmec_unmerge_file," RNA-Seq_HMEC todo/snp_", tempid," todo/hg_", tempid)
+            command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_unmerge_file," RNA-Seq_K562 todo/snp_", tempid," todo/hg_", tempid)
+            command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_unmerge_file," RNA-Seq_MCF7 todo/snp_", tempid," todo/hg_", tempid)
           }
         }
         
@@ -840,6 +890,7 @@ shinyServer(function(input, output, session) {
         
         
         if(isOpen(todornaseqcon, "w")) {
+          close(todornaseqcon)
           success = TRUE
         } 
         
@@ -856,10 +907,10 @@ shinyServer(function(input, output, session) {
           subject <- "RNA-Seq Submission Report"
           msg <- paste0(USERNAME," has just submitted a RNA-Seq request with id:",tempid,".")
           attachment1 <- mime_part(todornaseqfile, "command_line.txt")
-          attachment2 <- mime_part(snpsfile, "snpsfile.txt")
-          msgWithAttachment <- list(msg,attachment1, attachment2)
+          attachment2 <- mime_part(snpsfile, paste0("snp_", tempid))
+          attachment3 <- mime_part(hgsfile, paste0("hg_", tempid))
+          msgWithAttachment <- list(msg,attachment1, attachment2, attachment3)
           sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
-          
           
           from <- "no-reply@ShinySNP"
           to <- USERMAIL
@@ -933,15 +984,15 @@ shinyServer(function(input, output, session) {
         
         command_line = ""
         
-        root_command_line <-paste0("Rscript chipseq.R ", input$chr, " ", input$position_min,
+        root_command_line <-paste0("Rscript src/chipseq.R ", input$chr, " ", input$position_min,
                                    " ", input$position_max, " ", tempid)
         
         if("HMEC" %in% input$chipseq_analysis)
-          command_line = paste0(command_line, ";",root_command_line, "_hmec ", hmec_file, " snpsfile.txt")
+          command_line = paste0(command_line, ";",root_command_line, "_hmec ", hmec_file, " RNA-Seq_HMEC todo/snp_", tempid," todo/hg_", tempid)
         if("K562" %in% input$chipseq_analysis) 
-          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file, " snpsfile.txt")
+          command_line = paste0(command_line, ";",root_command_line, "_k562 ", k562_file, " RNA-Seq_K562 todo/snp_", tempid," todo/hg_", tempid)
         if("MCF7" %in% input$chipseq_analysis) 
-          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file, " snpsfile.txt")
+          command_line = paste0(command_line, ";",root_command_line, "_mcf7 ", mcf7_file, " RNA-Seq_MCF7 todo/snp_", tempid," todo/hg_", tempid)
         
         # ENVOI DE MAIL DE CONFIRMATION DE SOUMISSION + MAIL POUR MOI
         if(isOpen(todochipseqcon, "w")) {
@@ -962,8 +1013,9 @@ shinyServer(function(input, output, session) {
           subject <- "ChIP-Seq Submission Report"
           msg <- paste0(USERNAME," has just submitted a ChIP-Seq request with id:",tempid,".")
           attachment1 <- mime_part(todochipseqfile, "command_line.txt")
-          attachment2 <- mime_part(snpsfile, "snpsfile.txt")
-          msgWithAttachment <- list(msg,attachment1,attachment2)
+          attachment2 <- mime_part(snpsfile, paste0("snp_", tempid))
+          attachment3 <- mime_part(hgsfile, paste0("hg_", tempid))
+          msgWithAttachment <- list(msg,attachment1, attachment2, attachment3)
           sendmail(from = from, to = to, subject = subject, msg = msgWithAttachment)
           
           from <- "no-reply@ShinySNP"
