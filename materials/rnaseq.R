@@ -1,18 +1,23 @@
-
+t0 = Sys.time()
 args <- commandArgs(trailingOnly = TRUE)
 
 if(length(args) < 5) {
-  stop("Argument missing! Usage : scrip.R chrX start stop target_name path_to_file_list [path_to_snp_file] [highlight_region fac. start:end]")
+  stop("Argument missing! Usage : scrip.R chrX start stop uniq_id path_to_file_list [figure_title] [path_to_snp_file] [path_to_highlight_file]")
 }
 
 
 current_chr = args[1]
 current_start = as.numeric(args[2])
 current_stop = as.numeric(args[3])
-current_target = args[4]
+uniq_id = args[4]
 file_list = args[5]
-snp_file = args[6] # facultatif
-highlight_region = args[7] # facultatif
+fig_title = args[6] # facultatif
+snp_file = args[7] # facultatif
+highlight_file = args[8] # facultatif
+
+if(is.na(fig_title)) {
+  fig_title = "RNA-Seq figure"
+}
 
 suppressMessages(library(GenomicAlignments))
 suppressMessages(library(GenomicRanges))
@@ -83,9 +88,6 @@ for (i in (1:length(bam_files_list))) {
 }
 
 print("Means OK!")
-if (is.na(highlight_region)) {
-  highlight_region = "0:0"
-}
 
 names(means) = names(bam_files_list)
 top_value <- max(unlist(mclapply(means, max, mc.cores = 4)))
@@ -96,9 +98,23 @@ get_plot <- function(bam_file_name) {
   position <- seq(start(current_range), end(current_range))
   trackname <- bam_file_name
   data <- data.frame(position = position, coverage = coverage)
-  highlight_region = strsplit(x = highlight_region, fixed = T, split = ":")[[1]]
-  d = data.frame(x1=as.numeric(highlight_region[1]), x2=as.numeric(highlight_region[2]), y1=0, y2=top_value)
-  g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), color="black", alpha = 0.4) + ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+  
+  if(!is.null(highlight_file) && file.exists(highlight_file)) {
+    hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+    #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
+    d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=1, col = hgs_df$color)
+    my.colors = d$col
+    names(my.colors) = my.colors
+  } else {
+    d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+  }
+  
+  g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
+    geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
+    ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+  
+  print(paste0("Track plot for ", trackname," -> DONE"))
+  
   g
 }
 
@@ -152,13 +168,13 @@ if(is.null(snps_track)){
 }
 
 
-pdf(paste0(current_target,"_rnaseq.pdf"))
+pdf(paste0("done/",uniq_id,"_rnaseq.pdf"))
 
-tracks(plots, label.text.cex = 0.5) + (xlim(current_range - border))
+tracks(plots, label.text.cex = 0.5) + (xlim(current_range - border)) + ggtitle(fig_title)
 
 dev.off()
 
-save(means, file = paste0("means_",current_target,"_rnaseq.rda"))
-save(plots, file = paste0("plots_",current_target,"_rnaseq_plots.rda"))
+save(means, file = paste0("done/means_",uniq_id,"_rnaseq.rda"))
+save(plots, file = paste0("done/plots_",uniq_id,"_rnaseq_plots.rda"))
 
-
+print(Sys.time() - t0)

@@ -1,16 +1,23 @@
+t0 = Sys.time()
 args <- commandArgs(trailingOnly = TRUE)
 
 if(length(args) < 5) {
-  stop("Argument missing! Usage : scrip.R chrX start stop target_name path_to_file_list [path_to_snp_file]")
+  stop("Argument missing! Usage : scrip.R chrX start stop uniq_id path_to_file_list [figure_title] [path_to_snp_file] [path_to_highlight_file]")
 }
 
 
 current_chr = args[1]
 current_start = as.numeric(args[2])
 current_stop = as.numeric(args[3])
-current_target = args[4]
+uniq_id = args[4]
 file_list = args[5]
-snp_file = args[6] # facultatif
+fig_title = args[6] # facultatif
+snp_file = args[7] # facultatif
+highlight_file = args[8] # facultatif
+
+if(is.na(fig_title)) {
+  fig_title = "RNA-Seq figure"
+}
 
 suppressMessages(library(GenomicAlignments))
 suppressMessages(library(GenomicRanges))
@@ -173,7 +180,6 @@ for (i in (1:length(bam_files_list))) {
 
 top_value <- max(unlist(mclapply(means, max, mc.cores = 4)))
 names(means) = names(bam_files_list)
-print(paste0("1.means length : ",length(means)))
 
 roll_mean <- function(experiment, n=100){
   res = means[[experiment]]
@@ -201,7 +207,6 @@ new_means = mclapply(names(means), roll_mean, mc.cores = 4)
 names(new_means) = names(means)
 means = new_means
 
-print(paste0("2.means length : ",length(means)))
 print(names(means))
 
 trackname <- character()
@@ -211,7 +216,24 @@ get_plot <- function(bam_file_name) {
   position <- seq(start(current_range), end(current_range))
   trackname <- bam_file_name
   data <- data.frame(position = position, coverage = coverage)
-  ggplot(data, aes(x = position, y = coverage)) + geom_line() + ylim(0,top_value) + ylab(trackname) + theme_bw() + theme(axis.title.y = element_text(size = rel(0.5), angle = 90), axis.text.y = element_text(size = rel(0.5))) +  xlim(current_range) 
+  
+  if(!is.null(highlight_file) && file.exists(highlight_file)) {
+    hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+    #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
+    d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=1, col = hgs_df$color)
+    my.colors = d$col
+    names(my.colors) = my.colors
+  } else {
+    d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+  }
+  
+  g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
+    geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
+    ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+  
+  print(paste0("Track plot for ", trackname," -> DONE"))
+  
+  g
 }
 
 plots <- mclapply(names(means), get_plot, mc.cores = 4)
@@ -262,18 +284,18 @@ if(is.null(snps_track)){
   plots = c(plots, snps_track,  annotation = genes)
 }
 
-pdf(paste0(current_target,"_chipseq.pdf"))
+pdf(paste0("done/",uniq_id,"_chipseq.pdf"))
 
 selected_plots = create_plots_list(plots)
 
-tracks(selected_plots) +  xlim(current_range)
+tracks(selected_plots) +  xlim(current_range) + ggtitle(fig_title)
 #tracks(c(plots[1:6], plots[19]), label.text.cex = 0.5)
 #tracks(c(plots[7:12], plots[19]), label.text.cex = 0.5)
 #tracks(plots[13:19], label.text.cex = 0.5)
 
 
 dev.off()
-save(means, file = paste0("means_",current_target,"_chipseq.rda"))
-save(plots, file = paste0("plots_",current_target,"_chipseq_plots.rda"))
+save(means, file = paste0("done/means_",uniq_id,"_chipseq.rda"))
+save(plots, file = paste0("done/plots_",uniq_id,"_chipseq_plots.rda"))
 
-
+print(Sys.time() - t0)
