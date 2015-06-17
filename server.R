@@ -485,7 +485,7 @@ shinyServer(function(input, output, session) {
     input$reset
     
     if (!run || reset)
-      return()
+      return(waiting_plot("Waiting for your request..."))
     
     isolate ({
       
@@ -495,7 +495,7 @@ shinyServer(function(input, output, session) {
         createAlert(session, "alert0", "exampleAlert0", title = "Warning",
                     content = error_msg, append = TRUE, dismiss = TRUE)
         run <<- FALSE
-        return()
+        return(waiting_plot("Waiting for your request..."))
         
       } else {
         closeAlert(session, "exampleAlert0")
@@ -595,7 +595,7 @@ shinyServer(function(input, output, session) {
     input$reset
     
     if (!run || reset)
-      return()
+      return(waiting_plot("Waiting for your request..."))
     
     isolate ({
       if(is.na(input$position_min) || is.na(input$position_max)) {
@@ -604,7 +604,7 @@ shinyServer(function(input, output, session) {
         createAlert(session, "alert0", "exampleAlert0", title = "Warning",
                     content = error_msg, append = TRUE, dismiss = TRUE)
         run <<- FALSE
-        return()
+        return(waiting_plot("Waiting for your request..."))
         
       } else {
         closeAlert(session, "exampleAlert0")
@@ -619,6 +619,13 @@ shinyServer(function(input, output, session) {
       updateButton(session, "addhg", disabled = TRUE)
       
       print("RUN Plot23")
+      
+      tryCatch ({
+        close(con = snpcon)
+        close(hgcon)
+      },error = function(e) {
+        print(e)
+      })
       
       my.data <- load1DData(current_chr = input$chr)
       
