@@ -134,13 +134,13 @@ create_plots_list = function(myplots) {
     mylist = c(mylist, list(myplot))
   }
   
-  if(! is.null(myplots$annotation)) {
-    myplot = myplots$annotation
+  if(! is.null(myplots$snps)) {
+    myplot = myplots$snps
     mylist = c(mylist, list(myplot))
   }
   
-  if(! is.null(myplots$snps)) {
-    myplot = myplots$snps
+  if(! is.null(myplots$annotation)) {
+    myplot = myplots$annotation
     mylist = c(mylist, list(myplot))
   }
   

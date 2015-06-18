@@ -195,7 +195,7 @@ shinyUI(fluidPage(
                                                       tags$ul(list(
                                                         tags$li("Targets for MCF7 : CTCF, H3K27ac, H3K36me3, H3K4me3, H3K27me3"),
                                                         tags$li("Targets for K562 : H3K36me3, H3K4me2, CTCF, EZH2"),
-                                                        tags$li("Targets for HMEC : H3K4me3, H2AFZ, H3K9me3, H3K36me3, H3K4me3, 
+                                                        tags$li("Targets for HMEC : H2AFZ, H3K9me3, H3K36me3, H3K4me3, 
                                              H3K27ac, H3K4me1, H3K79me2, CTCF, H3K9ac, H3K4me2, 
                                              H4K20me1, H3K27me3, EZH2")
                                                       ))),
