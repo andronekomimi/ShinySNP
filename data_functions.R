@@ -337,21 +337,26 @@ drawAnnotations <- function(label = "Annotations", current_range) {
   
   if(!is.null(gr_txdb)){
     colnames(values(gr_txdb))[4] <- "model"
-    gr_txdb$symbols <- select(org.Hs.eg.db,
-                              keys = as.character(gr_txdb$gene_id),
-                              column = "SYMBOL",
-                              keytype = "ENTREZID")$SYMBOL
-    i <- which(gr_txdb$model == "gap")
+    tryCatch({
+      gr_txdb$symbols <- select(org.Hs.eg.db,
+                                keys = as.character(gr_txdb$gene_id),
+                                column = "SYMBOL",
+                                keytype = "ENTREZID")$SYMBOL
+      i <- which(gr_txdb$model == "gap")
+      
+      gr_txdb <- gr_txdb[-i]
+      levels(gr_txdb) <- c("cds", "exon", "utr")
+      grl_txdb <- split(gr_txdb, gr_txdb$symbols)
+      
+      if(length(grl_txdb) > 0){
+        g_track <- autoplot(grl_txdb, aes(type = model)) + 
+          theme_bw() + xlim(current_range) + ylab(label) +
+          theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+      }
+    }, error = function(err) {
+      print(err)
+    })
     
-    gr_txdb <- gr_txdb[-i]
-    levels(gr_txdb) <- c("cds", "exon", "utr")
-    grl_txdb <- split(gr_txdb, gr_txdb$symbols)
-    
-    if(length(grl_txdb) > 0){
-      g_track <- autoplot(grl_txdb, aes(type = model)) + 
-        theme_bw() + xlim(current_range) + ylab(label) +
-        theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
-    }
   }
   
   return(g_track)
