@@ -25,7 +25,14 @@ footer<-function(){
 
 shinyUI(fluidPage(
   tags$head(
-    tags$link(rel = "icon", type = "image/x-icon", href = "logo.jpg")
+    tags$link(rel = "icon", type = "image/x-icon", href = "logo.jpg"),
+    tags$script('Shiny.addCustomMessageHandler("myCallbackHandler",
+                       function(typeMessage) {console.log(typeMessage)
+                           if(typeMessage == 1){
+                              console.log("got here");
+                              $("a:contains(3D Conformation)").click();
+                           }
+                        });')
   ),
   titlePanel("Shiny SNP"),
   uiOutput(outputId ="uiLogin"),
@@ -45,12 +52,11 @@ shinyUI(fluidPage(
     conditionalPanel(condition = "!output.uiLogin",
                      list(
                        sidebarPanel(
-
                          h3("Select region"),
                          selectInput("chr", 
                                      label = "Choose a chromosome",
                                      choices = as.character(chroms$chr),
-                                     selected = "chr12"),
+                                     selected = "chr1"),
                          fluidRow(
                            column(width = 6,
                                   numericInput(inputId = 'position_min', 
@@ -62,31 +68,10 @@ shinyUI(fluidPage(
                                                value = NA))
                          ),
                          hr(),
-                         h3("Select regions to highlight"),
-                         fluidRow(
-                           column(width = 6,
-                                  numericInput(inputId = "hgstart", 
-                                               label = "start", 
-                                               value = NA)),
-                           column(width = 6,
-                                  numericInput(inputId = "hgend", 
-                                               label = "end", 
-                                               value = NA))
+                         bsCollapse(id = "param", open = c('Advanced parameters'), multiple = FALSE,
+                                    bsCollapsePanel('Advanced parameters',uiOutput("highlight"), 
+                                                    style = "default")
                          ),
-                         br(),
-                         div(style="form-group shiny-input-container",
-                             selectInput(inputId = "hgcolor", label = "Choose a color", 
-                                         choices = list("blue" = "steelblue",
-                                                        "green" = "chartreuse4",
-                                                        "orange" = "darkorange",
-                                                        "violet" = "darkviolet",
-                                                        "pink" = "deeppink",
-                                                        "red" = "red3",
-                                                        "yellow" = "gold"))
-                         ),
-                         bsButton(inputId = "addhg", label = "Add new Highlight Zone"),
-                         br(),
-                         br(),
                          bsAlert("addhg_msg_i"),
                          hr(),
                          h3("Add variants"),
@@ -217,7 +202,7 @@ shinyUI(fluidPage(
                                              br(),
                                              br(),
                                              checkboxGroupInput(inputId = "chipseq_analysis",label = "Choose cell types", 
-                                                         choices = list("MCF7","K562","HMEC"), selected = "MCF7"),
+                                                                choices = list("MCF7","K562","HMEC"), selected = "MCF7"),
                                              br(),
                                              br(),
                                              bsButton(inputId = "runCHIPSeq",label = "Send analysis request", style = "btn btn-primary",disabled = TRUE),

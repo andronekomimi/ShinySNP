@@ -246,6 +246,7 @@ shinyServer(function(input, output, session) {
         return()
       
       isolate({
+        updateSelectInput(session, "chr", selected = "chr12")
         updateNumericInput(session, "position_min", value = 27950000)
         updateNumericInput(session, "position_max", value = 28735000)
         updateNumericInput(session, "snp_position_min", value = 28155080)
@@ -254,6 +255,37 @@ shinyServer(function(input, output, session) {
         updateNumericInput(session, "hgend", value = 28127138)
       })}
   })
+  
+  
+  output$highlight <- renderUI({
+    list(
+      h4("Select regions to highlight"),
+      fluidRow(
+        column(width = 6,
+               numericInput(inputId = "hgstart", 
+                            label = "start", 
+                            value = NA)),
+        column(width = 6,
+               numericInput(inputId = "hgend", 
+                            label = "end", 
+                            value = NA))
+      ),
+      br(),
+      div(style="form-group shiny-input-container",
+          selectInput(inputId = "hgcolor", label = "Choose a color", 
+                      choices = list("blue" = "steelblue",
+                                     "green" = "chartreuse4",
+                                     "orange" = "darkorange",
+                                     "violet" = "darkviolet",
+                                     "pink" = "deeppink",
+                                     "red" = "red3",
+                                     "yellow" = "gold"))
+      ),
+      bsButton(inputId = "addhg", label = "Add new Highlight Zone"),
+      br(),
+      br())
+  })
+  
   
   
   addSNPs <- eventReactive(input$addsnp, {
@@ -1043,6 +1075,9 @@ shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$reset, {
+    # renvoyer sur le panel principal
+    session$sendCustomMessage("myCallbackHandler", "1")
+    
     #Desactiver reset pour eviter double click
     updateButton(session, "reset", disabled = TRUE)
     reset <<- TRUE
