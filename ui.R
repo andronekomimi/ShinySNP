@@ -29,7 +29,6 @@ shinyUI(fluidPage(
     tags$script('Shiny.addCustomMessageHandler("myCallbackHandler",
                        function(typeMessage) {console.log(typeMessage)
                            if(typeMessage == 1){
-                              console.log("got here");
                               $("a:contains(3D Conformation)").click();
                            }
                         });')
@@ -135,6 +134,7 @@ shinyUI(fluidPage(
                        list(
                          navbarPage(span("Analysis", style = "color:green"),
                                     tabPanel("3D Conformation",
+                                             bsAlert("chr_i"),
                                              bsAlert("alert0"),
                                              bsAlert("alert1"),
                                              bsAlert("alert2"),

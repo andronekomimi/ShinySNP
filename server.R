@@ -504,8 +504,30 @@ shinyServer(function(input, output, session) {
       return()
     
     isolate({
-      run <<- TRUE
-      reset <<- FALSE
+      closeAlert(session, alertId = "alert_chr")
+      
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        error_msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+        iserror <- TRUE
+        createAlert(session, anchorId = "chr_i", alertId = "alert_chr", title = "Error",
+                    content = error_msg, append = TRUE, dismiss = TRUE)
+        run <<- FALSE
+        return(waiting_plot("Waiting for your request..."))
+        
+      } else {
+        if(input$position_min >= input$position_max) {
+          error_msg <- "Error while setting the region to study : stop position has to be greater than start postion"
+          iserror <- TRUE
+          createAlert(session, anchorId = "chr_i", alertId = "alert_chr", title = "Error",
+                      content = error_msg, append = TRUE, dismiss = TRUE)
+          run <<- FALSE
+          return(waiting_plot("Waiting for your request..."))
+        } else {
+          closeAlert(session, alertId = "alert_chr")
+          run <<- TRUE
+          reset <<- FALSE
+        }
+      }
     })
   })
   
@@ -1113,6 +1135,7 @@ shinyServer(function(input, output, session) {
     rnaseq <<- FALSE
     
     # CLOSING ALL ALERT BOX
+    closeAlert(session, alertId = "alert_chr")
     closeAlert(session, alertId = "addhg_msg")
     closeAlert(session, alertId = "addsnp_msg")
     closeAlert(session, alertId = "loadsnp_msg")
