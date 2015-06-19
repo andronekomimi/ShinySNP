@@ -1,7 +1,3 @@
-HMEC_ENCSR000CUN	/is1/users/lemaud01/data-pasteur/ENCFF000GEN.bam,/is1/users/lemaud01/data-pasteur/ENCFF000GDJ.bam	NA
-K562_ENCSR000CPH	/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000HES.bam,/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000HET.bam	NA
-K562_ENCSR000BZV	/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000LMU.bam,/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000LMW.bam	NA
-K562_ENCSR109IQO	/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF002DKH.bam,/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF002DKL.bam	NA
 MCF7_ENCSR000CPT	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HQD.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HQC.bam	NA
 MCF7_ENCSR000CSW	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JWY.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JWZ.bam	NA
 MCF7_ENCSR000CTU	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HRI.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HRJ.bam	NA
@@ -10,3 +6,7 @@ MCF7_ENCSR310FIS	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DKQ.bam,/is1
 MCF7_ENCSR667JTA	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DJW.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DJZ.bam	NA
 MCF7_ENCSR000CSV	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JZO.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JZR.bam	NA
 MCF7_ENCSR000CSU	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JYT.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JYU.bam	NA
+HMEC_ENCSR000CUN	/is1/users/lemaud01/data-pasteur/ENCFF000GEN.bam,/is1/users/lemaud01/data-pasteur/ENCFF000GDJ.bam	NA
+K562_ENCSR000CPH	/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000HES.bam,/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000HET.bam	NA
+K562_ENCSR000BZV	/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000LMU.bam,/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF000LMW.bam	NA
+K562_ENCSR109IQO	/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF002DKH.bam,/is1/users/lemaud01/data-pasteur/K562/rnaseq/ENCFF002DKL.bam	NA
