@@ -87,6 +87,7 @@ for (i in (1:length(bam_files_list))) {
   means <- c(means, list(colMeans(do.call("rbind", coverages))))
 }
 
+save(means, file = paste0("done/means_",uniq_id,"_rnaseq.rda"))
 print("Means OK!")
 
 names(means) = names(bam_files_list)
@@ -102,12 +103,17 @@ get_plot <- function(bam_file_name) {
   if(!is.null(highlight_file) && file.exists(highlight_file)) {
     hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
     #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
-    d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=top_value, col = hgs_df$color)
-    my.colors = d$col
-    names(my.colors) = my.colors
+    if(nrow(hgs_df) > 0){
+      d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=top_value, col = hgs_df$color)
+    } else {
+      d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+    }
   } else {
     d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
   }
+  
+  my.colors = d$col
+  names(my.colors) = my.colors
   
   g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
     geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
@@ -167,6 +173,7 @@ if(is.null(snps_track)){
   plots = c(plots, snps_track, genes)
 }
 
+save(plots, file = paste0("done/plots_",uniq_id,"_rnaseq_plots.rda"))
 
 pdf(paste0("done/",uniq_id,"_rnaseq.pdf"))
 
@@ -174,7 +181,5 @@ tracks(plots, label.text.cex = 0.5, title = fig_title) + (xlim(current_range - b
 
 dev.off()
 
-save(means, file = paste0("done/means_",uniq_id,"_rnaseq.rda"))
-save(plots, file = paste0("done/plots_",uniq_id,"_rnaseq_plots.rda"))
 
 print(Sys.time() - t0)

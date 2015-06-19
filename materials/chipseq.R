@@ -224,12 +224,17 @@ get_plot <- function(bam_file_name) {
   if(!is.null(highlight_file) && file.exists(highlight_file)) {
     hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
     #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
-    d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=1, col = hgs_df$color)
-    my.colors = d$col
-    names(my.colors) = my.colors
+    if(nrow(hgs_df) > 0){
+      d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=1, col = hgs_df$color)
+    }else {
+      d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+    }
   } else {
     d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
   }
+  
+  my.colors = d$col
+  names(my.colors) = my.colors
   
   g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
     geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
