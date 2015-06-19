@@ -122,10 +122,16 @@ convert2GRange <- function(S, current_chr, label) {
   
   ranges = IRanges(left,right)
   
+  confidence = S$Confidence_Score1
+  if(is.null(confidence)) {
+    confidence = rep(0.5,nrow(S))
+  }
+  
   g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
                       label = rep(label,nrow(S)),
                       color = rep("black",nrow(S)),
-                      alpha = rep(0.5,nrow(S)))
+                      #alpha = rep(0.5,nrow(S)),
+                      alpha = (1-confidence))
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
   invisible(g_ranges)
 }
@@ -153,6 +159,7 @@ create_gr_from_df <- function(current_range, my.df, label) {
   if(nrow(my.df) > 0){
     tmp = unique(subsetData(my.df, current_range))
     if(nrow(tmp) > 0) {
+      
       convert2GRange(tmp, current_chr = as.character(seqnames(current_range)), 
                      label = label)
     } else {
@@ -178,20 +185,6 @@ create_gr_from_df_4LNCRNA <- function(current_range, my.df, label) {
   }
   
 }
-
-# get1DDataOverview <- function(my.data, current_range) {
-#   
-#   my.dataframes = list(
-#     enhancers = list(df = (subsetData(my.data$enhancers,current_range = current_range)) , label = "ENHANCERS"), 
-#     k562_super_enhancers = list(df = (subsetData(my.data$k562_super_enhancers,current_range = current_range)), label = "K562 SUPER ENHANCERS"),
-#     mcf7_super_enhancers = list(df = (subsetData(my.data$mcf7_super_enhancers,current_range = current_range)), label = "MCF7 SUPER ENHANCERS"), 
-#     hmec_super_enhancers = list(df = (subsetData(my.data$hmec_super_enhancers,current_range = current_range)), label = "HMEC SUPER ENHANCERS"), 
-#     k562_impet = list(df = (subsetData(my.data$k562_impet,current_range = current_range)), label = "K562 IM-PET"),
-#     mcf7_impet = list(df = (subsetData(my.data$mcf7_impet,current_range = current_range)), label = "MCF7 IM-PET"), 
-#     hmec_impet = list(df = (subsetData(my.data$hmec_impet,current_range = current_range)), label = "HMEC IM-PET"))
-#   
-#   invisible(my.dataframes)
-# }
 
 
 get1DDataOverview <- function(my.data, current_range) {
@@ -443,7 +436,9 @@ drawLNCRNAFigures <- function(my.df, current_range, highlight_ranges) {
                                  current_range = current_range, 
                                  highlight_ranges = highlight_ranges),
       lncrna_hist = (ggplot(lncrna_df, aes(x = cell, y = fpkm)) + 
-                       geom_bar(stat = "identity") + facet_grid(. ~ ts))
+                       geom_bar(stat = "identity") + 
+                       geom_text(aes(label=round(fpkm, digits = 3),vjust=-1.3), size = 2, color = "blue") +
+                       facet_grid(. ~ ts))
     )
   } else {
     print("No TsInfos in the requested area")
@@ -663,7 +658,7 @@ make_emphasis = function(my.ranges, hg.ranges) {
     query_idx = queryHits(hit)
     subject_idx = subjectHits(hit)
     
-    my.ranges[query_idx]$alpha = hg.ranges[subject_idx]$alpha
+    #my.ranges[query_idx]$alpha = hg.ranges[subject_idx]$alpha
     my.ranges[query_idx]$color = hg.ranges[subject_idx]$color
   }
   
