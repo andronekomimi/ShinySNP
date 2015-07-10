@@ -682,11 +682,14 @@ shinyServer(function(input, output, session) {
       })
       
       my.data <- load1DData(current_chr = input$chr)
+      my.data2 <- load2DData(current_chr = input$chr)
       
       current_range <- setStudyRange(current_chr = input$chr, 
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
+      
       my.ranges <- get1DDataOverview(my.data = my.data, current_range = current_range)
+      my.ranges2 <- get2DDataOverview(my.data = my.data2, current_range = current_range)
       
       highlights = read.table(hgsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       print(highlights)
@@ -704,13 +707,17 @@ shinyServer(function(input, output, session) {
                                      current_range = current_range,
                                      highlight_ranges = my.hg.ranges)
       
+      impets_tracks <- drawIMPET(ranges_list = my.ranges2, 
+                                current_range = current_range,
+                                highlight_ranges = my.hg.ranges)
+      
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
       lncrna_figures = drawLNCRNAFigures(my.df = my.data$lncrna, 
                                          current_range = current_range, 
                                          highlight_ranges = my.hg.ranges) 
       
-      my.tracks = c(segments_tracks)
+      my.tracks = c(segments_tracks, impets_tracks)
       
       if(!is.null(lncrna_figures$lncrna_track)){
         my.tracks = c(my.tracks, lncrna_figures$lncrna_track)

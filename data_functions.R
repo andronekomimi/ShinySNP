@@ -82,18 +82,28 @@ load1DData <- function(current_chr) {
   mcf7_super_enhancers = tryCatch({h5read(file = "data/data.h5",name = paste0("common/MCF7/",current_chr,"/SUPER-ENHANCER/df"))}, error = function(e) {return(data.frame())} )
   hmec_super_enhancers = tryCatch({h5read(file = "data/data.h5",name = paste0("common/HMEC/",current_chr,"/SUPER-ENHANCER/df"))}, error = function(e) {return(data.frame())} )
   
-  ### impet
-  k562_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/K562/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
-  mcf7_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/MCF7/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
-  hmec_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/HMEC/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
-  
   my.data = list(
     lncrna = lncrna, 
     lncrna_expr = lncrna_expr, 
     enhancers = enhancers,
     k562_super_enhancers = k562_super_enhancers, 
     mcf7_super_enhancers = mcf7_super_enhancers, 
-    hmec_super_enhancers = hmec_super_enhancers,
+    hmec_super_enhancers = hmec_super_enhancers
+  )
+  
+  invisible(my.data)
+  
+  
+}
+
+load2DData <- function(current_chr) {
+  
+  ### impet
+  k562_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/K562/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
+  mcf7_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/MCF7/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
+  hmec_impet = tryCatch({h5read(file = "data/data.h5",name = paste0("externe/HMEC/",current_chr,"/IM-PET/df"))}, error = function(e) {return(data.frame())} )
+  
+  my.data = list(
     k562_impet = k562_impet, 
     mcf7_impet = mcf7_impet, 
     hmec_impet = hmec_impet
@@ -103,7 +113,6 @@ load1DData <- function(current_chr) {
   
   
 }
-
 
 subsetData <- function(M, current_range){
   subset(M, (M$InteractorAChr == as.character(seqnames(current_range)) & 
@@ -127,12 +136,45 @@ convert2GRange <- function(S, current_chr, label) {
     confidence = rep(0.5,nrow(S))
   }
   
+  gene = S$Bgene
+  if(is.null(gene)) {
+    gene = rep("",nrow(S))
+  }
+  
   g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
                       label = rep(label,nrow(S)),
                       color = rep("black",nrow(S)),
-                      #alpha = rep(0.5,nrow(S)),
+                      gene = gene,
                       alpha = (1-confidence))
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
+  invisible(g_ranges)
+}
+
+
+convert2GRange4IMPET <- function(S, current_chr, label) {
+  
+  is.gene = grepl(x = S$Bgene, pattern = "*.,ENSG.*")
+  
+  left = S$InteractorAStart[is.gene]
+  right = S$InteractorAEnd[is.gene]
+  confidence = S$Confidence_Score1[is.gene]
+  gene = S$Bgene[is.gene]
+  gene = gsub(x = gene, pattern = ",.*",replacement = "")
+
+  df.temp = data.frame(left,right,gene,confidence=(1-confidence))
+  df.temp = unique(df.temp)
+  
+  ranges = IRanges(df.temp$left,df.temp$right)
+  
+  g_ranges <- GRanges(seqnames = current_chr, ranges = ranges, 
+                      label = rep(label,nrow(df.temp)),
+                      color = rep("black",nrow(df.temp)),
+                      gene = df.temp$gene,
+                      alpha = df.temp$confidence)
+
+  cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
+  print(S)
+  print(df.temp)
   invisible(g_ranges)
 }
 
@@ -153,6 +195,7 @@ convert2GRange4LNCRNA <- function(S, current_chr, label) {
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
   invisible(g_ranges)
 }
+
 
 
 create_gr_from_df <- function(current_range, my.df, label) {
@@ -186,6 +229,21 @@ create_gr_from_df_4LNCRNA <- function(current_range, my.df, label) {
   
 }
 
+create_gr_from_df_4IMPET <- function(current_range, my.df, label) {
+  if(nrow(my.df) > 0){
+    tmp = unique(subsetData(my.df, current_range))
+    if(nrow(tmp) > 0) {
+      convert2GRange4IMPET(tmp, current_chr = as.character(seqnames(current_range)), 
+                           label = label)
+    } else {
+      invisible(GRanges())
+    }
+  } else  {
+    invisible(GRanges())
+  }
+  
+}
+
 
 get1DDataOverview <- function(my.data, current_range) {
   
@@ -193,10 +251,17 @@ get1DDataOverview <- function(my.data, current_range) {
     enhancers = create_gr_from_df(my.df = my.data$enhancers,current_range = current_range, label = "ENHANCERS"), 
     k562_super_enhancers = create_gr_from_df(my.df = my.data$k562_super_enhancers,current_range = current_range, label = "K562 SUPER ENHANCERS"),
     mcf7_super_enhancers = create_gr_from_df(my.df = my.data$mcf7_super_enhancers,current_range = current_range, label = "MCF7 SUPER ENHANCERS"), 
-    hmec_super_enhancers = create_gr_from_df(my.df = my.data$hmec_super_enhancers,current_range = current_range, label = "HMEC SUPER ENHANCERS"), 
-    k562_impet = create_gr_from_df(my.df = my.data$k562_impet,current_range = current_range, label = "K562 IM-PET"),
-    mcf7_impet = create_gr_from_df(my.df = my.data$mcf7_impet,current_range = current_range, label = "MCF7 IM-PET"), 
-    hmec_impet = create_gr_from_df(my.df = my.data$hmec_impet,current_range = current_range, label = "HMEC IM-PET"))
+    hmec_super_enhancers = create_gr_from_df(my.df = my.data$hmec_super_enhancers,current_range = current_range, label = "HMEC SUPER ENHANCERS"))
+  
+  invisible(my.ranges)
+}
+
+get2DDataOverview <- function(my.data, current_range) {
+  
+  my.ranges = list(
+    k562_impet = create_gr_from_df_4IMPET(my.df = my.data$k562_impet,current_range = current_range, label = "K562 IM-PET"),
+    mcf7_impet = create_gr_from_df_4IMPET(my.df = my.data$mcf7_impet,current_range = current_range, label = "MCF7 IM-PET"), 
+    hmec_impet = create_gr_from_df_4IMPET(my.df = my.data$hmec_impet,current_range = current_range, label = "HMEC IM-PET"))
   
   invisible(my.ranges)
 }
@@ -459,6 +524,44 @@ drawLNCRNAFigures <- function(my.df, current_range, highlight_ranges) {
   }
   
 }
+
+drawIMPET <- function(ranges_list, highlight_ranges, current_range){
+  
+  my.tracks = c()
+  
+  for(i in seq_along(ranges_list)) {
+    my.range = ranges_list[[i]]
+    
+    if(length(my.range) > 0) {
+#       if(!is.null(highlight_ranges)) {
+#         my.range = make_emphasis(my.range, highlight_ranges)      
+#       }
+      
+      track_title = gsub(x = my.range[1]$label, pattern = " ", replacement = "\n")
+      my.colors = unique(my.range$color)
+      names(my.colors) = my.colors
+      
+      g = autoplot(my.range, aes(color=gene, fill = gene, group = gene, alpha = alpha), group.selfish = FALSE)
+      
+      range_track = g + theme_bw() + xlim(current_range) + 
+        guides(alpha=FALSE, col = guide_legend(ncol =  2, keywidth = 0.2, keyheight = 0.4), 
+               fill = guide_legend(ncol =  2, keywidth = 0.2, keyheight = 0.4)) + 
+        ylab(track_title) + theme(axis.title.y = element_text(size = rel(0.5), angle = 90),
+                                  legend.text =  element_text(size = rel(0.4)),
+                                  legend.title = element_text(size = rel(0.4)))
+      
+      if(!is.null(my.range$id)) {
+        range_track = range_track + geom_text(aes(x = (start + ((end - start)/2)),
+                                                  y = 1, label=id, angle=45), size = 2, color = "blue")
+      }
+      
+      my.tracks = c(my.tracks, range_track)
+    }   
+  }
+  
+  invisible(my.tracks)
+}
+
 
 
 mergeRanges <- function(ranges, label) {
