@@ -536,6 +536,9 @@ shinyServer(function(input, output, session) {
     if (input$run == 0)
       return(waiting_plot("Waiting for your request..."))
     
+    if (! "interne" %in% input$my.dataset)
+      return(waiting_plot("Waiting for your request..."))
+    
     input$reset
     
     if (!run || reset)
@@ -571,7 +574,7 @@ shinyServer(function(input, output, session) {
         print(e)
       })
       
-      my.data <- load3DData(current_chr = input$chr, my.dataset = input$my.dataset)
+      my.data <- load3DData(current_chr = input$chr, my.dataset = "interne")
       current_range <- setStudyRange(current_chr = input$chr, 
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
@@ -640,16 +643,132 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  drawPlot23 <- reactive({
+  drawPlot1b <- reactive({
+    
     if (input$run == 0)
-      return(
-        list(plot2 = waiting_plot("Waiting for your request..."), 
-             waiting_plot("Waiting for your request...")))
+      return(waiting_plot("Waiting for your request..."))
+    
+    if (! "externe" %in% input$my.dataset)
+      return(waiting_plot("Waiting for your request..."))
     
     input$reset
     
     if (!run || reset)
       return(waiting_plot("Waiting for your request..."))
+    
+    isolate ({
+      
+      if(is.na(input$position_min) || is.na(input$position_max)) {
+        error_msg <- "You need to define at least the region to study (chromosome, start and stop position)"
+        iserror <- TRUE
+        createAlert(session, "alert0", "exampleAlert0", title = "Warning",
+                    content = error_msg, append = TRUE, dismiss = TRUE)
+        run <<- FALSE
+        return(waiting_plot("Waiting for your request..."))
+        
+      } else {
+        closeAlert(session, "exampleAlert0")
+      }
+      
+      
+      # go ! 
+      
+      updateButton(session, "reset", disabled = FALSE)
+      updateButton(session, "run", disabled = TRUE)
+      updateButton(session, "addsnp", disabled = TRUE)
+      updateButton(session, "addhg", disabled = TRUE)
+      
+      print("RUN Plot1")
+      tryCatch ({
+        close(con = snpcon)
+        close(hgcon)
+      },error = function(e) {
+        print(e)
+      })
+      
+      my.data <- load3DData(current_chr = input$chr, my.dataset = "externe")
+      current_range <- setStudyRange(current_chr = input$chr, 
+                                     current_start = input$position_min, 
+                                     current_stop = input$position_max)
+      my.ranges <- get3DDataOverview(my.data = my.data, current_range = current_range)
+      
+      highlights = read.table(hgsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      print(highlights)
+      
+      my.hg.ranges = NULL
+      
+      if(nrow(highlights)){
+        my.hg.ranges = GRanges(seqnames = input$chr, 
+                               ranges = IRanges(highlights$start,highlights$end),  
+                               alpha = rep(0.5,times = nrow(highlights)),
+                               color = highlights$color)
+      }
+      
+      archs_tracks <- drawArchs(ranges_list = my.ranges,
+                                current_range = current_range,
+                                highlight_ranges = my.hg.ranges)
+      
+      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      
+      ### READ SNP FILE THEN CONVERT IN DATAFRAME
+      snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      print(snpsdf)
+      
+      if(nrow(snpsdf) > 0 ){
+        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        my.tracks = c(archs_tracks, snp_track, annot_track)
+      } else {
+        my.tracks = c(archs_tracks, annot_track)
+      }
+      
+      warning("DONE calculate the tracks",call. = FALSE)
+      
+      tracks(my.tracks) + xlim(current_range)
+    })
+    
+  })
+  
+  output$plot1b <- renderPlot({
+    drawPlot1b()
+  })
+  
+  
+  # affichage de boutons download
+  output$download_plot1b <- renderUI ({
+    
+    if (input$run == 0)
+      return()
+    
+    input$reset
+    
+    if (!run || reset)
+      return()
+    
+    list(
+      br(),
+      fluidRow(
+        column(width = 6,
+               downloadButton(outputId = "download_plot1b_png", label = "Download PNG")),
+        column(width = 6,
+               downloadButton(outputId = "download_plot1b_pdf", label = "Download PDF"))
+      )
+    )
+  })
+  
+  
+  
+  drawPlot23 <- reactive({
+    if (input$run == 0)
+      return(
+        list(plot2 = waiting_plot("Waiting for your request..."), 
+             plot3 = waiting_plot("Waiting for your request...")))
+    
+    input$reset
+    
+    if (!run || reset)
+      return(
+        list(plot2 = waiting_plot("Waiting for your request..."), 
+             plot3 = waiting_plot("Waiting for your request...")))
     
     isolate ({
       if(is.na(input$position_min) || is.na(input$position_max)) {
@@ -806,6 +925,24 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       ggsave(file,drawPlot1())
+    }
+  )
+  
+  output$download_plot1b_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D_2.png"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot1b())
+    }
+  )
+  
+  output$download_plot1b_pdf <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D_2.pdf"
+    },
+    content = function(file) {
+      ggsave(file,drawPlot1b())
     }
   )
   

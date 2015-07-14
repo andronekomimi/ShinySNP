@@ -29,7 +29,7 @@ shinyUI(fluidPage(
     tags$script('Shiny.addCustomMessageHandler("myCallbackHandler",
                        function(typeMessage) {console.log(typeMessage)
                            if(typeMessage == 1){
-                              $("a:contains(3D Conformation)").click();
+                              $("a:contains(3D Conformation and Regulation)").click();
                            }
                         });')
   ),
@@ -109,13 +109,11 @@ shinyUI(fluidPage(
                          ),
                          bsAlert("loadsnp_msg_i"),
                          hr(),
-                         h3("Choose the dataset"),
-                         radioButtons(inputId = 'my.dataset', 
-                                      inline = TRUE,
-                                      label = NULL,
-                                      choices = list("local" = "interne", 
-                                                     "4DGenome" = "externe"),
-                                      selected = "interne"),
+                         h3("Choose the 3D Conformation dataset"),
+                         checkboxGroupInput(inputId = "my.dataset",label = NULL, inline = TRUE,
+                                            choices = list("local" = "interne", 
+                                                           "4DGenome" = "externe"),
+                                            selected = c("interne","externe")),
                          br(),
                          uiOutput(outputId = "runEx"),
                          fluidRow(
@@ -133,7 +131,7 @@ shinyUI(fluidPage(
       conditionalPanel(condition = "!output.uiLogin",
                        list(
                          navbarPage(span("Analysis", style = "color:green"),
-                                    tabPanel("3D Conformation",
+                                    tabPanel("3D Conformation and Regulation",
                                              bsAlert("chr_i"),
                                              bsAlert("alert0"),
                                              bsAlert("alert1"),
@@ -142,21 +140,27 @@ shinyUI(fluidPage(
                                              bsAlert("alert4"),
                                              bsAlert("alert5"),
                                              bsAlert("alert6"),
+                                             h4("3D Conformation : Local Dataset"),
                                              plotOutput("plot1"),
                                              uiOutput(outputId = "download_plot1"),
                                              br(),
-                                             br()
-                                    ),
-                                    tabPanel("Lncrna & Enhancers",
+                                             hr(),
+                                             h4("3D Conformation : 4DGenome Dataset"),
+                                             plotOutput("plot1b"),
+                                             uiOutput(outputId = "download_plot1b"),
+                                             br(),
+                                             hr(),
+                                             h4("Regulation"),
                                              plotOutput("plot2"),
                                              uiOutput(outputId = "download_plot2"),
                                              br(),
+                                             h5("LNCRNA Expression levels"),
                                              plotOutput("plot3"),
                                              uiOutput(outputId = "download_plot3"),
                                              br(),
                                              br()
                                     ),
-                                    tabPanel("RNA-Seq",
+                                    tabPanel("Non-Instant Analysis : RNA-Seq and ChIP-Seq",
                                              h3("RNA-Seq"),
                                              helpText("We are working with the following dataset : ",
                                                       tags$ul(list(
@@ -187,9 +191,8 @@ shinyUI(fluidPage(
                                                       br(), br(), bsAlert("addrnaseq_msg_i"), br()),
                                                column(width = 6,
                                                       bsButton(inputId = "runRNASeq",label = "Send analysis request", style = "btn btn-primary", disabled = TRUE),
-                                                      br(), br(), bsAlert("runrnaseq_msg_i")))
-                                    ),
-                                    tabPanel("ChIP-Seq",
+                                                      br(), br(), bsAlert("runrnaseq_msg_i"))),
+                                             hr(),
                                              h3("ChIP-Seq"),
                                              helpText("We are working with the following datasets : ",
                                                       tags$ul(list(

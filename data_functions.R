@@ -173,8 +173,7 @@ convert2GRange4IMPET <- function(S, current_chr, label) {
                       alpha = df.temp$confidence)
 
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
-  print(S)
-  print(df.temp)
+  
   invisible(g_ranges)
 }
 
