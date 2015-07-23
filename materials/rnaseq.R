@@ -24,11 +24,9 @@ suppressMessages(library(GenomicRanges))
 suppressMessages(library(tools))
 suppressMessages(library(ggplot2))
 suppressMessages(library(ggbio))
-#suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
+suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 suppressMessages(library(biovizBase))
-#suppressMessages(library(org.Hs.eg.db))
-library(TxDb.Hsapiens.UCSC.hg19.knownGene, lib.loc="local_lib/" )
-library(org.Hs.eg.db, lib.loc="local_lib/" )
+suppressMessages(library(org.Hs.eg.db))
 library(parallel)
 
 ######################### FUNCTIONS ########################
