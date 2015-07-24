@@ -388,8 +388,12 @@ shinyServer(function(input, output, session) {
       
       if((!"id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
            (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
-        stop(paste0("File format error : waiting for a tab delimited file containing ",
-                    "at least the following 4 columns : id, start, end, metadata"))
+        
+        msg = paste0("File format error : waiting for a tab delimited file containing ",
+                     "at least the following 4 columns : id, start, end, metadata")
+        
+        stop("File format error : waiting for a tab delimited file containing ",
+             "at least the following 4 columns : id, start, end, metadata")
       } else {
         updateButton(session,inputId = "addsnp", disabled = TRUE)
         
@@ -827,8 +831,8 @@ shinyServer(function(input, output, session) {
                                      highlight_ranges = my.hg.ranges)
       
       impets_tracks <- drawIMPET(ranges_list = my.ranges2, 
-                                current_range = current_range,
-                                highlight_ranges = my.hg.ranges)
+                                 current_range = current_range,
+                                 highlight_ranges = my.hg.ranges)
       
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
