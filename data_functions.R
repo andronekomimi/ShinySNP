@@ -395,7 +395,7 @@ drawAnnotations <- function(label = "Annotations", current_range) {
   if(!is.null(gr_txdb)){
     colnames(values(gr_txdb))[4] <- "model"
     tryCatch({
-      gr_txdb$symbols <- select(org.Hs.eg.db,
+      gr_txdb$symbols <- AnnotationDbi::select(org.Hs.eg.db,
                                 keys = as.character(gr_txdb$gene_id),
                                 column = "SYMBOL",
                                 keytype = "ENTREZID")$SYMBOL

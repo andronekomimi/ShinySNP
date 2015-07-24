@@ -77,7 +77,7 @@ shinyUI(fluidPage(
                          helpText("Add your variants manually or load a file conaining the variants list"),
                          helpText("File format : ",
                                   tags$ul(
-                                    tags$li("Tab-delimited, with 4 named column 'id,start,stop,metadata'"),
+                                    tags$li("Tab-delimited, with 4 named column 'id,start,end,metadata'"),
                                     tags$li("One variant per line"),
                                     tags$li("The metadata column enables to make variants groups. 
                The variants of the same group will be represent with the same color"))),
