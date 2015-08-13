@@ -1,8 +1,8 @@
-ENCSR000CPT	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HQD.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HQC.bam	NA
-ENCSR000CSW	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JWY.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JWZ.bam	NA
-ENCSR000CTU	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HRI.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000HRJ.bam	NA
-ENCSR000CWQ	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000ECJ.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000ECL.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000ECN.bamNA
-ENCSR310FIS	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DKQ.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DKT.bam	NA
-ENCSR667JTA	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DJW.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF002DJZ.bam	NA
-ENCSR000CSV	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JZO.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JZR.bam	NA
-ENCSR000CSU	/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JYT.bam,/is1/users/lemaud01/data-pasteur/MCF7-K562/ENCFF000JYU.bam	NA
+ENCSR000CPT	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000HQD.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000HQC.bam	NA
+ENCSR000CSW	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000JWY.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000JWZ.bam	NA
+ENCSR000CTU	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000HRI.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000HRJ.bam	NA
+ENCSR000CWQ	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000ECJ.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000ECL.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000ECN.bamNA
+ENCSR310FIS	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF002DKQ.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF002DKT.bam	NA
+ENCSR667JTA	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF002DJW.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF002DJZ.bam	NA
+ENCSR000CSV	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000JZO.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000JZR.bam	NA
+ENCSR000CSU	/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000JYT.bam,/home/lemaud01/data-pasteur/MCF7-K562/ENCFF000JYU.bam	NA

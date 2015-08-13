@@ -1081,6 +1081,9 @@ shinyServer(function(input, output, session) {
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
       
+      all_cell_merge_file = "all_cells_rnaseq.csv"
+      all_cell_unmerge_file = "all_cells_unmerge_rnaseq.csv"
+      
       if (input$merge_rnaseq_experiment){
         #localhost
         if(session$clientData$url_hostname == "127.0.0.1") {

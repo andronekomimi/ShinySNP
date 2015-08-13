@@ -1,8 +1,8 @@
-CTCF	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAR.bam,/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAT.bam	control1
-H3K27ac	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFN.bam,/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFM.bam	control2
-H3K36me3	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGJ.bam,/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGC.bam	control2
-H3K4me3	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001FXX.bam,/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001FXP.bam	control3
-H3K27me3	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFS.bam,/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGB.bam	control2
-control1	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAV.bam	NA
-control2	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGM.bam,/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGO.bam	NA
-control3	/is1/users/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001HUB.bam	NA
+CTCF	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAR.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAT.bam	control1
+H3K27ac	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFN.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFM.bam	control2
+H3K36me3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGJ.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGC.bam	control2
+H3K4me3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001FXX.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001FXP.bam	control3
+H3K27me3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFS.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGB.bam	control2
+control1	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAV.bam	NA
+control2	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGM.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGO.bam	NA
+control3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001HUB.bam	NA
