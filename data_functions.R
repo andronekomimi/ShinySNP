@@ -905,7 +905,7 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
   controls <- ret[[2]]
   bam_files <- unlist(bam_files_list)
   
-  system.time(mg <- metagene$new(current_range, bam_files, cores = 4 ))
+  system.time(mg <- metagene$new(current_range, bam_files, cores = 2 ))
   names(mg$coverages) <- names(bam_files)
   
   views <- lapply(mg$coverages, get_views, current_range)
@@ -954,7 +954,7 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
     g
   }
   
-  plots <- mclapply(names(coverages), get_plot, mc.cores = 4)
+  plots <- mclapply(names(coverages), get_plot, mc.cores = 2)
   
   invisible(plots)
 }
@@ -971,7 +971,7 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
   controls <- ret[[2]]
   bam_files <- unlist(bam_files_list)
   
-  system.time(mg <- metagene$new(current_range, bam_files, cores = 4 ))
+  system.time(mg <- metagene$new(current_range, bam_files, cores = 2 ))
   names(mg$coverages) <- names(bam_files)
   
   views <- lapply(mg$coverages, get_views, current_range)
@@ -1003,7 +1003,7 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
   }
   
   
-  new_coverages = mclapply(names(coverages), apply_control, mc.cores = 4)
+  new_coverages = mclapply(names(coverages), apply_control, mc.cores = 2)
   names(new_coverages) = names(coverages)
   coverages = new_coverages
   remove(new_coverages)
@@ -1040,7 +1040,7 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
     g
   }
   
-  plots <- mclapply(names(coverages), get_plot, mc.cores = 1)
+  plots <- mclapply(names(coverages), get_plot, mc.cores = 2)
   names(plots) = names(coverages)
   selected_plots = create_plots_list(plots)
   
