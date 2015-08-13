@@ -5,6 +5,7 @@ suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 suppressMessages(library(biovizBase))
 suppressMessages(library(org.Hs.eg.db))
 suppressMessages(library(rhdf5))
+suppressMessages(library(metagene))
 
 load3DData <- function(current_chr, my.dataset) {
   
@@ -160,8 +161,9 @@ convert2GRange4IMPET <- function(S, current_chr, label) {
   confidence = S$Confidence_Score1[is.gene]
   gene = S$Bgene[is.gene]
   gene = gsub(x = gene, pattern = ",.*",replacement = "")
-
-  df.temp = data.frame(left,right,gene,confidence=(1-confidence))
+  dest = (S$InteractorBStart[is.gene] + S$InteractorBEnd[is.gene])/2
+  
+  df.temp = data.frame(left,right,gene,dest,confidence=(1-confidence))
   df.temp = unique(df.temp)
   
   ranges = IRanges(df.temp$left,df.temp$right)
@@ -170,8 +172,9 @@ convert2GRange4IMPET <- function(S, current_chr, label) {
                       label = rep(label,nrow(df.temp)),
                       color = rep("black",nrow(df.temp)),
                       gene = df.temp$gene,
+                      dest = dest,
                       alpha = df.temp$confidence)
-
+  
   cat(paste0("-> Find ",nrow(S)," interaction(s) for ", label, "\n"))
   
   invisible(g_ranges)
@@ -396,9 +399,9 @@ drawAnnotations <- function(label = "Annotations", current_range) {
     colnames(values(gr_txdb))[4] <- "model"
     tryCatch({
       gr_txdb$symbols <- AnnotationDbi::select(org.Hs.eg.db,
-                                keys = as.character(gr_txdb$gene_id),
-                                column = "SYMBOL",
-                                keytype = "ENTREZID")$SYMBOL
+                                               keys = as.character(gr_txdb$gene_id),
+                                               column = "SYMBOL",
+                                               keytype = "ENTREZID")$SYMBOL
       i <- which(gr_txdb$model == "gap")
       
       gr_txdb <- gr_txdb[-i]
@@ -532,15 +535,19 @@ drawIMPET <- function(ranges_list, highlight_ranges, current_range){
     my.range = ranges_list[[i]]
     
     if(length(my.range) > 0) {
-#       if(!is.null(highlight_ranges)) {
-#         my.range = make_emphasis(my.range, highlight_ranges)      
-#       }
+      #       if(!is.null(highlight_ranges)) {
+      #         my.range = make_emphasis(my.range, highlight_ranges)      
+      #       }
+      
+      df_impet <- data.frame(x = (start(my.range)), xend = (my.range$dest), gene = my.range$gene)
       
       track_title = gsub(x = my.range[1]$label, pattern = " ", replacement = "\n")
       my.colors = unique(my.range$color)
       names(my.colors) = my.colors
       
-      g = autoplot(my.range, aes(color=gene, fill = gene, group = gene, alpha = alpha), group.selfish = FALSE)
+      g = autoplot(my.range, aes(color=gene, fill = gene, group = gene, alpha = alpha), group.selfish = FALSE) 	
+      #+
+      #  geom_arch(df_impet, aes(x = x, xend=xend,color = gene, group = gene))
       
       range_track = g + theme_bw() + xlim(current_range) + 
         guides(alpha=FALSE, col = guide_legend(ncol =  2, keywidth = 0.2, keyheight = 0.4), 
@@ -766,3 +773,278 @@ make_emphasis = function(my.ranges, hg.ranges) {
   
   my.ranges
 }
+
+#######################         RNASEQ/CHIPSEQ               ########################
+parse_file_list = function(file_path) {
+  
+  fpe <- read.table(file_path, header=FALSE, stringsAsFactors=FALSE)
+  l = list()
+  ctr = c()
+  n = length(fpe[[1]])
+  for (i in(1:n)){
+    l <- c(l, list(strsplit(fpe[i,2], split = ",", fixed = TRUE)[[1]]))
+    ctr <- c(ctr,fpe[i,3])
+  }
+  names(l)= fpe[[1]]
+  names(ctr)= fpe[[1]]
+  
+  list(l,ctr)
+}
+
+file_path_sans_ext = function(bam_files) {
+  files_name = c()
+  for(i in (1 : length(bam_files))) {
+    v=unlist(strsplit(bam_files[i],split="/",fixed=TRUE))
+    m = sub(".bam","",v[length(v)])
+    files_name = c(files_name,m)
+  }
+  files_name
+}
+
+get_views <- function(coverage, gr) { 
+  chr <- intersect(names(coverage), as.character(seqlevels(gr)))
+  Views(coverage[chr], as(gr, "RangesList")[chr])
+}
+
+create_plots_list = function(myplots) {
+  
+  mylist = list()
+  
+  #EZH2
+  if(! is.null(myplots$EZH2)) {
+    myplot = myplots$EZH2
+    myplot$layers[[1]]$geom_params$colour = "gray"
+    mylist = c(mylist, list(myplot))
+  }
+  
+  #CTCF
+  if(! is.null(myplots$CTCF)) {
+    myplot = myplots$CTCF
+    myplot$layers[[1]]$geom_params$colour = "blue"
+    mylist = c(mylist, list(myplot))
+  }
+  
+  #H3K27me3
+  if(! is.null(myplots$H3K27me3)) {
+    myplot = myplots$H3K27me3
+    myplot$layers[[1]]$geom_params$colour = "purple"
+    myplot$scales$scales[[1]]$limits[2] = 1.2
+    mylist = c(mylist, list(myplot))
+  }
+  
+  #H3K4me1
+  if(! is.null(myplots$H3K4me1)) {
+    myplot = myplots$H3K4me1
+    myplot$layers[[1]]$geom_params$colour = "#FAD400"
+    myplot$scales$scales[[1]]$limits[2] = 1.2
+    mylist = c(mylist, list(myplot))
+  }
+  
+  
+  #H3K27ac
+  if(! is.null(myplots$H3K27ac)) {
+    myplot = myplots$H3K27ac
+    myplot$layers[[1]]$geom_params$colour = "#FAC000"
+    myplot$scales$scales[[1]]$limits[2] = 1.2
+    mylist = c(mylist, list(myplot))
+  }
+  
+  #H3K4me2
+  if(! is.null(myplots$H3K4me2)) {
+    myplot = myplots$H3K4me2
+    myplot$layers[[1]]$geom_params$colour = "#FA7D00"
+    myplot$scales$scales[[1]]$limits[2] = 1.2
+    mylist = c(mylist, list(myplot))
+  }
+  
+  #H3K4me3
+  if(! is.null(myplots$H3K4me3)) {
+    myplot = myplots$H3K4me3
+    myplot$layers[[1]]$geom_params$colour = "#FA7D00"
+    myplot$scales$scales[[1]]$limits[2] = 1.2
+    mylist = c(mylist, list(myplot))
+  }
+  
+  
+  #H3K36me3
+  if(! is.null(myplots$H3K36me3)) {
+    myplot = myplots$H3K36me3
+    myplot$layers[[1]]$geom_params$colour = "#19C910"
+    myplot$scales$scales[[1]]$limits[2] = 1.2
+    mylist = c(mylist, list(myplot))
+  }
+  
+  #rnaseq
+  if(! is.null(myplots$rnaseq)) {
+    myplot = myplots$rnaseq
+    myplot$layers[[1]]$geom_params$colour = "#37A331"
+    mylist = c(mylist, list(myplot))
+  }
+  
+  if(! is.null(myplots$snps)) {
+    myplot = myplots$snps
+    mylist = c(mylist, list(myplot))
+  }
+  
+  if(! is.null(myplots$annotation)) {
+    myplot = myplots$annotation
+    mylist = c(mylist, list(myplot))
+  }
+  
+  mylist
+}
+
+drawRNASEQ <- function(file_list, highlight_file, current_range) {
+  
+  current_start <- start(current_range)
+  current_stop <- end(current_range)
+  current_chr <- as.character(seqnames(current_range))
+  
+  ret <- parse_file_list(file_list)
+  bam_files_list <- ret[[1]]
+  controls <- ret[[2]]
+  bam_files <- unlist(bam_files_list)
+  
+  system.time(mg <- metagene$new(current_range, bam_files, cores = 4 ))
+  names(mg$coverages) <- names(bam_files)
+  
+  views <- lapply(mg$coverages, get_views, current_range)
+  
+  coverages <- list()
+  for(n in names(bam_files_list)) {
+    replicats = names(mg$coverages)[grepl(pattern = n, x = names(mg$coverages))]
+    
+    means <- c()
+    for(replicat in replicats) {
+      means <- colMeans(rbind(means, as.vector(views[[replicat]][[current_chr]][[1]])), na.rm=TRUE)
+    }
+    coverages[[n]] <- means
+  }
+  
+  top_value <- max(unlist(mclapply(coverages, max, mc.cores = 2)))
+  trackname <- character()
+  
+  get_plot <- function(bam_file_name) {
+    coverage <- coverages[[bam_file_name]]
+    position <- seq(start(current_range), end(current_range))
+    trackname <- bam_file_name
+    data <- data.frame(position = position, coverage = coverage)
+    
+    if(!is.null(highlight_file) && file.exists(highlight_file)) {
+      hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
+      if(nrow(hgs_df) > 0){
+        d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=top_value, col = hgs_df$color)
+      } else {
+        d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+      }
+    } else {
+      d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+    }
+    
+    my.colors = d$col
+    names(my.colors) = my.colors
+    
+    g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
+      geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
+      ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+    
+    print(paste0("Track plot for ", trackname," -> DONE"))
+    
+    g
+  }
+  
+  plots <- mclapply(names(coverages), get_plot, mc.cores = 4)
+  
+  invisible(plots)
+}
+
+
+drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
+  
+  current_start <- start(current_range)
+  current_stop <- end(current_range)
+  current_chr <- as.character(seqnames(current_range))
+  
+  ret <- parse_file_list(file_list)
+  bam_files_list <- ret[[1]]
+  controls <- ret[[2]]
+  bam_files <- unlist(bam_files_list)
+  
+  system.time(mg <- metagene$new(current_range, bam_files, cores = 4 ))
+  names(mg$coverages) <- names(bam_files)
+  
+  views <- lapply(mg$coverages, get_views, current_range)
+  
+  coverages <- list()
+  for(n in names(bam_files_list)) {
+    replicats = names(mg$coverages)[grepl(pattern = n, x = names(mg$coverages))]
+    
+    means <- c()
+    for(replicat in replicats) {
+      means <- colMeans(rbind(means, as.vector(views[[replicat]][[current_chr]][[1]])), na.rm=TRUE)
+    }
+    coverages[[n]] <- means
+  }
+  
+  top_value <- max(unlist(mclapply(coverages, max, mc.cores = 2)))
+  
+  apply_control <- function(experiment) {
+    ctr =  controls[[experiment]]
+    if (! is.na(ctr)) {
+      new_mean = coverages[[experiment]] - coverages[[ctr]]
+    }
+    else
+    {
+      new_mean = coverages[[experiment]]
+    }
+    
+    new_mean
+  }
+  
+  
+  new_coverages = mclapply(names(coverages), apply_control, mc.cores = 4)
+  names(new_coverages) = names(coverages)
+  coverages = new_coverages
+  remove(new_coverages)
+  
+  trackname <- character()
+  
+  get_plot <- function(bam_file_name) {
+    coverage <- coverages[[bam_file_name]]
+    position <- seq(start(current_range), end(current_range))
+    trackname <- bam_file_name
+    data <- data.frame(position = position, coverage = coverage)
+    
+    if(!is.null(highlight_file) && file.exists(highlight_file)) {
+      hgs_df <- read.table(highlight_file, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
+      #d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=max(data$coverage), col = hgs_df$color)
+      if(nrow(hgs_df) > 0){
+        d <- data.frame(x1=as.numeric(hgs_df$start), x2=as.numeric(hgs_df$end), y1=0, y2=top_value, col = hgs_df$color)
+      } else {
+        d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+      }
+    } else {
+      d <- data.frame(x1=c(0), x2=c(0), y1=0, y2=top_value, col=c("black"))
+    }
+    
+    my.colors = d$col
+    names(my.colors) = my.colors
+    
+    g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
+      geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
+      ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+    
+    print(paste0("Track plot for ", trackname," -> DONE"))
+    
+    g
+  }
+  
+  plots <- mclapply(names(coverages), get_plot, mc.cores = 1)
+  names(plots) = names(coverages)
+  selected_plots = create_plots_list(plots)
+  
+  invisible(selected_plots)
+}
+
+

@@ -174,24 +174,22 @@ shinyUI(fluidPage(
                                                column(width = 6,
                                                       radioButtons(inputId = 'merge_rnaseq_experiment', 
                                                                    label = "",
-                                                                   choices = list("One track per experiment" = FALSE, 
-                                                                                  "Merge experiments" = TRUE),
+                                                                   choices = list("Merge experiments" = TRUE,
+                                                                                  "One track per experiment" = FALSE
+                                                                   ),
                                                                    selected = TRUE)),
                                                column(width = 6,
-                                                      radioButtons(inputId = 'merge_rnaseq_file', 
-                                                                   label = "",
-                                                                   choices = list("One file per cell type" = FALSE, 
-                                                                                  "One single file" = TRUE),
-                                                                   selected = TRUE))
+                                                      bsButton(inputId = "runRNASeq",label = "Run RNA-Seq Analysis", style = "btn btn-primary", disabled = FALSE)
+                                               )
+                                             ),
+                                             fluidRow(
+                                               column(width = 12,
+                                                      bsAlert("runrnaseq_msg_i"))
                                              ),
                                              br(),
-                                             fluidRow(
-                                               column(width = 6,
-                                                      bsButton(inputId = "addRNASeq", label = "Add RNA-Seq analysis", disabled = TRUE),
-                                                      br(), br(), bsAlert("addrnaseq_msg_i"), br()),
-                                               column(width = 6,
-                                                      bsButton(inputId = "runRNASeq",label = "Send analysis request", style = "btn btn-primary", disabled = TRUE),
-                                                      br(), br(), bsAlert("runrnaseq_msg_i"))),
+                                             plotOutput("plot4"),
+                                             uiOutput(outputId = "download_plot4"),
+                                             br(),br(),
                                              hr(),
                                              h3("ChIP-Seq"),
                                              helpText("We are working with the following datasets : ",
@@ -203,13 +201,22 @@ shinyUI(fluidPage(
                                              H4K20me1, H3K27me3, EZH2")
                                                       ))),
                                              br(),
+                                             fluidRow(
+                                               column(width = 6,
+                                                      radioButtons(inputId = "chipseq_cell",label = "Choose cell type", 
+                                                                   choices = list("MCF7" = "mcf7" ,"K562" = "k562","HMEC" = "hmec"), selected = "mcf7")),
+                                               column(width = 6,
+                                                      bsButton(inputId = "runCHIPSeq",label = "Run ChIP-Seq Analysis", style = "btn btn-primary", disabled = TRUE)
+                                               )
+                                             ),
+                                             fluidRow(
+                                               column(width = 12,
+                                                      bsAlert("runchipseq_msg_i"))
+                                             ),
                                              br(),
-                                             checkboxGroupInput(inputId = "chipseq_analysis",label = "Choose cell types", 
-                                                                choices = list("MCF7","K562","HMEC"), selected = "MCF7"),
-                                             br(),
-                                             br(),
-                                             bsButton(inputId = "runCHIPSeq",label = "Send analysis request", style = "btn btn-primary",disabled = TRUE),
-                                             br(), br(), bsAlert("runchipseq_msg_i")
+                                             plotOutput("plot5"),
+                                             uiOutput(outputId = "download_plot5"),
+                                             br()
                                     )
                                     
                          )
