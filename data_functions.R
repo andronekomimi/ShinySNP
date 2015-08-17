@@ -895,7 +895,7 @@ create_plots_list = function(myplots) {
 }
 
 drawRNASEQ <- function(file_list, highlight_file, current_range) {
-  
+  views_dir <- read.csv(file = "/etc/shiny-apps/ShinySNP.conf",header = TRUE)$VIEWS_DIR
   current_start <- start(current_range)
   current_stop <- end(current_range)
   current_chr <- as.character(seqnames(current_range))
@@ -905,18 +905,15 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
   controls <- ret[[2]]
   bam_files <- unlist(bam_files_list)
   
-  system.time(mg <- metagene$new(current_range, bam_files, cores = 2 ))
-  names(mg$coverages) <- names(bam_files)
-  
-  views <- lapply(mg$coverages, get_views, current_range)
-  
   coverages <- list()
   for(n in names(bam_files_list)) {
     replicats = names(mg$coverages)[grepl(pattern = n, x = names(mg$coverages))]
-    
+    print(replicats)
     means <- c()
     for(replicat in replicats) {
-      means <- colMeans(rbind(means, as.vector(views[[replicat]][[current_chr]][[1]])), na.rm=TRUE)
+      load(paste0(views_dir,replicat,"_",current_chr,".Rda")) #views
+      means <- colMeans(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
+      remove(views)
     }
     coverages[[n]] <- means
   }
@@ -962,6 +959,7 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
 
 drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
   
+  views_dir <- read.csv(file = "/etc/shiny-apps/ShinySNP.conf",header = TRUE)$VIEWS_DIR
   current_start <- start(current_range)
   current_stop <- end(current_range)
   current_chr <- as.character(seqnames(current_range))
@@ -978,7 +976,7 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
     means <- c()
     
     for(replicat in replicats) {
-      load(paste0("/home/lemaud01/workspace/bam_preproc/views/",replicat,"_",current_chr,".Rda")) #views
+      load(paste0(views_dir,replicat,"_",current_chr,".Rda")) #views
       means <- colMeans(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
       remove(views)
     }

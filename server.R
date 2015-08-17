@@ -1,6 +1,5 @@
 # SHINYSNP server.R
 source("data_functions.R")
-library(sendmailR)
 
 # EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
 # chrom_list dans les parametres
@@ -1271,6 +1270,7 @@ shinyServer(function(input, output, session) {
       warning("DONE calculate the tracks",call. = FALSE)
       
       tracks(my.tracks) + xlim(current_range)
+      
     })
     
   })

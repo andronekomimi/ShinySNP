@@ -1,3 +1,3 @@
-ENCSR000CPH	/home/lemaud01/data-pasteur/K562/rnaseq/ENCFF000HES.bam,/home/lemaud01/data-pasteur/K562/rnaseq/ENCFF000HET.bam	NA
-ENCSR000BZV	/home/lemaud01/data-pasteur/K562/rnaseq/ENCFF000LMU.bam,/home/lemaud01/data-pasteur/K562/rnaseq/ENCFF000LMW.bam	NA
-ENCSR109IQO	/home/lemaud01/data-pasteur/K562/rnaseq/ENCFF002DKH.bam,/home/lemaud01/data-pasteur/K562/rnaseq/ENCFF002DKL.bam	NA
+ENCSR000CPH	ENCFF000HES,ENCFF000HET	NA
+ENCSR000BZV	ENCFF000LMU,ENCFF000LMW	NA
+ENCSR109IQO	ENCFF002DKH,ENCFF002DKL	NA

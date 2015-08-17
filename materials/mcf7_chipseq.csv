@@ -1,8 +1,8 @@
-CTCF	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAR.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAT.bam	control1
-H3K27ac	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFN.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFM.bam	control2
-H3K36me3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGJ.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGC.bam	control2
-H3K4me3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001FXX.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001FXP.bam	control3
-H3K27me3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VFS.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGB.bam	control2
-control1	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000SAV.bam	NA
-control2	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGM.bam,/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF000VGO.bam	NA
-control3	/home/lemaud01/data-pasteur/MCF7/chipseq/ENCFF001HUB.bam	NA
+CTCF	ENCFF000SAR,ENCFF000SAT	control1
+H3K27ac	ENCFF000VFN,ENCFF000VFM	control2
+H3K36me3	ENCFF000VGJ,ENCFF000VGC	control2
+H3K4me3	ENCFF001FXX,ENCFF001FXP	control3
+H3K27me3	ENCFF000VFS,ENCFF000VGB	control2
+control1	ENCFF000SAV	NA
+control2	ENCFF000VGM,ENCFF000VGO	NA
+control3	ENCFF001HUB	NA
