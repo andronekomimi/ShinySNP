@@ -1,6 +1,6 @@
-H3K36me3  /home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BXE.bam,/home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BXF.bam	control1
-H3K4me2 /home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BXS.bam,/home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BXT.bam	control1
-CTCF  /home/lemaud01/data-pasteur/K562/chipseq/ENCFF001HTC.bam,/home/lemaud01/data-pasteur/K562/chipseq/ENCFF001HTD.bam	control2
-EZH2  /home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BWG.bam,/home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BWH.bam	control1
-control1  /home/lemaud01/data-pasteur/K562/chipseq/ENCFF000BVZ.bam	NA
-control2  /home/lemaud01/data-pasteur/K562/chipseq/ENCFF001HTM.bam	NA
+H3K36me3	ENCFF000BXE,ENCFF000BXF	control1
+H3K4me2	ENCFF000BXS,ENCFF000BXT	control1
+CTCF	ENCFF001HTC,ENCFF001HTD	control2
+EZH2	ENCFF000BWG,ENCFF000BWH	control1
+control1	ENCFF000BVZ	NA
+control2	ENCFF001HTM	NA
