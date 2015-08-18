@@ -179,7 +179,7 @@ shinyUI(fluidPage(
                                                                    ),
                                                                    selected = TRUE)),
                                                column(width = 4,
-                                                      radioButtons(inputId = "rnaseqseq_cell",label = "Choose cell type", 
+                                                      radioButtons(inputId = "rnaseq_cell",label = "Choose cell type", 
                                                                    choices = list("MCF7" = "mcf7" ,"K562" = "k562","HMEC" = "hmec"), selected = "mcf7")),
                                                
                                                column(width = 4,
