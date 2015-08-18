@@ -500,7 +500,7 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  drawPlot1 <- reactive({
+  drawPlot1 <- function(){
     
     if (input$run == 0)
       return(waiting_plot("Waiting for your request..."))
@@ -583,7 +583,7 @@ shinyServer(function(input, output, session) {
       tracks(my.tracks) + xlim(current_range)
     })
     
-  })
+  }
   
   output$plot1 <- renderPlot({
     drawPlot1()
@@ -612,7 +612,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  drawPlot1b <- reactive({
+  drawPlot1b <- function(){
     
     if (input$run == 0)
       return(waiting_plot("Waiting for your request..."))
@@ -695,7 +695,7 @@ shinyServer(function(input, output, session) {
       tracks(my.tracks) + xlim(current_range)
     })
     
-  })
+  }
   
   output$plot1b <- renderPlot({
     drawPlot1b()
@@ -726,7 +726,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  drawPlot23 <- reactive({
+  drawPlot23 <- function(){
     if (input$run == 0)
       return(
         list(plot2 = waiting_plot("Waiting for your request..."), 
@@ -825,7 +825,7 @@ shinyServer(function(input, output, session) {
       
       list(plot2 = tracks(my.tracks) + xlim(current_range), plot3 = tracks(lncrna_figures$lncrna_hist))
     })
-  })
+  }
   
   output$plot2 <- renderPlot({
     drawPlot23()$plot2
@@ -1036,7 +1036,7 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  drawPlot4 <- reactive({
+  drawPlot4 <- function(){
     
     if (input$runRNASeq == 0)
       return(waiting_plot("Waiting for your request..."))
@@ -1082,18 +1082,9 @@ shinyServer(function(input, output, session) {
       
       
       if (input$merge_rnaseq_experiment){
-        #localhost
-        if(session$clientData$url_hostname == "127.0.0.1") {
-          file_list = "/data/hmec_merge_rnaseq.csv"
-        } else {
-          file_list = paste0("materials/", input$rnaseq_cell,"_merge_rnaseq.csv" )
-        }        
+        file_list = paste0("materials/", input$rnaseq_cell,"_merge_rnaseq.csv" )       
       } else {
-        if(session$clientData$url_hostname == "127.0.0.1") {
-          file_list = "/data/hmec_unmerge_rnaseq.csv"
-        } else {
-          file_list = paste0("materials/", input$rnaseq_cell,"_unmerge_rnaseq.csv" )
-        }
+        file_list = paste0("materials/", input$rnaseq_cell,"_unmerge_rnaseq.csv" )
       }
       
       
@@ -1119,7 +1110,7 @@ shinyServer(function(input, output, session) {
       tracks(my.tracks) + xlim(current_range)
     })
     
-  })
+  }
   
   output$plot4 <- renderPlot({
     drawPlot4()
@@ -1240,13 +1231,7 @@ shinyServer(function(input, output, session) {
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
       
-      #localhost
-      if(session$clientData$url_hostname == "127.0.0.1") {
-        file_list = paste0("/data/", input$chipseq_cell, "_chipseq.csv")
-      } else {
-        file_list = paste0("materials/", input$chipseq_cell, "_chipseq.csv")
-      }
-      
+      file_list = paste0("materials/", input$chipseq_cell, "_chipseq.csv")
       
       highlight_file = NULL # pas de hg dans ce type de graphe
       t0 = Sys.time()

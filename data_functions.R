@@ -896,6 +896,8 @@ create_plots_list = function(myplots) {
 
 drawRNASEQ <- function(file_list, highlight_file, current_range) {
   views_dir <- read.csv(file = "/etc/shiny-apps/ShinySNP.conf",header = TRUE)$VIEWS_DIR
+  nb.cores <- as.numeric(read.csv(file = "/etc/shiny-apps/ShinySNP.conf",header = TRUE)$CORES)
+  
   current_start <- start(current_range)
   current_stop <- end(current_range)
   current_chr <- as.character(seqnames(current_range))
@@ -907,18 +909,21 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
   
   coverages <- list()
   for(n in names(bam_files_list)) {
-    replicats = names(mg$coverages)[grepl(pattern = n, x = names(mg$coverages))]
+    replicats = bam_files_list[[n]]
     print(replicats)
     means <- c()
+    
     for(replicat in replicats) {
       load(paste0(views_dir,replicat,"_",current_chr,".Rda")) #views
       means <- colMeans(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
       remove(views)
     }
+    
     coverages[[n]] <- means
+    remove(means)
   }
   
-  top_value <- max(unlist(mclapply(coverages, max, mc.cores = 2)))
+  top_value <- max(unlist(mclapply(coverages, max, mc.cores = nb.cores)))
   trackname <- character()
   
   get_plot <- function(bam_file_name) {
@@ -944,14 +949,15 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
     
     g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
       geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
-      ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+      ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range) + 
+      theme(axis.title.y = element_text(angle = 0))
     
     print(paste0("Track plot for ", trackname," -> DONE"))
     
     g
   }
   
-  plots <- mclapply(names(coverages), get_plot, mc.cores = 2)
+  plots <- mclapply(names(coverages), get_plot, mc.cores = nb.cores)
   
   invisible(plots)
 }
@@ -960,6 +966,8 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
 drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
   
   views_dir <- read.csv(file = "/etc/shiny-apps/ShinySNP.conf",header = TRUE)$VIEWS_DIR
+  nb.cores <- as.numeric(read.csv(file = "/etc/shiny-apps/ShinySNP.conf",header = TRUE)$CORES)
+  
   current_start <- start(current_range)
   current_stop <- end(current_range)
   current_chr <- as.character(seqnames(current_range))
@@ -984,7 +992,7 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
     coverages[[n]] <- means
   }
   
-  top_value <- max(unlist(mclapply(coverages, max, mc.cores = 2)))
+  top_value <- max(unlist(mclapply(coverages, max, mc.cores = nb.cores)))
   
   apply_control <- function(experiment) {
     ctr =  controls[[experiment]]
@@ -1000,7 +1008,7 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
   }
   
   
-  new_coverages = mclapply(names(coverages), apply_control, mc.cores = 2)
+  new_coverages = mclapply(names(coverages), apply_control, mc.cores = nb.cores)
   names(new_coverages) = names(coverages)
   coverages = new_coverages
   remove(new_coverages)
@@ -1030,14 +1038,15 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
     
     g = ggplot() + geom_line(data = data, mapping =  aes(x = position, y = coverage)) + 
       geom_rect(data = d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), alpha = 0.4, fill = my.colors) +
-      ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range)
+      ylim(0,top_value) + ylab(trackname) + theme_bw() + xlim(current_range) +
+      theme(axis.title.y = element_text(angle = 0))
     
     print(paste0("Track plot for ", trackname," -> DONE"))
     
     g
   }
   
-  plots <- mclapply(names(coverages), get_plot, mc.cores = 2)
+  plots <- mclapply(names(coverages), get_plot, mc.cores = nb.cores)
   names(plots) = names(coverages)
   selected_plots = create_plots_list(plots)
   

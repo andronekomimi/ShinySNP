@@ -180,7 +180,7 @@ shinyUI(fluidPage(
                                                                    selected = TRUE)),
                                                column(width = 4,
                                                       radioButtons(inputId = "rnaseq_cell",label = "Choose cell type", 
-                                                                   choices = list("MCF7" = "mcf7" ,"K562" = "k562","HMEC" = "hmec"), selected = "mcf7")),
+                                                                   choices = list("MCF7" = "mcf7" ,"K562" = "k562","HMEC" = "hmec", "ALL" = "all_cells"), selected = "mcf7")),
                                                
                                                column(width = 4,
                                                       bsButton(inputId = "runRNASeq",label = "Run RNA-Seq Analysis", style = "btn btn-primary", disabled = FALSE)
