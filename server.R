@@ -1198,7 +1198,7 @@ shinyServer(function(input, output, session) {
   })
   
   
-  drawPlot5 <- reactive({
+  drawPlot5 <- function(){
     
     if (input$runCHIPSeq == 0)
       return(waiting_plot("Waiting for your request..."))
@@ -1273,7 +1273,7 @@ shinyServer(function(input, output, session) {
       
     })
     
-  })
+  }
   
   output$plot5 <- renderPlot({
     drawPlot5()

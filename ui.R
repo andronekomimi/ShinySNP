@@ -160,7 +160,7 @@ shinyUI(fluidPage(
                                              br(),
                                              br()
                                     ),
-                                    tabPanel("Non-Instant Analysis : RNA-Seq and ChIP-Seq",
+                                    tabPanel("Expression : RNA-Seq and ChIP-Seq",
                                              h3("RNA-Seq"),
                                              helpText("We are working with the following dataset : ",
                                                       tags$ul(list(
