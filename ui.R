@@ -171,14 +171,18 @@ shinyUI(fluidPage(
                                                       ))),
                                              br(),
                                              fluidRow(
-                                               column(width = 6,
+                                               column(width = 4,
                                                       radioButtons(inputId = 'merge_rnaseq_experiment', 
                                                                    label = "",
                                                                    choices = list("Merge experiments" = TRUE,
                                                                                   "One track per experiment" = FALSE
                                                                    ),
                                                                    selected = TRUE)),
-                                               column(width = 6,
+                                               column(width = 4,
+                                                      radioButtons(inputId = "rnaseqseq_cell",label = "Choose cell type", 
+                                                                   choices = list("MCF7" = "mcf7" ,"K562" = "k562","HMEC" = "hmec"), selected = "mcf7")),
+                                               
+                                               column(width = 4,
                                                       bsButton(inputId = "runRNASeq",label = "Run RNA-Seq Analysis", style = "btn btn-primary", disabled = FALSE)
                                                )
                                              ),

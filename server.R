@@ -1080,21 +1080,19 @@ shinyServer(function(input, output, session) {
                                      current_start = input$position_min, 
                                      current_stop = input$position_max)
       
-      all_cell_merge_file = "all_cells_rnaseq.csv"
-      all_cell_unmerge_file = "all_cells_unmerge_rnaseq.csv"
       
       if (input$merge_rnaseq_experiment){
         #localhost
         if(session$clientData$url_hostname == "127.0.0.1") {
           file_list = "/data/hmec_merge_rnaseq.csv"
         } else {
-          file_list = paste0("materials/", all_cell_merge_file)
+          file_list = paste0("materials/", input$rnaseq_cell,"_merge_rnaseq.csv" )
         }        
       } else {
         if(session$clientData$url_hostname == "127.0.0.1") {
           file_list = "/data/hmec_unmerge_rnaseq.csv"
         } else {
-          file_list = paste0("materials/", all_cell_unmerge_file)
+          file_list = paste0("materials/", input$rnaseq_cell,"_unmerge_rnaseq.csv" )
         }
       }
       
