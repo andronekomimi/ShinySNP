@@ -153,7 +153,6 @@ convert2GRange <- function(S, current_chr, label) {
 
 
 convert2GRange4IMPET <- function(S, current_chr, label) {
-  
   is.gene = grepl(x = S$Bgene, pattern = "*.,ENSG.*")
   
   left = S$InteractorAStart[is.gene]
@@ -235,8 +234,13 @@ create_gr_from_df_4IMPET <- function(current_range, my.df, label) {
   if(nrow(my.df) > 0){
     tmp = unique(subsetData(my.df, current_range))
     if(nrow(tmp) > 0) {
-      convert2GRange4IMPET(tmp, current_chr = as.character(seqnames(current_range)), 
-                           label = label)
+      has.gene = sum(grepl(x = tmp$Bgene, pattern = "*.,ENSG.*")) > 0
+      if (has.gene){
+        convert2GRange4IMPET(tmp, current_chr = as.character(seqnames(current_range)), 
+                             label = label)
+      } else {
+        invisible(GRanges())
+      }
     } else {
       invisible(GRanges())
     }
@@ -540,14 +544,12 @@ drawIMPET <- function(ranges_list, highlight_ranges, current_range){
       #       }
       
       df_impet <- data.frame(x = (start(my.range)), xend = (my.range$dest), gene = my.range$gene)
-      
       track_title = gsub(x = my.range[1]$label, pattern = " ", replacement = "\n")
       my.colors = unique(my.range$color)
       names(my.colors) = my.colors
       
-      g = autoplot(my.range, aes(color=gene, fill = gene, group = gene, alpha = alpha), group.selfish = FALSE) 	
-      #+
-      #  geom_arch(df_impet, aes(x = x, xend=xend,color = gene, group = gene))
+      g = autoplot(my.range, aes(color=gene, fill = gene, group = gene, alpha = alpha), group.selfish = FALSE) +
+        geom_arch(df_impet, aes(x = x, xend=xend,color = gene, group = gene))
       
       range_track = g + theme_bw() + xlim(current_range) + 
         guides(alpha=FALSE, col = guide_legend(ncol =  2, keywidth = 0.2, keyheight = 0.4), 
@@ -915,10 +917,11 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
     
     for(replicat in replicats) {
       load(paste0(views_dir,replicat,"_",current_chr,".Rda")) #views
-      means <- colMeans(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
+      means <- colSums(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
       remove(views)
     }
     
+    means <- means / (length(replicats))
     coverages[[n]] <- means
     remove(means)
   }
@@ -985,11 +988,13 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
     
     for(replicat in replicats) {
       load(paste0(views_dir,replicat,"_",current_chr,".Rda")) #views
-      means <- colMeans(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
+      means <- colSums(rbind(means, as.vector(views$coverages[[current_chr]][[1]][current_start:current_stop])), na.rm=TRUE)
       remove(views)
     }
     
+    means <- means / (length(replicats))
     coverages[[n]] <- means
+    remove(means)
   }
   
   top_value <- max(unlist(mclapply(coverages, max, mc.cores = nb.cores)))

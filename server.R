@@ -211,13 +211,20 @@ shinyServer(function(input, output, session) {
         return()
       
       isolate({
-        updateSelectInput(session, "chr", selected = "chr12")
-        updateNumericInput(session, "position_min", value = 27950000)
-        updateNumericInput(session, "position_max", value = 28735000)
-        updateNumericInput(session, "snp_position_min", value = 28155080)
-        updateNumericInput(session, "snp_position_max", value = 28155080)
-        updateNumericInput(session, "hgstart", value = 28111017)
-        updateNumericInput(session, "hgend", value = 28127138)
+#         updateSelectInput(session, "chr", selected = "chr12")
+#         updateNumericInput(session, "position_min", value = 27950000)
+#         updateNumericInput(session, "position_max", value = 28735000)
+#         updateNumericInput(session, "snp_position_min", value = 28155080)
+#         updateNumericInput(session, "snp_position_max", value = 28155080)
+#         updateNumericInput(session, "hgstart", value = 28111017)
+#         updateNumericInput(session, "hgend", value = 28127138)
+        updateSelectInput(session, "chr", selected = "chr4")
+        updateNumericInput(session, "position_min", value = 105900000)
+        updateNumericInput(session, "position_max", value = 106400000)
+        updateNumericInput(session, "snp_position_min", value = 105900000)
+        updateNumericInput(session, "snp_position_max", value = 106400000)
+        updateNumericInput(session, "hgstart", value = 105900000)
+        updateNumericInput(session, "hgend", value = 105901000)
       })}
   })
   
@@ -647,7 +654,7 @@ shinyServer(function(input, output, session) {
       updateButton(session, "addsnp", disabled = TRUE)
       updateButton(session, "addhg", disabled = TRUE)
       
-      print("RUN Plot1")
+      print("RUN Plot1B")
       tryCatch ({
         close(con = snpcon)
         close(hgcon)
