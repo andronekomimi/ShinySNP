@@ -544,6 +544,7 @@ drawIMPET <- function(ranges_list, highlight_ranges, current_range){
       #       }
       
       df_impet <- data.frame(x = (start(my.range)), xend = (my.range$dest), gene = my.range$gene)
+      
       track_title = gsub(x = my.range[1]$label, pattern = " ", replacement = "\n")
       my.colors = unique(my.range$color)
       names(my.colors) = my.colors
