@@ -211,13 +211,13 @@ shinyServer(function(input, output, session) {
         return()
       
       isolate({
-#         updateSelectInput(session, "chr", selected = "chr12")
-#         updateNumericInput(session, "position_min", value = 27950000)
-#         updateNumericInput(session, "position_max", value = 28735000)
-#         updateNumericInput(session, "snp_position_min", value = 28155080)
-#         updateNumericInput(session, "snp_position_max", value = 28155080)
-#         updateNumericInput(session, "hgstart", value = 28111017)
-#         updateNumericInput(session, "hgend", value = 28127138)
+        #         updateSelectInput(session, "chr", selected = "chr12")
+        #         updateNumericInput(session, "position_min", value = 27950000)
+        #         updateNumericInput(session, "position_max", value = 28735000)
+        #         updateNumericInput(session, "snp_position_min", value = 28155080)
+        #         updateNumericInput(session, "snp_position_max", value = 28155080)
+        #         updateNumericInput(session, "hgstart", value = 28111017)
+        #         updateNumericInput(session, "hgend", value = 28127138)
         updateSelectInput(session, "chr", selected = "chr4")
         updateNumericInput(session, "position_min", value = 105900000)
         updateNumericInput(session, "position_max", value = 106400000)
@@ -587,7 +587,14 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      tracks(my.tracks) + xlim(current_range)
+      t = tracks(my.tracks) + xlim(current_range)
+      
+      pdf(paste0("done/",tempid,"_conformation.pdf"), onefile=T, paper="USr")
+      print(t)
+      dev.off()
+      
+      t
+      
     })
     
   }
@@ -611,9 +618,7 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 6,
-               downloadButton(outputId = "download_plot1_png", label = "Download PNG")),
-        column(width = 6,
+        column(width = 12,
                downloadButton(outputId = "download_plot1_pdf", label = "Download PDF"))
       )
     )
@@ -699,7 +704,13 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      tracks(my.tracks) + xlim(current_range)
+      t = tracks(my.tracks) + xlim(current_range)
+      
+      pdf(paste0("done/",tempid,"_conformation_2.pdf"), onefile=T, paper="USr")
+      print(t)
+      dev.off()
+      
+      t
     })
     
   }
@@ -723,9 +734,7 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 6,
-               downloadButton(outputId = "download_plot1b_png", label = "Download PNG")),
-        column(width = 6,
+        column(width = 12,
                downloadButton(outputId = "download_plot1b_pdf", label = "Download PDF"))
       )
     )
@@ -830,7 +839,18 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      list(plot2 = tracks(my.tracks) + xlim(current_range), plot3 = tracks(lncrna_figures$lncrna_hist))
+      t2 = tracks(my.tracks) + xlim(current_range)
+      t3 = tracks(lncrna_figures$lncrna_hist)
+      
+      pdf(paste0("done/",tempid,"_regulation.pdf"), onefile=T, paper="USr")
+      print(t2)
+      dev.off()
+      
+      pdf(paste0("done/",tempid,"_lncrna_expr.pdf"), onefile=T, paper="USr")
+      print(t3)
+      dev.off()
+      
+      list(plot2 = t2, plot3 = t3)
     })
   }
   
@@ -851,9 +871,7 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 6,
-               downloadButton(outputId = "download_plot2_png", label = "Download PNG")),
-        column(width = 6,
+        column(width = 12,
                downloadButton(outputId = "download_plot2_pdf", label = "Download PDF"))
       )
     )
@@ -877,40 +895,19 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 6,
-               downloadButton(outputId = "download_plot3_png", label = "Download PNG")),
-        column(width = 6,
+        column(width = 12,
                downloadButton(outputId = "download_plot3_pdf", label = "Download PDF"))
       )
     )
   })
   
   
-  
-  output$download_plot1_png <- downloadHandler(
-    filename = function() {
-      "shinysnp_3D.png"
-    },
-    content = function(file) {
-      ggsave(file,drawPlot1())
-    }
-  )
-  
   output$download_plot1_pdf <- downloadHandler(
     filename = function() {
       "shinysnp_3D.pdf"
     },
     content = function(file) {
-      ggsave(file,drawPlot1())
-    }
-  )
-  
-  output$download_plot1b_png <- downloadHandler(
-    filename = function() {
-      "shinysnp_3D_2.png"
-    },
-    content = function(file) {
-      ggsave(file,drawPlot1b())
+      file.copy(paste0("done/",tempid,"_conformation.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -919,25 +916,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D_2.pdf"
     },
     content = function(file) {
-      ggsave(file,drawPlot1b())
-    }
-  )
-  
-  output$download_plot2_png <- downloadHandler(
-    filename = function() {
-      "shinysnp_1D.png"
-    },
-    content = function(file) {
-      ggsave(file,drawPlot23()$plot2)
-    }
-  )
-  
-  output$download_plot3_png <- downloadHandler(
-    filename = function() {
-      "shinysnp_hist.png"
-    },
-    content = function(file) {
-      ggsave(file,drawPlot23()$plot3)
+      file.copy(paste0("done/",tempid,"_conformation_2.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -946,7 +925,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_1D.pdf"
     },
     content = function(file) {
-      ggsave(file,drawPlot23()$plot2)
+      file.copy(paste0("done/",tempid,"_regulation.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -955,16 +934,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_hist.pdf"
     },
     content = function(file) {
-      ggsave(file,drawPlot23()$plot3)
-    }
-  )
-  
-  output$download_plot4_png <- downloadHandler(
-    filename = function() {
-      "shinysnp_rnaseq.png"
-    },
-    content = function(file) {
-      ggsave(file,drawPlot4())
+      file.copy(paste0("done/",tempid,"_lncrna_expr.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -973,16 +943,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_rnaseq.pdf"
     },
     content = function(file) {
-      ggsave(file,drawPlot4())
-    }
-  )
-  
-  output$download_plot5_png <- downloadHandler(
-    filename = function() {
-      "shinysnp_chipseq.png"
-    },
-    content = function(file) {
-      ggsave(file,drawPlot5())
+      file.copy(paste0("done/",tempid,"_rnaseq.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -991,7 +952,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_chipseq.pdf"
     },
     content = function(file) {
-      ggsave(file,drawPlot5())
+      file.copy(paste0("done/",tempid,"_chipseq.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -1114,7 +1075,13 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      tracks(my.tracks) + xlim(current_range)
+      t = tracks(my.tracks) + xlim(current_range)
+      
+      pdf(paste0("done/",tempid,"_rnaseq.pdf"), onefile=T, paper="USr")
+      print(t)
+      dev.off()
+      
+      t
     })
     
   }
@@ -1138,9 +1105,7 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 6,
-               downloadButton(outputId = "download_plot4_png", label = "Download PNG")),
-        column(width = 6,
+        column(width = 12,
                downloadButton(outputId = "download_plot4_pdf", label = "Download PDF"))
       )
     )
@@ -1242,7 +1207,7 @@ shinyServer(function(input, output, session) {
       
       highlight_file = NULL # pas de hg dans ce type de graphe
       t0 = Sys.time()
-      rnaseq_tracks <- drawCHIPSEQ(file_list, highlight_file, current_range)
+      chipseq_tracks <- drawCHIPSEQ(file_list, highlight_file, current_range)
       print(Sys.time()-t0)
       annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
       
@@ -1252,14 +1217,20 @@ shinyServer(function(input, output, session) {
       
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
-        my.tracks = c(rnaseq_tracks, snp_track, annot_track)
+        my.tracks = c(chipseq_tracks, snp_track, annot_track)
       } else {
-        my.tracks = c(rnaseq_tracks, annot_track)
+        my.tracks = c(chipseq_tracks, annot_track)
       }
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      tracks(my.tracks) + xlim(current_range)
+      t = tracks(my.tracks) + xlim(current_range)
+      
+      pdf(paste0("done/",tempid,"_chipseq.pdf"), onefile=T, paper="USr")
+      print(t)
+      dev.off()
+      
+      t
       
     })
     
@@ -1284,9 +1255,7 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 6,
-               downloadButton(outputId = "download_plot5_png", label = "Download PNG")),
-        column(width = 6,
+        column(width = 12,
                downloadButton(outputId = "download_plot5_pdf", label = "Download PDF"))
       )
     )
