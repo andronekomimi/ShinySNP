@@ -593,6 +593,14 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
+      png(paste0("done/",tempid,"_conformation.png"), bg="transparent")
+      print(t)
+      dev.off()
+      
+      svg(paste0("done/",tempid,"_conformation.svg"), bg="transparent")
+      print(t)
+      dev.off()
+      
       t
       
     })
@@ -618,8 +626,12 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 12,
-               downloadButton(outputId = "download_plot1_pdf", label = "Download PDF"))
+        column(width = 4,
+               downloadButton(outputId = "download_plot1_pdf", label = "Download PDF")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot1_png", label = "Download PNG")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot1_svg", label = "Download SVG"))
       )
     )
   })
@@ -710,6 +722,14 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
+      png(paste0("done/",tempid,"_conformation_2.png"), bg="transparent")
+      print(t)
+      dev.off()
+      
+      svg(paste0("done/",tempid,"_conformation_2.svg"), bg="transparent")
+      print(t)
+      dev.off()
+      
       t
     })
     
@@ -734,8 +754,12 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 12,
-               downloadButton(outputId = "download_plot1b_pdf", label = "Download PDF"))
+        column(width = 4,
+               downloadButton(outputId = "download_plot1b_pdf", label = "Download PDF")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot1b_png", label = "Download PNG")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot1b_svg", label = "Download SVG"))
       )
     )
   })
@@ -846,7 +870,23 @@ shinyServer(function(input, output, session) {
       print(t2)
       dev.off()
       
+      png(paste0("done/",tempid,"_regulation.png"), bg="transparent")
+      print(t2)
+      dev.off()
+      
+      svg(paste0("done/",tempid,"_regulation.svg"), bg="transparent")
+      print(t2)
+      dev.off()
+      
       pdf(paste0("done/",tempid,"_lncrna_expr.pdf"), onefile=T, paper="USr")
+      print(t3)
+      dev.off()
+      
+      png(paste0("done/",tempid,"_lncrna_expr.png"), bg="transparent")
+      print(t3)
+      dev.off()
+      
+      svg(paste0("done/",tempid,"_lncrna_expr.svg"), bg="transparent")
       print(t3)
       dev.off()
       
@@ -871,8 +911,12 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 12,
-               downloadButton(outputId = "download_plot2_pdf", label = "Download PDF"))
+        column(width = 4,
+               downloadButton(outputId = "download_plot2_pdf", label = "Download PDF")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot2_png", label = "Download PNG")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot2_svg", label = "Download SVG"))
       )
     )
   })
@@ -895,13 +939,17 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 12,
-               downloadButton(outputId = "download_plot3_pdf", label = "Download PDF"))
+        column(width = 4,
+               downloadButton(outputId = "download_plot3_pdf", label = "Download PDF")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot3_png", label = "Download PNG")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot3_svg", label = "Download SVG"))
       )
     )
   })
   
-  
+  ### FILE COPY PDF
   output$download_plot1_pdf <- downloadHandler(
     filename = function() {
       "shinysnp_3D.pdf"
@@ -953,6 +1001,117 @@ shinyServer(function(input, output, session) {
     },
     content = function(file) {
       file.copy(paste0("done/",tempid,"_chipseq.pdf"), file, overwrite = TRUE)
+    }
+  )
+  
+  
+  ### FILE COPY PNG
+  output$download_plot1_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D.png"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_conformation.png"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot1b_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D_2.png"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_conformation_2.png"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot2_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_1D.png"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_regulation.png"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot3_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_hist.png"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_lncrna_expr.png"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot4_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_rnaseq.png"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_rnaseq.png"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot5_png <- downloadHandler(
+    filename = function() {
+      "shinysnp_chipseq.png"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_chipseq.png"), file, overwrite = TRUE)
+    }
+  )
+  
+  ### FILE COPY SVG
+  output$download_plot1_svg <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D.svg"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_conformation.svg"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot1b_svg <- downloadHandler(
+    filename = function() {
+      "shinysnp_3D_2.svg"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_conformation_2.svg"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot2_svg <- downloadHandler(
+    filename = function() {
+      "shinysnp_1D.svg"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_regulation.svg"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot3_svg <- downloadHandler(
+    filename = function() {
+      "shinysnp_hist.svg"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_lncrna_expr.svg"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot4_svg <- downloadHandler(
+    filename = function() {
+      "shinysnp_rnaseq.svg"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_rnaseq.svg"), file, overwrite = TRUE)
+    }
+  )
+  
+  output$download_plot5_svg <- downloadHandler(
+    filename = function() {
+      "shinysnp_chipseq.svg"
+    },
+    content = function(file) {
+      file.copy(paste0("done/",tempid,"_chipseq.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1081,6 +1240,14 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
+      png(paste0("done/",tempid,"_rnaseq.png"), bg="transparent")
+      print(t)
+      dev.off()
+      
+      svg(paste0("done/",tempid,"_rnaseq.svg"), bg="transparent")
+      print(t)
+      dev.off()
+      
       t
     })
     
@@ -1105,8 +1272,12 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 12,
-               downloadButton(outputId = "download_plot4_pdf", label = "Download PDF"))
+        column(width = 4,
+               downloadButton(outputId = "download_plot4_pdf", label = "Download PDF")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot4_png", label = "Download PNG")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot4_svg", label = "Download SVG"))
       )
     )
   })
@@ -1230,6 +1401,14 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
+      png(paste0("done/",tempid,"_chipseq.png"), bg="transparent")
+      print(t)
+      dev.off()
+      
+      svg(paste0("done/",tempid,"_chipseq.svg"), bg="transparent")
+      print(t)
+      dev.off()
+      
       t
       
     })
@@ -1255,8 +1434,12 @@ shinyServer(function(input, output, session) {
     list(
       br(),
       fluidRow(
-        column(width = 12,
-               downloadButton(outputId = "download_plot5_pdf", label = "Download PDF"))
+        column(width = 4,
+               downloadButton(outputId = "download_plot5_pdf", label = "Download PDF")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot5_png", label = "Download PNG")),
+        column(width = 4,
+               downloadButton(outputId = "download_plot5_svg", label = "Download SVG"))
       )
     )
   })
