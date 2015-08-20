@@ -962,7 +962,7 @@ drawRNASEQ <- function(file_list, highlight_file, current_range) {
   }
   
   plots <- mclapply(names(coverages), get_plot, mc.cores = nb.cores)
-  
+  remove(coverages)
   invisible(plots)
 }
 
@@ -1055,6 +1055,9 @@ drawCHIPSEQ <- function(file_list, highlight_file, current_range) {
   plots <- mclapply(names(coverages), get_plot, mc.cores = nb.cores)
   names(plots) = names(coverages)
   selected_plots = create_plots_list(plots)
+  
+  remove(coverages)
+  remove(plots)
   
   invisible(selected_plots)
 }

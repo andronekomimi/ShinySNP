@@ -593,11 +593,11 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_conformation.png"), bg="transparent")
+      png(paste0("done/",tempid,"_conformation.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_conformation.svg"), bg="transparent")
+      svg(paste0("done/",tempid,"_conformation.svg"))
       print(t)
       dev.off()
       
@@ -722,11 +722,11 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_conformation_2.png"), bg="transparent")
+      png(paste0("done/",tempid,"_conformation_2.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_conformation_2.svg"), bg="transparent")
+      svg(paste0("done/",tempid,"_conformation_2.svg"))
       print(t)
       dev.off()
       
@@ -870,11 +870,11 @@ shinyServer(function(input, output, session) {
       print(t2)
       dev.off()
       
-      png(paste0("done/",tempid,"_regulation.png"), bg="transparent")
+      png(paste0("done/",tempid,"_regulation.png"))
       print(t2)
       dev.off()
       
-      svg(paste0("done/",tempid,"_regulation.svg"), bg="transparent")
+      svg(paste0("done/",tempid,"_regulation.svg"))
       print(t2)
       dev.off()
       
@@ -882,11 +882,11 @@ shinyServer(function(input, output, session) {
       print(t3)
       dev.off()
       
-      png(paste0("done/",tempid,"_lncrna_expr.png"), bg="transparent")
+      png(paste0("done/",tempid,"_lncrna_expr.png"))
       print(t3)
       dev.off()
       
-      svg(paste0("done/",tempid,"_lncrna_expr.svg"), bg="transparent")
+      svg(paste0("done/",tempid,"_lncrna_expr.svg"))
       print(t3)
       dev.off()
       
@@ -1240,11 +1240,11 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_rnaseq.png"), bg="transparent")
+      png(paste0("done/",tempid,"_rnaseq.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_rnaseq.svg"), bg="transparent")
+      svg(paste0("done/",tempid,"_rnaseq.svg"))
       print(t)
       dev.off()
       
@@ -1401,11 +1401,11 @@ shinyServer(function(input, output, session) {
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_chipseq.png"), bg="transparent")
+      png(paste0("done/",tempid,"_chipseq.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_chipseq.svg"), bg="transparent")
+      svg(paste0("done/",tempid,"_chipseq.svg"))
       print(t)
       dev.off()
       
