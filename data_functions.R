@@ -5,7 +5,6 @@ suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 suppressMessages(library(biovizBase))
 suppressMessages(library(org.Hs.eg.db))
 suppressMessages(library(rhdf5))
-suppressMessages(library(metagene))
 
 load3DData <- function(current_chr, my.dataset) {
   
