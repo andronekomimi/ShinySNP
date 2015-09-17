@@ -1,133 +1,135 @@
 # SHINYSNP server.R
 source("data_functions.R")
 
-# EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
-# chrom_list dans les parametres
-chroms = read.csv("data/chromosomes.txt", header = TRUE)
-
-Logged = FALSE;
-
-## Chargement de la DB d'authenfication
-membership_db = "/etc/shiny-apps/ShinySNP_membership.sqlite"
-con = RSQLite::dbConnect(RSQLite::SQLite(), membership_db)
-members = dbGetQuery(con,'select * from membership')
-RSQLite::dbDisconnect(con)
-
-##### GLOBALS
-
-OPERATOR = "audrey.lemacon.1@ulaval.ca"
-USERMAIL = ""
-USERNAME = ""
-USERROLE = ""
-
-
-# files connections
-tempid = 0
-
-logfile = ""
-logcon = ""
-
-snpcon = ""
-snpsfile = ""
-
-hgcon = ""
-hgsfile = ""
-
-# buttons
-run = FALSE
-reset = FALSE
-rnaseq = FALSE
-chipseq = FALSE
-
-# create empty plot
-waiting_plot <- function(msg) {
-  df = data.frame(x=c(1), 
-                  y=c(1), 
-                  name = c(msg))
-  g = ggplot(data=df, mapping=aes(x=x, y=y)) +
-    geom_blank() + ylab("") + xlab("") + 
-    geom_text(aes(x = x, y = y, label=name), size = 7, color = "darkgreen") +
-    theme(
-      axis.text.x = element_blank(),
-      axis.text.y = element_blank(),
-      axis.ticks = element_blank())
-  g
-}
-
-
-setup_files <- function() {
-  
-  logfile <<- tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
-  tempid <<- strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
-  snpsfile <<- paste0("todo/snp_", tempid)
-  hgsfile <<- paste0("todo/hg_", tempid)
-  
-  if(!file.exists(logfile)) {
-    file.create(logfile)
-    print("create log file")
-    logcon <<- file(logfile,open="w")
-    print("open connection to log file")
-    writeLines(c(USERNAME), logcon)
-    writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
-    print("write in log file")
-  }
-  
-  if(!file.exists(snpsfile)) {
-    file.create(snpsfile)
-    snpcon <<- file(snpsfile,open="a+b")
-    writeLines(paste("id","start","end","metadata",sep = "\t"), snpcon)
-  }
-  
-  if(!file.exists(hgsfile)) {
-    file.create(hgsfile)
-    hgcon <<- file(hgsfile,open="a+b")
-    writeLines(paste("start","end","color",sep = "\t"), hgcon)
-  }
-  
-  print(paste0("Files setup for id:",tempid))
-}
-
-
-close_files <- function() {
-  # close all resilient files
-  print("closing files")
-  tryCatch ({
-    close(snpcon)   
-  },error = function(e) {
-    print(e)
-  })
-  
-  tryCatch ({
-    close(hgcon)  
-  },error = function(e) {
-    print(e)
-  })
-  
-  tryCatch ({
-    if(isOpen(logcon, "w")){
-      writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
-      print("write in log file before closing")
-      close(logcon)
-      print("close log file")
-    }
-    H5close()    
-  },error = function(e) {
-    print(e)
-  })
-  
-  
-  tryCatch ({
-    H5close()    
-  },error = function(e) {
-    print(e)
-  })
-  
-}
-
 options(scipen=999) # virer l'annotation scientifique
 
 
 shinyServer(function(input, output, session) {
+  
+  
+  
+  # EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
+  # chrom_list dans les parametres
+  chroms = read.csv("data/chromosomes.txt", header = TRUE)
+  
+  Logged = FALSE;
+  
+  ## Chargement de la DB d'authenfication
+  membership_db = "/etc/shiny-apps/ShinySNP_membership.sqlite"
+  con = RSQLite::dbConnect(RSQLite::SQLite(), membership_db)
+  members = dbGetQuery(con,'select * from membership')
+  RSQLite::dbDisconnect(con)
+  
+  ##### GLOBALS
+  
+  OPERATOR = "audrey.lemacon.1@ulaval.ca"
+  USERMAIL = ""
+  USERNAME = ""
+  USERROLE = ""
+  
+  
+  # files connections
+  tempid = 0
+  
+  logfile = ""
+  logcon = ""
+  
+  snpcon = ""
+  snpsfile = ""
+  
+  hgcon = ""
+  hgsfile = ""
+  
+  # buttons
+  run = FALSE
+  reset = FALSE
+  rnaseq = FALSE
+  chipseq = FALSE
+  
+  # create empty plot
+  waiting_plot <- function(msg) {
+    df = data.frame(x=c(1), 
+                    y=c(1), 
+                    name = c(msg))
+    g = ggplot(data=df, mapping=aes(x=x, y=y)) +
+      geom_blank() + ylab("") + xlab("") + 
+      geom_text(aes(x = x, y = y, label=name), size = 7, color = "darkgreen") +
+      theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank())
+    g
+  }
+  
+  
+  setup_files <- function() {
+    
+    logfile <<- tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
+    tempid <<- strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
+    snpsfile <<- paste0("todo/snp_", tempid)
+    hgsfile <<- paste0("todo/hg_", tempid)
+    
+    if(!file.exists(logfile)) {
+      file.create(logfile)
+      print("create log file")
+      logcon <<- file(logfile,open="w")
+      print("open connection to log file")
+      writeLines(c(USERNAME), logcon)
+      writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+      print("write in log file")
+    }
+    
+    if(!file.exists(snpsfile)) {
+      file.create(snpsfile)
+      snpcon <<- file(snpsfile,open="a+b")
+      writeLines(paste("id","start","end","metadata",sep = "\t"), snpcon)
+    }
+    
+    if(!file.exists(hgsfile)) {
+      file.create(hgsfile)
+      hgcon <<- file(hgsfile,open="a+b")
+      writeLines(paste("start","end","color",sep = "\t"), hgcon)
+    }
+    
+    print(paste0("Files setup for id:",tempid))
+  }
+  
+  
+  close_files <- function() {
+    # close all resilient files
+    print("closing files")
+    tryCatch ({
+      close(snpcon)   
+    },error = function(e) {
+      print(e)
+    })
+    
+    tryCatch ({
+      close(hgcon)  
+    },error = function(e) {
+      print(e)
+    })
+    
+    tryCatch ({
+      if(isOpen(logcon, "w")){
+        writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+        print("write in log file before closing")
+        close(logcon)
+        print("close log file")
+      }
+      H5close()    
+    },error = function(e) {
+      print(e)
+    })
+    
+    
+    tryCatch ({
+      H5close()    
+    },error = function(e) {
+      print(e)
+    })
+    
+  }
   
   
   USER <- reactiveValues(Logged = FALSE)
