@@ -40,6 +40,8 @@ shinyServer(function(input, output, session) {
   hgcon = ""
   hgsfile = ""
   
+  shinyTmpDir <- tempdir()
+  
   # buttons
   run = FALSE
   reset = FALSE
@@ -66,8 +68,8 @@ shinyServer(function(input, output, session) {
     
     logfile <<- tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
     tempid <<- strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
-    snpsfile <<- paste0("todo/snp_", tempid)
-    hgsfile <<- paste0("todo/hg_", tempid)
+    snpsfile <<- paste0(shinyTmpDir,.Platform$file.sep,"snp_", tempid)
+    hgsfile <<- paste0(shinyTmpDir,.Platform$file.sep,"hg_", tempid)
     
     if(!file.exists(logfile)) {
       file.create(logfile)
@@ -591,15 +593,15 @@ shinyServer(function(input, output, session) {
       
       t = tracks(my.tracks) + xlim(current_range)
       
-      pdf(paste0("done/",tempid,"_conformation.pdf"), onefile=T, paper="USr")
+      pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.pdf"), onefile=T, paper="USr")
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_conformation.png"))
+      png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_conformation.svg"))
+      svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.svg"))
       print(t)
       dev.off()
       
@@ -720,15 +722,15 @@ shinyServer(function(input, output, session) {
       
       t = tracks(my.tracks) + xlim(current_range)
       
-      pdf(paste0("done/",tempid,"_conformation_2.pdf"), onefile=T, paper="USr")
+      pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.pdf"), onefile=T, paper="USr")
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_conformation_2.png"))
+      png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_conformation_2.svg"))
+      svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.svg"))
       print(t)
       dev.off()
       
@@ -868,27 +870,27 @@ shinyServer(function(input, output, session) {
       t2 = tracks(my.tracks) + xlim(current_range)
       t3 = tracks(lncrna_figures$lncrna_hist)
       
-      pdf(paste0("done/",tempid,"_regulation.pdf"), onefile=T, paper="USr")
+      pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_regulation.pdf"), onefile=T, paper="USr")
       print(t2)
       dev.off()
       
-      png(paste0("done/",tempid,"_regulation.png"))
+      png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_regulation.png"))
       print(t2)
       dev.off()
       
-      svg(paste0("done/",tempid,"_regulation.svg"))
+      svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_regulation.svg"))
       print(t2)
       dev.off()
       
-      pdf(paste0("done/",tempid,"_lncrna_expr.pdf"), onefile=T, paper="USr")
+      pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_lncrna_expr.pdf"), onefile=T, paper="USr")
       print(t3)
       dev.off()
       
-      png(paste0("done/",tempid,"_lncrna_expr.png"))
+      png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_lncrna_expr.png"))
       print(t3)
       dev.off()
       
-      svg(paste0("done/",tempid,"_lncrna_expr.svg"))
+      svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_lncrna_expr.svg"))
       print(t3)
       dev.off()
       
@@ -957,7 +959,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D.pdf"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_conformation.pdf"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -966,7 +968,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D_2.pdf"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_conformation_2.pdf"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -975,7 +977,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_1D.pdf"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_regulation.pdf"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_regulation.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -984,7 +986,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_hist.pdf"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_lncrna_expr.pdf"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_lncrna_expr.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -993,7 +995,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_rnaseq.pdf"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_rnaseq.pdf"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -1002,7 +1004,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_chipseq.pdf"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_chipseq.pdf"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.pdf"), file, overwrite = TRUE)
     }
   )
   
@@ -1013,7 +1015,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D.png"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_conformation.png"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.png"), file, overwrite = TRUE)
     }
   )
   
@@ -1022,7 +1024,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D_2.png"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_conformation_2.png"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.png"), file, overwrite = TRUE)
     }
   )
   
@@ -1031,7 +1033,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_1D.png"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_regulation.png"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_regulation.png"), file, overwrite = TRUE)
     }
   )
   
@@ -1040,7 +1042,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_hist.png"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_lncrna_expr.png"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_lncrna_expr.png"), file, overwrite = TRUE)
     }
   )
   
@@ -1049,7 +1051,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_rnaseq.png"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_rnaseq.png"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.png"), file, overwrite = TRUE)
     }
   )
   
@@ -1058,7 +1060,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_chipseq.png"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_chipseq.png"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.png"), file, overwrite = TRUE)
     }
   )
   
@@ -1068,7 +1070,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D.svg"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_conformation.svg"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1077,7 +1079,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_3D_2.svg"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_conformation_2.svg"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1086,7 +1088,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_1D.svg"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_regulation.svg"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_regulation.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1095,7 +1097,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_hist.svg"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_lncrna_expr.svg"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_lncrna_expr.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1104,7 +1106,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_rnaseq.svg"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_rnaseq.svg"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1113,7 +1115,7 @@ shinyServer(function(input, output, session) {
       "shinysnp_chipseq.svg"
     },
     content = function(file) {
-      file.copy(paste0("done/",tempid,"_chipseq.svg"), file, overwrite = TRUE)
+      file.copy(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.svg"), file, overwrite = TRUE)
     }
   )
   
@@ -1238,15 +1240,15 @@ shinyServer(function(input, output, session) {
       
       t = tracks(my.tracks) + xlim(current_range)
       
-      pdf(paste0("done/",tempid,"_rnaseq.pdf"), onefile=T, paper="USr")
+      pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.pdf"), onefile=T, paper="USr")
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_rnaseq.png"))
+      png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_rnaseq.svg"))
+      svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.svg"))
       print(t)
       dev.off()
       
@@ -1399,15 +1401,15 @@ shinyServer(function(input, output, session) {
       
       t = tracks(my.tracks) + xlim(current_range)
       
-      pdf(paste0("done/",tempid,"_chipseq.pdf"), onefile=T, paper="USr")
+      pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.pdf"), onefile=T, paper="USr")
       print(t)
       dev.off()
       
-      png(paste0("done/",tempid,"_chipseq.png"))
+      png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.png"))
       print(t)
       dev.off()
       
-      svg(paste0("done/",tempid,"_chipseq.svg"))
+      svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.svg"))
       print(t)
       dev.off()
       
