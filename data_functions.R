@@ -336,17 +336,18 @@ getOverlaps <- function(ranges_list, snps_df, current_range) {
     
     if(length(my.range) > 0) {
       range_name <-  my.range[1]$label
-      overlaps <- paste0(overlaps, "Overlaps between variants and ",range_name,":\n")
-      
       hits <- findOverlaps(query = my.range, subject = snps)
       
-      for(i in seq_along(hits)) {
-        hit = hits[i]
-        query_idx = queryHits(hit)
-        subject_idx = subjectHits(hit)
-        overlap_snp <- snps[subject_idx]
-        overlap_region <- my.range[query_idx]
-        overlaps <- paste0(overlaps, "\t\t- ",overlap_snp$name, " (",start(overlap_snp),") <---> [",start(overlap_region),"-",end(overlap_region), "]\n")
+      if(length(hits) > 0 ){
+        overlaps <- paste0(overlaps, "Overlaps between variants and ",range_name,":\n")
+        for(i in seq_along(hits)) {
+          hit = hits[i]
+          query_idx = queryHits(hit)
+          subject_idx = subjectHits(hit)
+          overlap_snp <- snps[subject_idx]
+          overlap_region <- my.range[query_idx]
+          overlaps <- paste0(overlaps, "\t\t- ",overlap_snp$name, " (",start(overlap_snp),") <---> [",start(overlap_region),"-",end(overlap_region), "]\n")
+        }
       }
     }   
   }
