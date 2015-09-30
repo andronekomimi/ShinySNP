@@ -317,6 +317,43 @@ drawArchs <- function(ranges_list, highlight_ranges, current_range) {
   invisible(my.tracks)
 }
 
+
+getOverlaps <- function(ranges_list, snps_df, current_range) {
+  
+  overlaps = ""
+  
+  ### SNP Genomic Ranges
+  ids <- as.character(snps_df$id)       
+  snps_ranges <- IRanges(as.numeric(as.character(snps_df$start)), as.numeric(as.character(snps_df$end)))
+  snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
+  snps$name <- ids
+  
+  my.tracks = c()
+  
+  for(i in seq_along(ranges_list)) {
+    
+    my.range = ranges_list[[i]]
+    
+    if(length(my.range) > 0) {
+      range_name <-  my.range[1]$label
+      overlaps <- paste0(overlaps, "Overlaps between variants and ",range_name,":\n")
+      
+      hits <- findOverlaps(query = my.range, subject = snps)
+      
+      for(i in seq_along(hits)) {
+        hit = hits[i]
+        query_idx = queryHits(hit)
+        subject_idx = subjectHits(hit)
+        overlap_snp <- snps[subject_idx]
+        overlap_region <- my.range[query_idx]
+        overlaps <- paste0(overlaps, "\t\t- ",overlap_snp$name, " (",start(overlap_snp),") <---> [",start(overlap_region),"-",end(overlap_region), "]\n")
+      }
+    }   
+  }
+  
+  invisible(overlaps)
+}
+
 drawSegment <- function(ranges_list, highlight_ranges, current_range) {
   
   my.tracks = c()

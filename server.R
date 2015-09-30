@@ -215,20 +215,20 @@ shinyServer(function(input, output, session) {
         return()
       
       isolate({
-        #         updateSelectInput(session, "chr", selected = "chr12")
-        #         updateNumericInput(session, "position_min", value = 27950000)
-        #         updateNumericInput(session, "position_max", value = 28735000)
-        #         updateNumericInput(session, "snp_position_min", value = 28155080)
-        #         updateNumericInput(session, "snp_position_max", value = 28155080)
-        #         updateNumericInput(session, "hgstart", value = 28111017)
-        #         updateNumericInput(session, "hgend", value = 28127138)
-        updateSelectInput(session, "chr", selected = "chr4")
-        updateNumericInput(session, "position_min", value = 105900000)
-        updateNumericInput(session, "position_max", value = 106400000)
-        updateNumericInput(session, "snp_position_min", value = 105900000)
-        updateNumericInput(session, "snp_position_max", value = 106400000)
-        updateNumericInput(session, "hgstart", value = 105900000)
-        updateNumericInput(session, "hgend", value = 105901000)
+        updateSelectInput(session, "chr", selected = "chr12")
+        updateNumericInput(session, "position_min", value = 27950000)
+        updateNumericInput(session, "position_max", value = 28735000)
+        updateNumericInput(session, "snp_position_min", value = 28155080)
+        updateNumericInput(session, "snp_position_max", value = 28155080)
+        updateNumericInput(session, "hgstart", value = 28111017)
+        updateNumericInput(session, "hgend", value = 28127138)
+        #         updateSelectInput(session, "chr", selected = "chr4")
+        #         updateNumericInput(session, "position_min", value = 105900000)
+        #         updateNumericInput(session, "position_max", value = 106400000)
+        #         updateNumericInput(session, "snp_position_min", value = 105900000)
+        #         updateNumericInput(session, "snp_position_max", value = 106400000)
+        #         updateNumericInput(session, "hgstart", value = 105900000)
+        #         updateNumericInput(session, "hgend", value = 105901000)
       })}
   })
   
@@ -580,11 +580,16 @@ shinyServer(function(input, output, session) {
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
-      print(snpsdf)
+      #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
         my.tracks = c(archs_tracks, snp_track, annot_track)
+        
+        output$overlap_plot1 <- renderText({
+          getOverlaps(ranges_list = my.ranges, snps_df = snpsdf, current_range = current_range)
+        })
+        
       } else {
         my.tracks = c(archs_tracks, annot_track)
       }
@@ -709,11 +714,16 @@ shinyServer(function(input, output, session) {
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
-      print(snpsdf)
+      #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
         my.tracks = c(archs_tracks, snp_track, annot_track)
+        
+        output$overlap_plot1b <- renderText({
+          getOverlaps(ranges_list = my.ranges, snps_df = snpsdf, current_range = current_range)
+        })
+        
       } else {
         my.tracks = c(archs_tracks, annot_track)
       }
@@ -861,6 +871,10 @@ shinyServer(function(input, output, session) {
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
         my.tracks = c(my.tracks, snp_track)
+        
+        output$overlap_plot2 <- renderText({
+          getOverlaps(ranges_list = c(my.ranges,my.ranges2), snps_df = snpsdf, current_range = current_range)
+        })
       }
       
       my.tracks = c(my.tracks, annot_track)
@@ -1227,7 +1241,7 @@ shinyServer(function(input, output, session) {
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
-      print(snpsdf)
+      #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
@@ -1388,7 +1402,7 @@ shinyServer(function(input, output, session) {
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
-      print(snpsdf)
+      #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
         snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
