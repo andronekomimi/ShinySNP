@@ -48,6 +48,12 @@ shinyServer(function(input, output, session) {
   rnaseq = FALSE
   chipseq = FALSE
   
+  #common tracks
+  annot_track = NULL
+  snp_track = NULL
+  
+  
+  
   # create empty plot
   waiting_plot <- function(msg) {
     df = data.frame(x=c(1), 
@@ -513,16 +519,27 @@ shinyServer(function(input, output, session) {
   
   drawPlot1 <- function(){
     
-    if (input$run == 0)
+    if (input$run == 0) {
+      output$overlap_plot1 <- renderText({
+        "Waiting for your request..."
+      })
+      
       return(waiting_plot("Waiting for your request..."))
+    }
     
     if (! "interne" %in% input$my.dataset)
       return(waiting_plot("Waiting for your request..."))
     
     input$reset
     
-    if (!run || reset)
+    if (!run || reset){
+      
+      output$overlap_plot1 <- renderText({
+        "Waiting for your request..."
+      })
+      
       return(waiting_plot("Waiting for your request..."))
+    }
     
     isolate ({
       
@@ -575,15 +592,20 @@ shinyServer(function(input, output, session) {
       archs_tracks <- drawArchs(ranges_list = my.ranges,
                                 current_range = current_range,
                                 highlight_ranges = my.hg.ranges)
-      
-      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      if(is.null(annot_track)){
+        annot_track <<- drawAnnotations("Genes",current_range = current_range + 10000)
+      }
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
-        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        
+        if (is.null(snp_track)){
+          snp_track <<- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        }
+        
         my.tracks = c(archs_tracks, snp_track, annot_track)
         
         output$overlap_plot1 <- renderText({
@@ -647,16 +669,28 @@ shinyServer(function(input, output, session) {
   
   drawPlot1b <- function(){
     
-    if (input$run == 0)
+    if (input$run == 0){
+      
+      output$overlap_plot1b <- renderText({
+        "Waiting for your request..."
+      })
+      
       return(waiting_plot("Waiting for your request..."))
+    }
     
     if (! "externe" %in% input$my.dataset)
       return(waiting_plot("Waiting for your request..."))
     
     input$reset
     
-    if (!run || reset)
+    if (!run || reset) {
+      
+      output$overlap_plot1b <- renderText({
+        "Waiting for your request..."
+      })
+      
       return(waiting_plot("Waiting for your request..."))
+    }
     
     isolate ({
       
@@ -710,14 +744,18 @@ shinyServer(function(input, output, session) {
                                 current_range = current_range,
                                 highlight_ranges = my.hg.ranges)
       
-      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      if(is.null(annot_track)){
+        annot_track <<- drawAnnotations("Genes",current_range = current_range + 10000)
+      }
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
-        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        if(is.null(snp_track)){
+          snp_track <<- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        }
         my.tracks = c(archs_tracks, snp_track, annot_track)
         
         output$overlap_plot1b <- renderText({
@@ -781,17 +819,29 @@ shinyServer(function(input, output, session) {
   
   
   drawPlot23 <- function(){
-    if (input$run == 0)
+    if (input$run == 0){ 
+      
+      output$overlap_plot2 <- renderText({
+        "Waiting for your request..."
+      })
+      
       return(
         list(plot2 = waiting_plot("Waiting for your request..."), 
              plot3 = waiting_plot("Waiting for your request...")))
+    }
     
     input$reset
     
-    if (!run || reset)
+    if (!run || reset) {
+      
+      output$overlap_plot2 <- renderText({
+        "Waiting for your request..."
+      })
+      
       return(
         list(plot2 = waiting_plot("Waiting for your request..."), 
              plot3 = waiting_plot("Waiting for your request...")))
+    }
     
     isolate ({
       if(is.na(input$position_min) || is.na(input$position_max)) {
@@ -853,7 +903,9 @@ shinyServer(function(input, output, session) {
                                  current_range = current_range,
                                  highlight_ranges = my.hg.ranges)
       
-      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      if(is.null(annot_track)){
+        annot_track <<- drawAnnotations("Genes",current_range = current_range + 10000)
+      }
       
       lncrna_figures = drawLNCRNAFigures(my.df = my.data$lncrna, 
                                          current_range = current_range, 
@@ -869,7 +921,11 @@ shinyServer(function(input, output, session) {
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       
       if(nrow(snpsdf) > 0 ){
-        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        
+        if(is.null(snp_track)){
+          snp_track <<- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        }
+        
         my.tracks = c(my.tracks, snp_track)
         
         output$overlap_plot2 <- renderText({
@@ -1234,17 +1290,23 @@ shinyServer(function(input, output, session) {
       
       
       highlight_file = NULL # pas de hg dans ce type de graphe
-      t0 = Sys.time()
+      
       rnaseq_tracks <- drawRNASEQ(file_list, highlight_file, current_range)
-      print(Sys.time()-t0)
-      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      
+      if(is.null(annot_track)){
+        annot_track <<- drawAnnotations("Genes",current_range = current_range + 10000)
+      }
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
       #print(snpsdf)
       
       if(nrow(snpsdf) > 0 ){
-        snp_track <- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        
+        if(is.null(snp_track)){
+          snp_track <<- drawSNP(current_range = current_range, snps_df = snpsdf, label = "SNPs")
+        }
+        
         my.tracks = c(rnaseq_tracks, snp_track, annot_track)
       } else {
         my.tracks = c(rnaseq_tracks, annot_track)
@@ -1395,10 +1457,12 @@ shinyServer(function(input, output, session) {
       file_list = paste0("materials/", input$chipseq_cell, "_chipseq.csv")
       
       highlight_file = NULL # pas de hg dans ce type de graphe
-      t0 = Sys.time()
+      
       chipseq_tracks <- drawCHIPSEQ(file_list, highlight_file, current_range)
-      print(Sys.time()-t0)
-      annot_track <- drawAnnotations("Genes",current_range = current_range + 10000)
+      
+      if(is.null(annot_track)){
+        annot_track <<- drawAnnotations("Genes",current_range = current_range + 10000)
+      }
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
       snpsdf = read.table(snpsfile, header=TRUE, stringsAsFactors=FALSE, quote = "\"", sep="\t")
@@ -1480,12 +1544,13 @@ shinyServer(function(input, output, session) {
     setup_files()
     
     # RESET PARAMETERS
-    updateNumericInput(session, "position_min", value = NA)
-    updateNumericInput(session, "position_max", value = NA)
+    #updateNumericInput(session, "position_min", value = NA)
+    #updateNumericInput(session, "position_max", value = NA)
     updateNumericInput(session, "snp_position_min", value = NA)
     updateNumericInput(session, "snp_position_max", value = NA)
     updateNumericInput(session, "hgstart", value = NA)
     updateNumericInput(session, "hgend", value = NA)
+    updateTextInput(session, "chr", value = "chr1")
     updateButton(session, "addsnp", disabled = FALSE)
     updateButton(session, "addhg", disabled = FALSE)
     updateButton(session, "run", disabled = FALSE)
@@ -1500,6 +1565,8 @@ shinyServer(function(input, output, session) {
     run <<- FALSE
     chipseq <<- FALSE
     rnaseq <<- FALSE
+    annot_track <<- NULL
+    snp_track <<- NULL
     
     # CLOSING ALL ALERT BOX
     closeAlert(session, alertId = "alert_chr")
