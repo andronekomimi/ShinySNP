@@ -43,6 +43,16 @@ shinyUI(fluidPage(
                                br(),
                                actionButton("Login", "Log in"),
                                br(),br(),
+                               tags$div( 
+                                        list(
+                                          "Forget your access details ? Contact us at ", 
+                                          tags$a(href="mailto:audrey.lemacon.1@ulaval.ca","audrey.lemacon.1@ulaval.ca"),
+                                          br(),
+                                          "New on ShinySNP ? Ask for your access details at ",
+                                          tags$a(href="mailto:Arnaud.Droit@crchudequebec.ulaval.ca", "Arnaud.Droit@crchudequebec.ulaval.ca")
+                                        )
+                                        
+                               ),
                                span(textOutput("pass"), style = "color:red")
                      )
                    )
