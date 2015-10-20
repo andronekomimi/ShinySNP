@@ -374,7 +374,7 @@ drawSegment <- function(ranges_list, highlight_ranges, current_range) {
       range_track =  ggbio::autoplot(my.range, aes(fill=color, alpha=alpha)) +
         scale_fill_manual(values = my.colors) +
         theme_bw() + xlim(current_range) + guides(fill= FALSE,alpha=FALSE) + 
-        ylab(track_title) + theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+        ylab(track_title) + theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
       
       if(!is.null(my.range$id)) {
         range_track = range_track + geom_text(aes(x = (start + ((end - start)/2)),
@@ -452,7 +452,7 @@ drawAnnotations <- function(label = "Annotations", current_range) {
       if(length(grl_txdb) > 0){
         g_track <- autoplot(grl_txdb, aes(type = model)) + 
           theme_bw() + xlim(current_range) + ylab(label) +
-          theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+          theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
       }
     }, error = function(err) {
       print(err)
@@ -472,10 +472,10 @@ drawSNP <- function(current_range, snps_df, label) {
   snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
   snps$name <- ids
   
-  snps_track <- autoplot(snps, aes(fill=imp)) +
+  snps_track <- autoplot(snps, aes(color=imp)) +
     geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-    theme_bw() + xlim(current_range) + ylab(label) + guides(fill= FALSE) + 
-    theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+    theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
+    theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
   
   snps_track
 }
@@ -793,7 +793,7 @@ get_chiapet_arch <- function(rep, track_title, current_range) {
     xlim(current_range) +
     theme(axis.ticks = element_blank(), axis.text.y = element_blank()) +
     ylab(track_title) + guides(alpha=FALSE, color=FALSE) +
-    theme(axis.title.y = element_text(size = rel(0.5), angle = 90))
+    theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
   
   g
   
