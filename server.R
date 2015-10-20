@@ -593,7 +593,7 @@ shinyServer(function(input, output, session) {
                                 current_range = current_range,
                                 highlight_ranges = my.hg.ranges)
       if(is.null(annot_track)){
-        annot_track <<- drawAnnotations("Genes",current_range = current_range + 10000)
+        annot_track <<- drawAnnotations("Genes",current_range = current_range + 50000)
       }
       
       ### READ SNP FILE THEN CONVERT IN DATAFRAME
