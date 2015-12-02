@@ -74,8 +74,11 @@ shinyServer(function(input, output, session) {
     
     logfile <<- tempfile(pattern = "log_", tmpdir = "logs", fileext = "")
     tempid <<- strsplit(x = logfile, split = "logs/log_", fixed = TRUE)[[1]][2]
+    logfile <<- paste0(shinyTmpDir,.Platform$file.sep,"log_", tempid)
     snpsfile <<- paste0(shinyTmpDir,.Platform$file.sep,"snp_", tempid)
     hgsfile <<- paste0(shinyTmpDir,.Platform$file.sep,"hg_", tempid)
+    
+    print(logfile)
     
     if(!file.exists(logfile)) {
       file.create(logfile)
@@ -617,22 +620,22 @@ shinyServer(function(input, output, session) {
       }
       
       warning("DONE calculate the tracks",call. = FALSE)
-      
-      t = tracks(my.tracks) + xlim(current_range)
+
+      my.tracks = tracks(my.tracks) + xlim(current_range)
       
       pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.pdf"), onefile=T, paper="USr")
-      print(t)
+      print(my.tracks)
       dev.off()
       
       png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.png"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
       svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.svg"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
-      t
+      my.tracks
       
     })
     
@@ -768,21 +771,21 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      t = tracks(my.tracks) + xlim(current_range)
+      my.tracks = tracks(my.tracks) + xlim(current_range)
       
       pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.pdf"), onefile=T, paper="USr")
-      print(t)
+      print(my.tracks)
       dev.off()
       
       png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.png"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
       svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation_2.svg"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
-      t
+      my.tracks
     })
     
   }
@@ -1314,21 +1317,21 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      t = tracks(my.tracks) + xlim(current_range)
+      my.tracks = tracks(my.tracks) + xlim(current_range)
       
       pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.pdf"), onefile=T, paper="USr")
-      print(t)
+      print(my.tracks)
       dev.off()
       
       png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.png"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
       svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_rnaseq.svg"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
-      t
+      my.tracks
     })
     
   }
@@ -1477,21 +1480,21 @@ shinyServer(function(input, output, session) {
       
       warning("DONE calculate the tracks",call. = FALSE)
       
-      t = tracks(my.tracks) + xlim(current_range)
+      my.tracks = tracks(my.tracks) + xlim(current_range)
       
       pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.pdf"), onefile=T, paper="USr")
-      print(t)
+      print(my.tracks)
       dev.off()
       
       png(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.png"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
       svg(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_chipseq.svg"))
-      print(t)
+      print(my.tracks)
       dev.off()
       
-      t
+      my.tracks
       
     })
     

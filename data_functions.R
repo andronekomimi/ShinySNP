@@ -5,6 +5,7 @@ suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 suppressMessages(library(biovizBase))
 suppressMessages(library(org.Hs.eg.db))
 suppressMessages(library(rhdf5))
+suppressMessages(library(grid))
 
 load3DData <- function(current_chr, my.dataset) {
   
@@ -406,28 +407,7 @@ setHighLight <- function(current_start, current_stop, method) {
   special_range
 }
 
-
-drawAnnotations <- function(label = "Annotations", current_range) {
-  #can_run_4()
-  
-  df = data.frame(x=c(mean(c(start(current_range), end(current_range)))), 
-                  y=c(1), 
-                  name = c("No genomic element in this area"))
-  
-  err_label <- "No genomic element in this area"
-  label_position = mean(c(start(current_range), end(current_range)))
-  range <- IRanges(label_position, label_position)
-  range <- GRanges(seqnames = as.character(seqlevels(current_range)), ranges = range)
-  range$name = err_label
-  
-  g_track <- ggplot(range) +
-    geom_text(aes(x = start, y = 1, label=name), size = 5, color = "red") +
-    theme_bw() + xlim(current_range) + ylab("") + xlab("") + guides(color= FALSE) + 
-    theme(
-      axis.text.x = element_blank(),
-      axis.text.y = element_blank(),
-      axis.ticks = element_blank())
-  
+getGenesGranges <- function(current_range) {
   gr_txdb <- NULL
   
   tryCatch({
@@ -447,20 +427,169 @@ drawAnnotations <- function(label = "Annotations", current_range) {
       
       gr_txdb <- gr_txdb[-i]
       levels(gr_txdb) <- c("cds", "exon", "utr")
-      grl_txdb <- split(gr_txdb, gr_txdb$symbols)
-      
-      if(length(grl_txdb) > 0){
-        g_track <- autoplot(grl_txdb, aes(type = model)) + 
-          theme_bw() + xlim(current_range) + ylab(label) +
-          theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
-      }
     }, error = function(err) {
       print(err)
     })
+  }
+  
+  return(gr_txdb)
+}
+
+drawGeneDetails <- function(genesGrange, current_range, label)  {
+  
+  g_track <- NULL
+  
+  if(! is.null(genesGrange)) {
+    
+    grl_txdb <- split(genesGrange, genesGrange$symbols)
+    
+    if(length(grl_txdb) > 0){
+      
+      g_track <- autoplot(grl_txdb, aes(type = model)) + 
+        theme_bw() + xlim(current_range) + ylab(label) +
+        guides(col = guide_legend(ncol =  2, keywidth = 0.2, keyheight = 0.4), 
+               fill = guide_legend(ncol =  2, keywidth = 0.2, keyheight = 0.4)) + 
+        theme(axis.title.y = element_text(size = rel(0.65), angle = 90),
+              legend.text =  element_text(size = rel(0.4)),
+              legend.title = element_text(size = rel(0.4)))
+      
+      #genes <- autoplot(grl_txdb, aes(fill = symbols, group = symbols), group.selfish = FALSE, main.geom = "arrowrect", gap.geom = "segment") + theme_bw() + xlim(RANGE)
+      
+      print("Track gene -> DONE")
+    } else {
+      df = data.frame(x=c(mean(c(start(current_range), end(current_range)))), 
+                      y=c(1), 
+                      name = c("No genomic element in this area"))
+      
+      err_label <- "No genomic element in this area"
+      label_position = mean(c(start(current_range), end(current_range)))
+      range <- IRanges(label_position, label_position)
+      range <- GRanges(seqnames = as.character(seqlevels(current_range)), ranges = range)
+      range$name = err_label
+      
+      g_track <- ggplot(range) +
+        geom_text(aes(x = start, y = 1, label=name), size = 5, color = "red") +
+        theme_bw() + xlim(current_range) + ylab("") + xlab("") + guides(color= FALSE) + 
+        theme(
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank())
+    }
+    
+  } else {
+    df = data.frame(x=c(mean(c(start(current_range), end(current_range)))), 
+                    y=c(1), 
+                    name = c("No genomic element in this area"))
+    
+    err_label <- "No genomic element in this area"
+    label_position = mean(c(start(current_range), end(current_range)))
+    range <- IRanges(label_position, label_position)
+    range <- GRanges(seqnames = as.character(seqlevels(current_range)), ranges = range)
+    range$name = err_label
+    
+    g_track <- ggplot(range) +
+      geom_text(aes(x = start, y = 1, label=name), size = 5, color = "red") +
+      theme_bw() + xlim(current_range) + ylab("") + xlab("") + guides(color= FALSE) + 
+      theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank())
     
   }
   
   return(g_track)
+}
+
+drawGeneNames <- function(genesGrange) {
+  
+  genes_names_track <- NULL
+  
+  if(! is.null(genesGrange)) {
+    
+    genesGrange <- genesGrange[!is.na(genesGrange$symbols)]
+    gene_names <- unique(genesGrange$symbols)
+    
+    if(length(gene_names) > 0) {
+      gene_starts <- c()
+      gene_ends <- c()
+      gene_positions <- c()
+      i = 0
+      
+      for(g in gene_names) {
+        i <- i + 1
+        gene_infos <- genesGrange[genesGrange$symbols == g]
+        gene_starts <- c(gene_starts, start(gene_infos[1]))
+        gene_ends <- c(gene_ends, end(gene_infos[length(gene_infos)]))
+        gene_positions <- c(gene_positions, i)
+      }
+      
+      df_genes <- data.frame(seqnames = gene_names,
+                             position = gene_positions,
+                             start = gene_starts, 
+                             end = gene_ends)
+      
+      genes_names_track <- ggplot() + 
+        geom_segment(data=df_genes, 
+                     mapping=aes(x=start, y=1, xend=start, yend=max(c(5,max(position)))),
+                     arrow=arrow(length = unit(0.2,"cm")), 
+                     color="black") +
+        theme_bw() + theme(axis.text.y=element_blank(), axis.ticks=element_blank()) +
+        ylab(label = "") + xlab(label = "") + 
+        geom_text(data=df_genes, 
+                  aes(x=start, y=1, label=seqnames), 
+                  size=2, angle =90, hjust=0, vjust=-0.5)
+      
+      print("Track gene names -> DONE")
+    } else {
+      df = data.frame(x=c(mean(c(start(current_range), end(current_range)))), 
+                      y=c(1), 
+                      name = c("No genomic element in this area"))
+      
+      err_label <- "No genomic element in this area"
+      label_position = mean(c(start(current_range), end(current_range)))
+      range <- IRanges(label_position, label_position)
+      range <- GRanges(seqnames = as.character(seqlevels(current_range)), ranges = range)
+      range$name = err_label
+      
+      genes_names_track <- ggplot(range) +
+        geom_text(aes(x = start, y = 1, label=name), size = 5, color = "red") +
+        theme_bw() + xlim(current_range) + ylab("") + xlab("") + guides(color= FALSE) + 
+        theme(
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank())
+    }
+  } else {
+    
+    df = data.frame(x=c(mean(c(start(current_range), end(current_range)))), 
+                    y=c(1), 
+                    name = c("No genomic element in this area"))
+    
+    err_label <- "No genomic element in this area"
+    label_position = mean(c(start(current_range), end(current_range)))
+    range <- IRanges(label_position, label_position)
+    range <- GRanges(seqnames = as.character(seqlevels(current_range)), ranges = range)
+    range$name = err_label
+    
+    genes_names_track <- ggplot(range) +
+      geom_text(aes(x = start, y = 1, label=name), size = 5, color = "red") +
+      theme_bw() + xlim(current_range) + ylab("") + xlab("") + guides(color= FALSE) + 
+      theme(
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank())
+  }
+  
+  return(genes_names_track)
+  
+}
+
+
+drawAnnotations <- function(label = "Gene\nStructure", current_range) {
+  
+  annotations = getGenesGranges(current_range)
+  list(drawGeneDetails(genesGrange = annotations, current_range = current_range, label = label),
+       drawGeneNames(annotations))
   
 }
 
@@ -472,10 +601,18 @@ drawSNP <- function(current_range, snps_df, label) {
   snps <- GRanges(seqnames = as.character(seqnames(current_range)), ranges = snps_ranges, imp = snps_df$metadata)
   snps$name <- ids
   
-  snps_track <- autoplot(snps, aes(color=imp)) +
-    geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
-    theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
-    theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
+  if(length(unique(snps_df$metadata)) == 1) {
+    snps_track <- autoplot(snps) +
+      #       geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
+      theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
+      theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
+  } else {
+    snps_track <- autoplot(snps, aes(color=imp)) +
+      #       geom_text(aes(x = start, y = 1, label=name, angle = 90, vjust=-1), size = 1, color = "blue") +
+      theme_bw() + xlim(current_range) + ylab(label) + guides(color= FALSE) + 
+      theme(axis.title.y = element_text(size = rel(0.65), angle = 90))
+    
+  }
   
   snps_track
 }
