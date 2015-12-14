@@ -11,22 +11,8 @@ shinyServer(function(input, output, session) {
   # EXECUTER 1 FOIS AU LANCEMENT DE LAPPLI
   # chrom_list dans les parametres
   chroms = read.csv("data/chromosomes.txt", header = TRUE)
-  
-  Logged = FALSE;
-  
-  ## Chargement de la DB d'authenfication
-  membership_db = "/etc/shiny-apps/ShinySNP_membership.sqlite"
-  con = RSQLite::dbConnect(RSQLite::SQLite(), membership_db)
-  members = dbGetQuery(con,'select * from membership')
-  RSQLite::dbDisconnect(con)
-  
+
   ##### GLOBALS
-  
-  OPERATOR = "audrey.lemacon.1@ulaval.ca"
-  USERMAIL = ""
-  USERNAME = ""
-  USERROLE = ""
-  
   
   # files connections
   tempid = 0
@@ -52,8 +38,6 @@ shinyServer(function(input, output, session) {
   annot_track = NULL
   snp_track = NULL
   
-  
-  
   # create empty plot
   waiting_plot <- function(msg) {
     df = data.frame(x=c(1), 
@@ -69,6 +53,27 @@ shinyServer(function(input, output, session) {
     g
   }
   
+  user <- reactive({
+    if(is.null(session$user))
+      return('anonymous')
+    return(session$user)
+  })
+  
+  isAdmin <- reactive({
+    if (user() == "admin"){
+      return(TRUE)
+    } else{
+      return(FALSE)
+    }
+  })
+  
+  onLocal <- reactive({
+    if (session$clientData$url_hostname == "localhost" || session$clientData$url_hostname == "127.0.0.1"){
+      return(TRUE)
+    } else{
+      return(FALSE)
+    }
+  })
   
   setup_files <- function() {
     
@@ -78,16 +83,17 @@ shinyServer(function(input, output, session) {
     snpsfile <<- paste0(shinyTmpDir,.Platform$file.sep,"snp_", tempid)
     hgsfile <<- paste0(shinyTmpDir,.Platform$file.sep,"hg_", tempid)
     
-    print(logfile)
-    
-    if(!file.exists(logfile)) {
-      file.create(logfile)
-      print("create log file")
-      logcon <<- file(logfile,open="w")
-      print("open connection to log file")
-      writeLines(c(USERNAME), logcon)
-      writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
-      print("write in log file")
+    if(!onLocal()){
+      if(!file.exists(logfile)) {
+        print(logfile)
+        file.create(logfile)
+        print("create log file")
+        logcon <<- file(logfile,open="w")
+        print("open connection to log file")
+        writeLines(c(user()), logcon)
+        writeLines(c(format(Sys.time(), "%a %b %d %X %Y")), logcon)
+        print("write in log file")
+      }
     }
     
     if(!file.exists(snpsfile)) {
@@ -142,68 +148,24 @@ shinyServer(function(input, output, session) {
     
   }
   
-  
-  USER <- reactiveValues(Logged = FALSE)
-  
-  output$uiLogin <- renderUI({
-    if (USER$Logged == FALSE) {
-      list(
-        h3("Please sign in")
-      )
-    }
+  observe({
+    setup_files()
+    
+    # Reactiver ts les boutons
+    updateButton(session, "addsnp", disabled = FALSE)
+    updateButton(session, "addhg", disabled = FALSE)
+    updateButton(session, "run", disabled = FALSE)
+    updateButton(session, "reset", disabled = TRUE)
+    updateButton(session, "runRNASeq", disabled = FALSE)
+    updateButton(session, "runCHIPSeq", disabled = FALSE)
+    
+    output$runEx <- renderUI({
+      if(isAdmin() || onLocal()) {
+        return(list(actionButton(inputId = "runEx", label = "Run Example")))
+      }
+    })
+    
   })
-  
-  outputOptions(output, "uiLogin", suspendWhenHidden=FALSE)
-  
-  output$pass <- renderText({
-    if (USER$Logged == FALSE) {
-      
-      if (!is.null(input$Login) && input$Login > 0) {
-        authentif_success = TRUE
-        
-        Username <- isolate(input$Username)
-        Password <- isolate(input$Password)
-        
-        if(!(Username %in% members$user)) {
-          authentif_success = FALSE
-        } else {
-          passw = subset(members, user==Username)$password
-          if(passw != Password) {
-            authentif_success = FALSE
-          }
-        }
-        
-        if (authentif_success) {
-          USER$Logged <- TRUE
-          USERNAME <<- as.character(subset(members, user==Username)$username)
-          USERMAIL <<- as.character(subset(members, user==Username)$email)
-          USERROLE <<- as.character(subset(members, user==Username)$role)
-          
-          setup_files()
-          
-          # Reactiver ts les boutons
-          updateButton(session, "addsnp", disabled = FALSE)
-          updateButton(session, "addhg", disabled = FALSE)
-          updateButton(session, "run", disabled = FALSE)
-          updateButton(session, "reset", disabled = TRUE)
-          updateButton(session, "runRNASeq", disabled = FALSE)
-          updateButton(session, "runCHIPSeq", disabled = FALSE)
-          
-          output$runEx <- renderUI({
-            if(USERROLE == "admin") {
-              return(list(actionButton(inputId = "runEx", label = "Run Example")))
-            }
-          })
-          
-          "Authentication succeed!"
-          
-        } else  {
-          "Authentication failed!"
-        }
-      } 
-    }
-  })
-  
   
   #### CHANGE POSITION VALUE ACCORDING TO THE SELECTED CHROM
   observe({
@@ -231,13 +193,6 @@ shinyServer(function(input, output, session) {
         updateNumericInput(session, "snp_position_max", value = 28155080)
         updateNumericInput(session, "hgstart", value = 28111017)
         updateNumericInput(session, "hgend", value = 28127138)
-        #         updateSelectInput(session, "chr", selected = "chr4")
-        #         updateNumericInput(session, "position_min", value = 105900000)
-        #         updateNumericInput(session, "position_max", value = 106400000)
-        #         updateNumericInput(session, "snp_position_min", value = 105900000)
-        #         updateNumericInput(session, "snp_position_max", value = 106400000)
-        #         updateNumericInput(session, "hgstart", value = 105900000)
-        #         updateNumericInput(session, "hgend", value = 105901000)
       })}
   })
   
@@ -323,7 +278,7 @@ shinyServer(function(input, output, session) {
     
     if(!is.na(selected_chr_min) && !is.na(selected_chr_max)){
       if(snpstart >= selected_chr_min && snpstart <= selected_chr_max &&
-           snpend >= selected_chr_min && snpend <= selected_chr_max) {
+         snpend >= selected_chr_min && snpend <= selected_chr_max) {
         closeAlert(session, "exampleAlert3")          
       } else {
         error_msg <- "The variant must be inclued in the selected region"
@@ -372,7 +327,7 @@ shinyServer(function(input, output, session) {
       }
       
       if((!"id" %in% names(imported_snp)) || (!"start" %in% names(imported_snp)) ||
-           (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
+         (!"end" %in% names(imported_snp)) || (!"metadata" %in% names(imported_snp))) {
         
         msg = paste0("File format error : waiting for a tab delimited file containing ",
                      "at least the following 4 columns : id, start, end, metadata")
@@ -459,7 +414,7 @@ shinyServer(function(input, output, session) {
     
     if(!is.na(selected_chr_min) && !is.na(selected_chr_max)){
       if(hgstart >= selected_chr_min && hgstart <= selected_chr_max &&
-           hgend >= selected_chr_min && hgend <= selected_chr_max) {
+         hgend >= selected_chr_min && hgend <= selected_chr_max) {
         closeAlert(session, "exampleAlert6")          
       } else {
         error_msg <- "The HG Zone must be inclued in the selected region"
@@ -620,7 +575,7 @@ shinyServer(function(input, output, session) {
       }
       
       warning("DONE calculate the tracks",call. = FALSE)
-
+      
       my.tracks = tracks(my.tracks) + xlim(current_range)
       
       pdf(paste0(shinyTmpDir,.Platform$file.sep,tempid,"_conformation.pdf"), onefile=T, paper="USr")
